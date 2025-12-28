@@ -1,0 +1,87 @@
+# Data files (often contain sensitive information)
+*.mat
+*.csv
+*.xlsx
+*.xls
+/data/raw/
+/data/processed/
+
+# R-specific files
+.RData
+.Rhistory
+.Rproj.user/
+*.Rproj
+.Renviron
+
+# Python-specific files (if used)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# MATLAB-specific files
+*.asv
+*.m~
+*.fig
+*.mlappinstall
+*.mlpkginstall
+
+# Output files
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.eps
+*.svg
+figures/*.pdf
+figures/*.png
+figures/*.jpg
+figures/*.eps
+figures/*.svg
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# Log files
+*.log
+
+# Large data files
+*.h5
+*.hdf5
+*.npy
+*.npz
+
+# Backup files
+*.bak
+*.backup
+
+# Jupyter Notebook checkpoints (if used)
+.ipynb_checkpoints/
+
+# Compiled documents (if building from source)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+*.out
+
