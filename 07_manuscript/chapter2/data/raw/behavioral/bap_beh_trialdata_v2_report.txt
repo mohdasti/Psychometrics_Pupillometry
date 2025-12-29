@@ -1,0 +1,102 @@
+DATA CLEANING REPORT
+==================================================
+Dataset: BAP
+Cleaning Configuration: v2
+Generated: 2025-08-27 22:10:04
+
+OVERALL STATISTICS
+--------------------
+Original trials: 20,340
+Trials after cleaning: 17,971
+Trials removed: 2,369
+Data retention: 88.4%
+
+TASK BREAKDOWN
+--------------------
+AUD: 8,888/10,200 trials (87.1% retained, 1,312 removed)
+VIS: 9,083/10,140 trials (89.6% retained, 1,057 removed)
+
+GRIP CONDITION BREAKDOWN
+--------------------
+LOW GRIP: 8,838/10,170 trials (86.9% retained, 1,332 removed)
+HIGH GRIP: 9,133/10,170 trials (89.8% retained, 1,037 removed)
+
+DETAILED FLAG BREAKDOWN
+--------------------
+invalid_subject: 600 trials flagged (removed)
+same_diff_dominant_resp_gt_90pct: 690 trials flagged (removed)
+missing_same_diff_resp: 316 trials flagged (removed)
+same_diff_resp_lt_200ms: 254 trials flagged (removed)
+grip_valid_lt_65pct: 711 trials flagged (removed)
+
+SUBJECT BREAKDOWN
+--------------------
+BAP001: 278/300 trials (92.7% retained, 22 removed)
+BAP003: 282/300 trials (94.0% retained, 18 removed)
+BAP101: 296/300 trials (98.7% retained, 4 removed)
+BAP102: 294/300 trials (98.0% retained, 6 removed)
+BAP103: 234/300 trials (78.0% retained, 66 removed)
+BAP104: 299/300 trials (99.7% retained, 1 removed)
+BAP106: 288/300 trials (96.0% retained, 12 removed)
+BAP107: 261/300 trials (87.0% retained, 39 removed)
+BAP108: 298/300 trials (99.3% retained, 2 removed)
+BAP109: 0/300 trials (0.0% retained, 300 removed)
+BAP110: 224/300 trials (74.7% retained, 76 removed)
+BAP111: 252/300 trials (84.0% retained, 48 removed)
+BAP114: 283/300 trials (94.3% retained, 17 removed)
+BAP116: 289/300 trials (96.3% retained, 11 removed)
+BAP117: 289/300 trials (96.3% retained, 11 removed)
+BAP118: 291/300 trials (97.0% retained, 9 removed)
+BAP120: 293/300 trials (97.7% retained, 7 removed)
+BAP121: 270/300 trials (90.0% retained, 30 removed)
+BAP122: 251/300 trials (83.7% retained, 49 removed)
+BAP123: 298/300 trials (99.3% retained, 2 removed)
+BAP124: 283/300 trials (94.3% retained, 17 removed)
+BAP125: 294/300 trials (98.0% retained, 6 removed)
+BAP127: 297/300 trials (99.0% retained, 3 removed)
+BAP128: 295/300 trials (98.3% retained, 5 removed)
+BAP129: 239/300 trials (79.7% retained, 61 removed)
+BAP132: 270/300 trials (90.0% retained, 30 removed)
+BAP133: 299/300 trials (99.7% retained, 1 removed)
+BAP134: 297/300 trials (99.0% retained, 3 removed)
+BAP135: 281/300 trials (93.7% retained, 19 removed)
+BAP136: 289/300 trials (96.3% retained, 11 removed)
+BAP138: 296/300 trials (98.7% retained, 4 removed)
+BAP139: 254/300 trials (84.7% retained, 46 removed)
+BAP140: 262/300 trials (87.3% retained, 38 removed)
+BAP144: 0/300 trials (0.0% retained, 300 removed)
+BAP145: 297/300 trials (99.0% retained, 3 removed)
+BAP146: 229/300 trials (76.3% retained, 71 removed)
+BAP147: 298/300 trials (99.3% retained, 2 removed)
+BAP149: 238/240 trials (99.2% retained, 2 removed)
+BAP151: 290/300 trials (96.7% retained, 10 removed)
+BAP156: 197/300 trials (65.7% retained, 103 removed)
+BAP157: 295/300 trials (98.3% retained, 5 removed)
+BAP158: 296/300 trials (98.7% retained, 4 removed)
+BAP159: 289/300 trials (96.3% retained, 11 removed)
+BAP165: 294/300 trials (98.0% retained, 6 removed)
+BAP166: 299/300 trials (99.7% retained, 1 removed)
+BAP168: 171/300 trials (57.0% retained, 129 removed)
+BAP169: 292/300 trials (97.3% retained, 8 removed)
+BAP170: 268/300 trials (89.3% retained, 32 removed)
+BAP171: 295/300 trials (98.3% retained, 5 removed)
+BAP172: 128/150 trials (85.3% retained, 22 removed)
+BAP173: 284/300 trials (94.7% retained, 16 removed)
+BAP176: 267/300 trials (89.0% retained, 33 removed)
+BAP177: 294/300 trials (98.0% retained, 6 removed)
+BAP178: 292/300 trials (97.3% retained, 8 removed)
+BAP180: 297/300 trials (99.0% retained, 3 removed)
+BAP183: 106/300 trials (35.3% retained, 194 removed)
+BAP184: 289/300 trials (96.3% retained, 11 removed)
+BAP186: 142/150 trials (94.7% retained, 8 removed)
+BAP189: 259/300 trials (86.3% retained, 41 removed)
+BAP190: 282/300 trials (94.0% retained, 18 removed)
+BAP191: 286/300 trials (95.3% retained, 14 removed)
+BAP193: 148/300 trials (49.3% retained, 152 removed)
+BAP194: 291/300 trials (97.0% retained, 9 removed)
+BAP195: 270/300 trials (90.0% retained, 30 removed)
+BAP196: 296/300 trials (98.7% retained, 4 removed)
+BAP197: 285/300 trials (95.0% retained, 15 removed)
+BAP199: 294/300 trials (98.0% retained, 6 removed)
+BAP201: 194/300 trials (64.7% retained, 106 removed)
+BAP202: 293/300 trials (97.7% retained, 7 removed)

@@ -1,64 +1,18 @@
-# Chapter 2: Pupil-Indexed Arousal and Psychometric Sensitivity in Older Adults
+# Pupil-Indexed Arousal and Psychometric Sensitivity in Older Adults
 
-**Dissertation Title:** A Mechanistic Investigation of Physical-Cognitive Effort Interactions and Their Modulation by Aging
-
-**Chapter:** Chapter 2 — Pupil-Indexed Arousal and Psychometric Sensitivity in Older Adults
+This repository contains the analysis pipeline for investigating how physical effort–induced and pupil-indexed arousal relates to perceptual discrimination at the psychometric level in healthy older adults. The project uses a dual-task paradigm combining handgrip effort with auditory and visual perceptual discrimination, and integrates pupillometry with psychometric function analysis.
 
 ---
 
 ## Overview
 
-This repository contains the analysis pipeline for Chapter 2 of the dissertation, which extends an existing multi-author behavioral manuscript by adding trial-wise physiological coupling analyses. The chapter investigates how physical effort–induced and pupil-indexed arousal relates to perceptual discrimination at the psychometric level in healthy older adults (65+ years).
+### Research Question
 
-### Related Repository
-
-The dataset, experiment design, behavioral files, and pupillometry data are **identical** to those used in the companion repository:
-
-**→ [`modeling-pupil-DDM`](https://github.com/mohdasti/modeling-pupil-DDM)** (Chapter 3: Drift Diffusion Modeling)
-
-The key difference is the **analysis focus**:
-- **This repository (Chapter 2):** Psychometric function analysis and GLMM-based pupil–psychometric coupling
-- **modeling-pupil-DDM (Chapter 3):** Hierarchical drift diffusion modeling (DDM) and pupil–DDM parameter correlations
-
-Both repositories share preprocessing pipelines and data organization structures. See the "Context and Relationship to Other Work" section below for details.
+How does physical effort–induced arousal (indexed by pupil dynamics) relate to perceptual discrimination sensitivity in older adults? This project uses hierarchical generalized linear mixed models (GLMMs) to quantify how trial-wise phasic arousal covaries with psychometric sensitivity while preserving continuous stimulus intensity and individual-level arousal granularity.
 
 ### Key Contribution
 
-While the existing behavioral manuscript provides psychometric function (PF) fits and reports how handgrip effort relates to PF-derived parameters (thresholds and slopes), this dissertation extension quantifies **how trial-wise arousal** (indexed by phasic pupil dynamics) covaries with psychometric sensitivity using hierarchical generalized linear mixed models (GLMMs) that preserve continuous stimulus intensity and individual-level arousal granularity.
-
----
-
-## Context and Relationship to Other Work
-
-### Relationship to modeling-pupil-DDM Repository
-
-This repository shares the same underlying data and experiment design as the [`modeling-pupil-DDM`](https://github.com/mohdasti/modeling-pupil-DDM) repository (Chapter 3). Both repositories use:
-- Identical behavioral data files
-- Identical pupillometry preprocessing pipeline (MATLAB)
-- Identical experimental paradigm (handgrip dual-task with auditory/visual discrimination)
-- Identical participant sample (older adults, 65+ years)
-
-The key distinction is the **analysis approach**:
-- **This repository (Chapter 2):** Psychometric function analysis and GLMM-based pupil–psychometric coupling
-- **modeling-pupil-DDM (Chapter 3):** Hierarchical drift diffusion modeling (DDM) and pupil–DDM parameter correlations
-
-Users may reference the DDM repository for shared preprocessing pipelines and data organization structures.
-
-### Behavioral Backbone
-
-Chapter 2 is anchored in an existing multi-author behavioral manuscript that:
-- Fits psychometric functions (PFs) to older adult dual-task data
-- Reports effort-related changes in PF parameters (thresholds, slopes)
-- Includes complementary confidence/metacognitive analyses
-
-The PF outcomes from that work provide the **behavioral backbone** for this chapter. The dissertation chapter reports these PF results and (where needed) re-estimates confirmatory contrasts within a consistent statistical framework.
-
-### Dissertation Extension
-
-The **novel component** of Chapter 2 is a model-based integration of pupil-indexed arousal into psychometric analysis that:
-- Preserves continuous stimulus intensity (rather than collapsing into "Easy/Hard" bins)
-- Separates within-person (state) from between-person (trait) arousal differences
-- Handles realistic pupillometry constraints (noise, missingness, unbalanced trial counts)
+This project extends behavioral psychometric function (PF) analyses by adding trial-wise physiological coupling. Rather than collapsing trials into coarse "Easy/Hard" bins, we model continuous stimulus intensity directly and decompose arousal into within-person (state) and between-person (trait) components to test whether within-person fluctuations in arousal predict changes in psychometric sensitivity.
 
 ---
 
@@ -70,22 +24,34 @@ Approximately 50 healthy older adults (target N ≈ 50 after QC; final N may var
 
 ### Task Paradigm
 
-Participants perform auditory and visual same–different discrimination while simultaneously squeezing a dynamometer at:
-- **Low effort:** 5% MVC
+Participants perform **same–different discrimination** tasks in two modalities while simultaneously squeezing a dynamometer:
+
+**Effort Conditions:**
+- **Low effort:** 5% of maximum voluntary contraction (MVC)
 - **High effort:** 40% MVC
 
 **Stimuli:**
-- **Auditory:** 1000 Hz base tones with ±8/16/32/64 Hz offsets
-- **Visual:** Oriented Gabor patches with ±0.06/0.12/0.24/0.48 contrast differences
+- **Auditory Discrimination Task (ADT):** 1000 Hz base tones with frequency offsets of ±8, ±16, ±32, or ±64 Hz
+- **Visual Discrimination Task (VDT):** Oriented Gabor patches with contrast differences of ±0.06, ±0.12, ±0.24, or ±0.48
 
-**Trial structure:** 3 s pre-squeeze baseline → 3 s sustained squeeze → standard (0.1 s) → ISI (0.5 s) → target (0.1 s) → response window
+**Trial Structure:**
+Each trial follows this sequence:
+1. **Pre-squeeze baseline:** 3 seconds
+2. **Sustained squeeze period:** 3 seconds (Low or High effort)
+3. **Standard stimulus:** 0.1 seconds
+4. **Inter-stimulus interval (ISI):** 0.5 seconds
+5. **Target stimulus:** 0.1 seconds
+6. **Response window:** Participants indicate whether the target was "same" or "different" from the standard
+
+Participants respond using button presses, and both choice and response time are recorded.
 
 ### Pupillometry
 
-Pupil diameter is recorded continuously and processed using an established MATLAB preprocessing pipeline that:
+Pupil diameter is recorded continuously throughout each trial using an eye-tracking system. The data are processed using a MATLAB preprocessing pipeline that:
+
 - Segments trials relative to squeeze onset
-- Flags blinks/track loss
-- Computes window-specific validity metrics
+- Flags blinks and track loss events
+- Computes window-specific validity metrics (proportion of valid samples)
 - Implements baseline correction using pre-event windows
 
 #### Pupil Features
@@ -94,83 +60,118 @@ Two primary features are computed on each trial:
 
 1. **Total AUC:** Baseline-corrected area under the pupil curve over a global trial window, indexing overall arousal during concurrent physical effort. Used primarily for effort–pupil manipulation checks and subject-level coupling.
 
-2. **Cognitive pupil metric (primary):** Baseline-corrected task-evoked measure computed in a **fixed-duration post-target window** (e.g., 300 ms after target onset through a fixed 1 s window), designed to reduce confounding by RT and late-trial dropout. Implemented as fixed-window AUC (primary) and/or fixed-window mean dilation (secondary), with response-locked variants evaluated in sensitivity analyses.
+2. **Cognitive pupil metric (primary):** Baseline-corrected task-evoked measure computed in a **fixed-duration post-target window** (e.g., from 300 ms after target onset through a fixed 1 s window), designed to reduce confounding by response time and late-trial dropout. Implemented as fixed-window AUC (primary) and/or fixed-window mean dilation (secondary), with response-locked variants evaluated in sensitivity analyses.
 
 #### Quality Tiers
 
-Pupil-based analyses use pre-specified quality tiers:
+Pupil-based analyses use pre-specified quality tiers based on window-specific validity:
 
-- **Primary tier:** Window validity ≥ 0.60 for baseline and cognitive windows
-- **Sensitivity tiers:** Window validity ≥ 0.50 (lenient) and ≥ 0.70 (stricter)
-- **Window sensitivity:** Fixed-window cognitive metric (primary) vs. response-locked cognitive metric (secondary)
+- **Primary tier:** Baseline validity ≥ 0.60 AND cognitive window validity ≥ 0.60 (used for primary analyses)
+- **Lenient tier:** Baseline validity ≥ 0.50 AND cognitive window validity ≥ 0.50 (robustness check)
+- **Strict tier:** Baseline validity ≥ 0.70 AND cognitive window validity ≥ 0.70 (robustness check)
+
+This strategy matches inclusion criteria to the physiological question and demonstrates that key inferences are robust across reasonable quality thresholds.
 
 ---
 
 ## Analysis Pipeline
 
-### 1. Descriptive Analyses (`01_descriptives/`)
+### 1. Data Loading and Validation
 
-**Effort–pupil manipulation check:** Mixed-effects models test whether Total AUC and the fixed-window cognitive pupil metric differ between Low and High effort, across modalities. This provides a manipulation check that physical effort modulates global and task-evoked pupil dynamics in older adults.
+Loads and validates pre-merged trial-level data containing both behavioral measures (choices, RT, stimulus parameters) and pupil metrics (with quality flags). Validates data structure, checks for missing values, and standardizes variable names.
 
-### 2. Missingness Diagnostics (`02_missingness/`)
+**Script:** `07_manuscript/chapter2/scripts/01_load_and_validate_data.R`
 
-**Missingness-as-outcome analysis:** Logistic mixed-effects models test whether pupil usability (pass/fail) depends on effort, stimulus intensity, modality, and RT. If retention is predicted by task variables, results are interpreted with that bias in mind and robustness analyses are emphasized.
+### 2. Psychometric Function (PF) Parameter Estimation
 
-### 3. Psychometric Analyses (`03_psychometrics/`)
+Fits psychometric functions to extract thresholds and slopes per subject × task × effort combination, or loads existing PF parameters if available. Uses probit link functions (natural for psychometric modeling) with continuous stimulus intensity as the predictor.
 
-**Behavioral backbone (PF outcomes):** Quantifies how High versus Low handgrip effort alters PF-derived thresholds and slopes in older adults, separately for auditory and visual discrimination. Uses subject-level PF fits from the existing behavioral manuscript.
+**Script:** `07_manuscript/chapter2/scripts/02_compute_pf_parameters.R`
 
-### 4. Pupil–Psychometric Coupling (`04_glmm_coupling/`)
+### 3. Pupil Quality Tiers and Within-Subject Centering
 
-**Primary analysis:** Trial-level GLMMs linking phasic arousal to psychometric sensitivity.
+Defines quality tiers based on window validity thresholds and computes within-subject centered pupil metrics:
 
-The primary model treats the pupil metric as a continuous predictor using within-subject centering to separate state and trait components:
+- **State component:** `pupil_state = trial_value - subject_mean` (within-person fluctuations)
+- **Trait component:** `pupil_trait = subject_mean` (between-person differences)
 
-\[
-P^{(\text{trait})}_{j} = \overline{P}_{j}, \qquad
-P^{(\text{state})}_{ij} = P_{ij} - \overline{P}_{j}
-\]
+This decomposition allows testing whether within-person arousal fluctuations predict sensitivity changes, independent of stable individual differences in baseline arousal.
 
-Key model structure:
-- **Outcome:** Binary choice (e.g., "different" = 1)
-- **Predictors:** Continuous stimulus intensity (X), Effort, Modality, within-subject centered pupil (state), between-subject pupil (trait)
-- **Key interaction:** X × P^(state) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity
+**Script:** `07_manuscript/chapter2/scripts/03_pupil_quality_tiers.R`
 
-To reduce RT-related measurement confounds, models using response-locked pupil metrics include RT as a covariate.
+### 4. Effort–Pupil Manipulation Check
 
-**Secondary coupling:** Subject-level changes in pupil metrics (High–Low effort) related to subject-level changes in PF parameters (High–Low effort), testing whether individuals with stronger effort-evoked arousal changes also show larger effort-related changes in thresholds/slopes.
+Tests whether High effort increases pupil metrics relative to Low effort using mixed-effects models. This provides a physiological manipulation check that physical effort effectively modulates central arousal systems (indexed by pupil dynamics).
+
+**Script:** `07_manuscript/chapter2/scripts/04_effort_pupil_manipulation_check.R`
+
+### 5. Missingness Diagnostic
+
+Models pupil data missingness as an outcome to test for systematic bias. Uses logistic mixed-effects models to test whether data retention depends on effort, stimulus intensity, modality, or response time. If systematic bias is detected, results are interpreted with that in mind and robustness analyses are emphasized.
+
+**Script:** `07_manuscript/chapter2/scripts/05_missingness_diagnostic.R`
+
+### 6. Pupil–Psychometric Coupling (Primary Analysis)
+
+Fits hierarchical GLMMs linking phasic arousal to psychometric sensitivity. The primary model uses a probit link function:
+
+$$\text{probit}(P(Y_{ij}=1)) = \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}$$
+
+where:
+- $Y_{ij}$ = binary choice (e.g., "different" = 1) on trial $i$ for subject $j$
+- $X_{ij}$ = continuous stimulus intensity (frequency or contrast offset)
+- $P^{(\text{state})}_{ij}$ = within-subject centered pupil metric (trial value - subject mean)
+- $P^{(\text{trait})}_{j}$ = between-subject pupil metric (subject mean)
+
+The **key interaction term** is $X_{ij} \times P^{(\text{state})}_{ij}$, which tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity (i.e., changes in how strongly stimulus intensity predicts choice).
+
+Results are tested for robustness across quality tiers (primary, lenient, strict).
+
+**Script:** `07_manuscript/chapter2/scripts/06_pupil_psychometric_coupling.R`
+
+### 7. Subject-Level PF–Pupil Coupling
+
+Computes subject-level change scores (High effort - Low effort) for both pupil metrics and PF parameters, then correlates these changes to test whether individuals with stronger effort-evoked arousal changes also show larger effort-related changes in thresholds/slopes.
+
+**Script:** `07_manuscript/chapter2/scripts/07_pf_pupil_subject_coupling.R`
+
+### 8. Figure Generation
+
+Generates all publication-ready figures including:
+- Psychometric function plots by effort condition
+- Effort–pupil manipulation check plots
+- Psychometric curves by pupil state (high/medium/low tertiles)
+- Subject-level coupling plots (Δpupil vs ΔPF parameters)
+- Missingness diagnostic plots
+
+**Script:** `07_manuscript/chapter2/scripts/08_generate_figures.R`
 
 ---
 
 ## Repository Structure
 
-The repository structure is organized to align with the analysis pipeline stages:
-
 ```
 Psychometrics_Pupillometry/
-├── 01_data_preprocessing/   # Data preprocessing (shared structure with DDM repo)
-│   ├── matlab/              # MATLAB preprocessing pipeline (pupillometry)
-│   │   ├── segment_trials.m
-│   │   └── blink_correction.m
-│   └── python/              # Behavioral data preprocessing
-├── 02_pupillometry_analysis/# Pupil feature extraction
-│   └── feature_extraction/  # Total AUC, cognitive pupil metrics, QC tiers
-├── analysis/
-│   ├── 01_descriptives/     # Effort–pupil manipulation checks
-│   ├── 02_missingness/      # Missingness-as-outcome diagnostic models
-│   ├── 03_psychometrics/    # Behavioral backbone (PF fits)
-│   └── 04_glmm_coupling/    # Primary trial-level pupil–intensity models
-├── data/
-│   ├── raw/                 # Raw data files (gitignored if sensitive)
-│   ├── processed/           # Validated pupil windows, merged behavioral data
-│   └── metadata/            # Participant logs, QC tier lists
-├── figures/                 # Output for PFs and Pupil Intensity–Response plots
-├── config/                  # Configuration files (paths, parameters)
-├── README.md
+├── 07_manuscript/
+│   └── chapter2/
+│       ├── data/
+│       │   ├── raw/
+│       │   │   ├── behavioral/          # Raw behavioral data files
+│       │   │   └── pupil/               # Raw pupil data (if separate)
+│       │   ├── processed/               # Processed and merged data files
+│       │   └── qc/                      # Quality control outputs
+│       ├── scripts/                     # Analysis scripts (01-08)
+│       ├── output/
+│       │   ├── figures/                 # Generated figures
+│       │   ├── tables/                  # Generated tables
+│       │   └── models/                  # Saved model objects (.rds files)
+│       ├── reports/                     # Quarto report
+│       ├── config/                      # Configuration files (paths, parameters)
+│       ├── run_analysis.R              # Master script to run all analyses
+│       └── README.md                   # Detailed usage guide
+├── README.md                           # This file
 └── .gitignore
 ```
-
-*Note: Directory structure will be populated as analyses are developed. Preprocessing stages (01_data_preprocessing, 02_pupillometry_analysis) follow the same structure as the companion DDM repository, while analysis stages (03_psychometrics, 04_glmm_coupling) are specific to Chapter 2.*
 
 ---
 
@@ -179,58 +180,171 @@ Psychometrics_Pupillometry/
 ### Software
 
 - **R:** Version 4.x or higher
-- **MATLAB:** R2020b or higher (for preprocessing pipeline)
+- **MATLAB:** R2020b or higher (for pupillometry preprocessing pipeline, if preprocessing from raw data)
 
 ### R Packages
 
-Core dependencies include:
-- `lme4` — Mixed-effects models for GLMMs
-- `tidyverse` — Data manipulation and visualization
-- Additional packages as specified in individual analysis scripts
+Core dependencies:
 
-*Note: While `brms` is used in the companion DDM repository (Chapter 3) for Bayesian hierarchical modeling, this repository focuses on frequentist GLMMs via `lme4`. Bayesian approaches may be used for robustness checks if needed.*
+```r
+install.packages(c(
+  "tidyverse",      # Data manipulation and visualization
+  "lme4",           # Mixed-effects models for GLMMs
+  "broom.mixed",    # Tidying mixed-effects model outputs
+  "GGally",         # Correlation matrix plots
+  "here",           # Path management
+  "kableExtra",     # Enhanced tables (for reports)
+  "quarto",         # Report generation
+  "knitr"           # Report generation
+))
+```
 
-### MATLAB Toolboxes
+### Data Files
 
-As specified in the preprocessing pipeline documentation.
+The analysis pipeline expects the following data structure:
+
+**Primary processed data:**
+- `07_manuscript/chapter2/data/processed/ch2_triallevel_merged.csv`: Pre-merged trial-level data with behavioral + pupil measures
+
+**Raw behavioral data (if needed for merging):**
+- `07_manuscript/chapter2/data/raw/behavioral/bap_beh_trialdata_v2.csv`: Trial-level behavioral data
+- `07_manuscript/chapter2/data/raw/behavioral/bap_beh_subjxtaskdata_v2.csv`: Subject-level summaries
+
+**Master spreadsheet files:**
+- `07_manuscript/chapter2/data/raw/behavioral/LC Aging Subject Data master spreadsheet - behavioral.csv`: Contains PF parameters (thresholds, slopes) by subject, task, and effort condition
+- `07_manuscript/chapter2/data/raw/behavioral/LC Aging Subject Data master spreadsheet - demographics.csv`: Demographics data
+- `07_manuscript/chapter2/data/raw/behavioral/LC Aging Subject Data master spreadsheet - neuropsych.csv`: Neuropsychology battery data
 
 ---
 
-## Code Organization
+## Quick Start
 
-### Backbone Code vs. Dissertation Extension Code
+### Run Complete Analysis Pipeline
 
-To avoid confusion about ownership and novelty:
+From the repository root directory:
 
-- **Behavioral backbone code:** PF parameter estimation and related analyses from the existing multi-author manuscript. These analyses provide the foundation but are not the primary focus of this dissertation extension.
+```r
+# Source the master script
+source("07_manuscript/chapter2/run_analysis.R")
+```
 
-- **Dissertation extension code:** Trial-level GLMMs linking pupil-indexed arousal to psychometric sensitivity, missingness diagnostics, and related robustness analyses. These represent the novel contributions of this chapter.
+Or run scripts individually (recommended for first run):
 
-All code is clearly labeled to indicate its source and purpose.
+```r
+# Navigate to chapter2 directory
+setwd("07_manuscript/chapter2")
 
-### Shared vs. Repository-Specific Code
+# Run in order
+source("scripts/01_load_and_validate_data.R")
+source("scripts/02_compute_pf_parameters.R")
+source("scripts/03_pupil_quality_tiers.R")
+source("scripts/04_effort_pupil_manipulation_check.R")
+source("scripts/05_missingness_diagnostic.R")
+source("scripts/06_pupil_psychometric_coupling.R")
+source("scripts/07_pf_pupil_subject_coupling.R")
+source("scripts/08_generate_figures.R")
+```
 
-- **Shared preprocessing code:** The MATLAB pupillometry preprocessing pipeline and behavioral data preprocessing steps are shared with the [`modeling-pupil-DDM`](https://github.com/mohdasti/modeling-pupil-DDM) repository. These scripts may be referenced from either repository.
+### Generate Report
 
-- **Chapter 2-specific code:** Psychometric function fitting, GLMM coupling analyses, and missingness diagnostics are specific to this repository and represent the Chapter 2 analysis pipeline.
+After running all analyses:
+
+```bash
+cd 07_manuscript/chapter2/reports
+quarto render chap2_psychometric_pupil.qmd
+```
+
+---
+
+## Key Methodological Features
+
+### Continuous Stimulus Intensity
+
+All analyses preserve continuous stimulus intensity (not binned into "Easy/Hard"), allowing for direct modeling of intensity–response relationships and interactions with arousal.
+
+### Within-Subject Centering
+
+Pupil metrics are decomposed into state (trial-level fluctuations) and trait (subject-level means) components, allowing tests of whether within-person arousal fluctuations predict sensitivity changes, independent of stable individual differences.
+
+### Quality Tier Robustness
+
+Results are tested across multiple quality thresholds (≥0.50, ≥0.60, ≥0.70) to ensure robustness to different data inclusion criteria, matching quality requirements to the specific physiological question being addressed.
+
+### Fixed-Window Pupil Metrics
+
+Cognitive pupil metrics are computed in fixed-duration windows (rather than response-locked) to reduce confounding by response time and late-trial dropout.
 
 ---
 
 ## Expected Outcomes
 
-If hypotheses are supported, Chapter 2 will show that in older adults:
+If hypotheses are supported, the analyses will show that in older adults:
 
 1. High-effort handgrip modulates pupil dynamics (global and task-evoked), providing a physiological manipulation check.
 
 2. Psychometric performance differs between effort conditions at the behavioral level (PF-derived parameters), and trial-wise arousal covaries with psychometric sensitivity when intensity is modeled directly, with effects that are robust across reasonable quality thresholds and pupil-window definitions.
 
-Regardless of whether arousal primarily relates to sensitivity-like changes (intensity coupling) or criterion-like shifts (intercepts), Chapter 2 provides a statistically rigorous characterization of how pupil-indexed arousal covaries with psychophysical decision behavior in aging.
+Regardless of whether arousal primarily relates to sensitivity-like changes (intensity coupling) or criterion-like shifts (intercepts), the analyses provide a statistically rigorous characterization of how pupil-indexed arousal covaries with psychophysical decision behavior in aging.
 
 ---
 
-## References
+## Code Organization
 
-See the dissertation prospectus for full theoretical background and citations.
+### Behavioral Backbone vs. Novel Analyses
+
+- **Behavioral backbone code:** PF parameter estimation and related analyses. These provide the foundation for understanding effort-related changes in psychometric performance.
+
+- **Novel analyses code:** Trial-level GLMMs linking pupil-indexed arousal to psychometric sensitivity, missingness diagnostics, and related robustness analyses. These represent the primary contributions of this project.
+
+All code is clearly labeled to indicate its purpose.
+
+---
+
+## Outputs
+
+### Generated Files
+
+**Figures** (in `07_manuscript/chapter2/output/figures/`):
+- Psychometric function plots by effort condition
+- Effort–pupil manipulation check plots
+- Psychometric curves by pupil state tertiles
+- Subject-level coupling plots
+- Missingness diagnostic plots
+
+**Tables** (in `07_manuscript/chapter2/output/tables/`):
+- Fixed effects from all GLMMs
+- Correlation summaries
+- Quality tier summaries
+- Missingness diagnostic results
+
+**Models** (in `07_manuscript/chapter2/output/models/`):
+- Saved R model objects (.rds files) for all fitted models
+
+**Reports:**
+- `07_manuscript/chapter2/reports/chap2_psychometric_pupil.qmd`: Quarto report integrating all results
+
+---
+
+## Troubleshooting
+
+**Data file not found:**
+- Ensure `ch2_triallevel_merged.csv` exists in `07_manuscript/chapter2/data/processed/`
+- Check that raw data files are in the expected locations
+
+**Package errors:**
+- Install required packages (see Requirements section)
+- Ensure R version is 4.x or higher
+
+**Model convergence issues:**
+- Check sample sizes (may need more trials per subject)
+- Try different optimizers (e.g., `bobyqa`, `Nelder_Mead`)
+- Simplify model structure if needed
+
+**Path errors:**
+- Ensure scripts are run from the repository root or use `here()` package correctly
+- Check that `config/paths_config.R` is properly configured
+
+For detailed troubleshooting, see `07_manuscript/chapter2/README.md`.
 
 ---
 
@@ -244,5 +358,19 @@ See the dissertation prospectus for full theoretical background and citations.
 
 **Author:** Mohammad Dastgheib  
 **Institution:** University of California, Riverside  
-**Department:** Department of Psychology, Cognition & Cognitive Neuroscience Area  
-**Dissertation Committee:** Dr. Ilana Bennett (Chair), Dr. Aaron Seitz, Dr. John Franchak
+**Department:** Department of Psychology, Cognition & Cognitive Neuroscience Area
+
+---
+
+## Citation
+
+If you use this code in your research, please cite:
+
+```bibtex
+@software{psychometrics_pupillometry,
+  title = {Pupil-Indexed Arousal and Psychometric Sensitivity in Older Adults},
+  author = {Dastgheib, Mohammad},
+  year = {2024},
+  url = {https://github.com/mohdasti/Psychometrics_Pupillometry}
+}
+```
