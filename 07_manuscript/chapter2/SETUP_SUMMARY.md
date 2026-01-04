@@ -33,7 +33,7 @@ The Chapter 2 analysis pipeline has been successfully set up with all required c
 │   ├── tables/                     ✅ Output directory
 │   └── models/                     ✅ Output directory
 ├── reports/
-│   └── chap2_psychometric_pupil.qmd  ✅ Quarto report template
+│   └── chapter2_dissertation.qmd  ✅ Quarto report template
 ├── run_analysis.R                  ✅ Master execution script
 └── README.md                       ✅ Documentation
 ```
@@ -98,7 +98,7 @@ The Chapter 2 analysis pipeline has been successfully set up with all required c
 
 - ✅ `README.md` - Comprehensive guide to using the pipeline
 - ✅ `config/paths_config.R` - Centralized path configuration
-- ✅ `reports/chap2_psychometric_pupil.qmd` - Quarto report template
+- ✅ `reports/chapter2_dissertation.qmd` - Quarto report template
 - ✅ `run_analysis.R` - Master script to run all analyses in order
 
 ## Next Steps
@@ -144,7 +144,7 @@ source("scripts/08_generate_figures.R")
 After running analyses:
 ```bash
 cd reports
-quarto render chap2_psychometric_pupil.qmd
+quarto render chapter2_dissertation.qmd
 ```
 
 ## Key Features
