@@ -246,6 +246,18 @@ pupil_psychometric_lenient <- sread(file.path(tables_dir, "pupil_psychometric_le
 pupil_psychometric_strict <- sread(file.path(tables_dir, "pupil_psychometric_strict_effects.csv"))
 pf_pupil_correlations <- sread(file.path(tables_dir, "pf_pupil_coupling_correlations.csv"))
 missingness_effects <- sread(file.path(tables_dir, "missingness_diagnostic_effects.csv"))
+
+# LC integrity data (exploratory)
+lc_integrity_file <- file.path(processed_dir, "ch2_lc_integrity.csv")
+lc_integrity <- sread(lc_integrity_file)
+demographics_file <- file.path(processed_dir, "ch2_demographics.csv")
+demographics <- sread(demographics_file)
+neuropsych_file <- file.path(processed_dir, "ch2_neuropsych.csv")
+neuropsych <- sread(neuropsych_file)
+
+# LC integrity results (if analyses run)
+lc_psychometric_effects <- sread(file.path(tables_dir, "lc_psychometric_extension_effects.csv"))
+lc_subset_comparison <- sread(file.path(tables_dir, "lc_subset_bias_check.csv"))
 ```
 
 # Introduction
@@ -372,6 +384,10 @@ Physical–cognitive dual tasks are particularly relevant for understanding real
 
 Age-related changes in dual-task performance are well-documented, with older adults showing larger performance decrements under dual-task conditions [@verhaeghen2003; @beurskens2014]. This may reflect reduced cognitive reserve, impaired executive control, or altered arousal regulation.
 
+### Reconciling Resource Competition and Arousal Mechanisms
+
+The present study acknowledges that physical–cognitive dual-task interference may arise from both generic resource competition and arousal-mediated mechanisms. While resource competition models predict performance decrements when total demand exceeds available capacity, arousal-based frameworks (e.g., LC–NE system, Adaptive Gain Theory) predict that the *quality* of information processing may change as a function of arousal state, potentially independent of simple capacity limits. The current chapter focuses on arousal-mediated mechanisms because (a) pupillometry provides a direct index of LC–NE activity, allowing us to test arousal-specific hypotheses, and (b) the psychometric function framework enables us to distinguish sensitivity changes (arousal effects on signal quality) from criterion shifts (response strategy changes). However, effort main effects in the GLMM (capturing overall High vs. Low effort differences) may reflect both resource competition and arousal effects. If trial-wise pupil state does not significantly predict sensitivity beyond effort condition, this would suggest that resource competition or effort main effects (rather than moment-to-moment arousal fluctuations) are the primary drivers of performance changes. The chapter's focus on pupil–psychometric coupling is thus complementary to, rather than exclusive of, resource competition explanations.
+
 ## Linking Arousal to Psychometric Sensitivity: A Novel Approach
 
 ### Beyond Binned Analyses
@@ -392,7 +408,13 @@ Including both components as predictors in the same model allows us to ask two d
 
 To formally test how arousal relates to psychometric sensitivity, the present study employs hierarchical generalized linear mixed models (GLMMs) with a probit link. These models capture the binary decision outcome on each trial (e.g., "different" vs. "same" or correct vs. incorrect) as a function of continuous stimulus intensity, effort condition, modality, and pupil-indexed arousal, while also accounting for individual differences through random effects. The primary model can be written as:
 
-$$\text{probit}(P(Y_{ij}=1)) = \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}$$ {#eq-primary-glmm}
+$$
+\begin{aligned}
+\text{probit}(P(Y_{ij}=1)) &= \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} \\
+&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}
+\end{aligned}
+$$ {#eq-primary-glmm}
+
 
 where $Y_{ij}$ is the binary outcome on trial $i$ for subject $j$ (e.g., a correct "different" response), and $X_{ij}$ is the continuous stimulus intensity on that trial. $\text{Effort}_{ij}$ codes the handgrip effort condition (High vs. Low), and $\text{Modality}_{ij}$ codes the sensory modality (auditory vs. visual). $P^{(\text{state})}_{ij}$ and $P^{(\text{trait})}_{j}$ are the state and trait components of the pupil metric, respectively, as defined above. The terms $u_{0j}$ and $u_{1j}$ are subject-specific random intercepts and random slopes on $X_{ij}$, allowing each participant to have their own baseline performance level and intensity sensitivity.
 
@@ -487,6 +509,20 @@ Pupil-based analyses used pre-specified quality tiers:
 - **Lenient tier:** Window validity ≥ 0.50 (robustness check)
 - **Strict tier:** Window validity ≥ 0.70 (robustness check)
 
+## Locus Coeruleus (LC) Integrity
+
+### LC Integrity Quantification
+
+For a subset of participants, structural magnetic resonance imaging (MRI) data were available to quantify LC integrity. LC integrity was assessed using contrast-based metrics derived from magnetization transfer contrast (MTC) imaging, following the methodology described in Bennett et al. (2024, *Scientific Reports*). The primary LC integrity metric was computed as the mean MTC signal within the LC mask relative to the pons reference region (MTC~LC/pons~). This mean-within-mask approach was chosen over maximum-voxel extraction because it is more robust to uneven LC degeneration patterns that can affect maximum-voxel metrics [@bennett2024]. Additionally, diffusion-based metrics (e.g., restricted diffusion fraction) were available as complementary integrity indices, with prior work suggesting that diffusion metrics may relate to cognitive performance independent of age [@bennett2024].
+
+### Conceptual Relevance
+
+LC structural integrity provides a trait-level index of neuromodulatory capacity that complements the state-level (trial-wise) and trait-level (between-subject mean) pupil metrics. The LC–NE system serves as the primary source of norepinephrine to the forebrain and modulates cortical gain according to Adaptive Gain Theory [@astonjones2005]. Structural integrity of the LC may constrain both baseline (tonic) and task-evoked (phasic) LC–NE function, potentially explaining individual differences in arousal reactivity and its relationship to cognitive performance. In the context of Chapter 2's focus on pupil-indexed arousal and psychometric sensitivity, LC integrity may help explain why some individuals show stronger or weaker coupling between arousal state and perceptual sensitivity, beyond what is captured by pupil trait (mean arousal level).
+
+### LC Integrity Analyses: Exploratory Extension
+
+LC integrity analyses are positioned as **exploratory and secondary** to the primary pupil–psychometric coupling analyses specified in the prospectus. These analyses were motivated by the theoretical framework's emphasis on LC–NE mechanisms and by the recognition that trait-level pupil metrics (mean arousal) may be confounded with underlying LC structural integrity or other individual-difference factors (e.g., cognitive reserve, general health). However, because LC integrity data were not part of the original prospectus and are available for only a subset of participants, these analyses are treated as exploratory extensions that may inform future research rather than as confirmatory tests of primary hypotheses.
+
 ## Statistical Analysis
 
 ### Psychometric Function Fitting
@@ -497,9 +533,58 @@ Psychometric functions were fitted using probit link functions with continuous s
 
 The primary model used a probit link function to link phasic arousal to psychometric sensitivity:
 
-$$\text{probit}(P(Y_{ij}=1)) = \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}$$
+$$
+\begin{aligned}
+\text{probit}(P(Y_{ij}=1)) &= \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} \\
+&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}
+\end{aligned}
+$$
 
-where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (trial value - subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The key interaction term $X_{ij} \times P^{(\text{state})}_{ij}$ tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity.
+
+where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (trial value - subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The key interaction term $X_{ij} \times P^{(\text{state})}_{ij}$ (coefficient $\beta_5$) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity. The term $\beta_6 P^{(\text{trait})}_{j}$ tests whether between-subject differences in average arousal relate to sensitivity, while controlling for state-level effects. The random effects $u_{0j}$ and $u_{1j}$ allow each participant to have their own baseline performance level and intensity sensitivity, respectively.
+
+### Sensitivity Analysis and Robustness Checks
+
+To ensure the robustness of our primary findings, we conducted several sensitivity analyses:
+
+**1. Quality Tier Robustness Checks**
+
+The primary analysis used the primary quality tier (baseline and cognitive window validity ≥ 0.60). To assess whether results were sensitive to data quality thresholds, we re-ran the primary GLMM using two alternative quality tiers:
+
+- **Lenient tier:** Window validity ≥ 0.50 (includes more trials, potentially with lower data quality)
+- **Strict tier:** Window validity ≥ 0.70 (includes fewer trials, but with higher data quality)
+
+If the key interaction effect (stimulus intensity × pupil state) is consistent across all three quality tiers, this provides evidence that the finding is robust to different data inclusion criteria.
+
+**2. Model Comparison**
+
+To evaluate whether the interaction term meaningfully improves model fit, we compared the primary model (with the stimulus intensity × pupil state interaction) to an alternative model that excluded the interaction term. Models were compared using Akaike Information Criterion (AIC), where lower AIC values indicate better model fit. A substantial improvement in fit (ΔAIC > 2) for the model with the interaction would support the inclusion of this term and the interpretation that pupil state modulates psychometric sensitivity.
+
+**3. Missingness Diagnostic**
+
+As described in the Missingness Diagnostic section, we tested whether missing pupil data were systematically related to experimental conditions (effort, stimulus intensity, task) or behavioral measures (response time). If missingness is random or only related to non-experimental variables, this supports the validity of the primary analyses.
+
+### Exploratory LC Integrity Extension
+
+For participants with available LC integrity data, we extended the primary GLMM to examine whether LC structural integrity moderates the relationship between pupil-indexed arousal and psychometric sensitivity. The extended model includes:
+
+$$\text{probit}(P(Y_{ij}=1)) = \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + \beta_7 \text{LC}_j + \beta_8 (X_{ij} \times P^{(\text{state})}_{ij} \times \text{LC}_j) + \beta_9 \text{Age}_j + \beta_{10} \text{Sex}_j + \beta_{11} \text{Education}_j + u_{0j} + u_{1j}X_{ij}$$
+
+where $\text{LC}_j$ is the LC integrity metric (mean MTC~LC/pons~) for subject $j$, and the three-way interaction $X_{ij} \times P^{(\text{state})}_{ij} \times \text{LC}_j$ tests whether LC integrity moderates the coupling between pupil state and psychometric sensitivity. Age, sex, and education are included as covariates to control for potential confounds. The random effects structure remains consistent with the primary model. These analyses are exploratory given that (a) LC integrity data were not part of the original prospectus, (b) LC data are available for only a subset of participants, and (c) the primary focus remains on pupil–psychometric coupling rather than LC integrity per se.
+
+### Analysis Plan: Confirmatory vs. Exploratory
+
+The primary analyses specified in the prospectus are treated as **confirmatory**:
+- Effort effects on psychometric function parameters (RQ1)
+- Effort–pupil manipulation check (RQ2)
+- Trial-level pupil–psychometric coupling (RQ3, primary analysis)
+- Subject-level PF–pupil coupling (RQ4)
+
+**Sensitivity analyses** (quality tier robustness checks, model comparison) are pre-specified and serve to evaluate the robustness of primary findings.
+
+**Exploratory analyses** include:
+- LC integrity moderation analyses (not in original prospectus)
+- Any post-hoc analyses suggested by the data
 
 # Results
 
@@ -602,6 +687,8 @@ if (!is.null(pf_params)) {
 
 Psychometric function parameters (thresholds and slopes) were estimated separately for each subject × task × effort combination using probit link functions with continuous stimulus intensity.
 
+**Hypothesis Testing:** Hypothesis 1a predicted that thresholds would be higher (worse sensitivity) under High effort relative to Low effort, reflecting degraded signal-to-noise ratios from resource competition or supra-optimal arousal. Hypothesis 1b predicted that slopes would be shallower (lower sensitivity) under High effort, indicating increased variability in perceptual judgments when arousal is elevated. These hypotheses were tested by comparing PF parameters between High and Low effort conditions within each task modality.
+
 ```{r pf-backbone-fig}
 #| label: fig-pf-backbone
 #| fig-cap: "Psychometric Functions by Effort Condition"
@@ -659,6 +746,8 @@ if (!is.null(effort_pupil_effects) || !is.null(effort_total_auc_effects)) {
 ```
 
 High-effort handgrip increased pupil dynamics relative to Low effort, confirming effective engagement of central arousal systems. Mixed-effects models tested whether effort condition predicted pupil metrics (Total AUC and Cognitive AUC) while controlling for task modality.
+
+**Hypothesis Testing:** Hypothesis 2a predicted that baseline (tonic) pupil diameter would be larger under High effort, and Hypothesis 2b predicted that task-evoked pupil responses (AUC) would be larger under High effort. Both hypotheses were supported if High effort significantly increased Total AUC and Cognitive AUC relative to Low effort, providing a physiological manipulation check that physical effort modulates central arousal systems in older adults.
 
 ```{r effort-pupil-fig}
 #| label: fig-effort-pupil
@@ -750,6 +839,10 @@ if (!is.null(pupil_psychometric_effects)) {
 
 The primary analysis tested whether trial-wise phasic arousal (pupil state) predicts psychometric sensitivity when stimulus intensity is modeled continuously. The key test is the interaction between stimulus intensity and pupil cognitive state, which directly assesses whether within-person fluctuations in arousal modulate psychometric sensitivity.
 
+**Hypothesis Testing:** Hypothesis 3a predicted that the interaction between stimulus intensity and pupil state ($X_{ij} \times P^{(\text{state})}_{ij}$) would be negative, indicating that higher trial-level arousal is associated with shallower psychometric slopes (reduced sensitivity), consistent with supra-optimal arousal degrading signal quality. The alternative Hypothesis 3b allowed for a positive interaction if moderate arousal enhances sensitivity. Hypothesis 3c predicted minimal effects of pupil trait (between-subject baseline arousal) on sensitivity, as trait effects may be confounded with other individual differences.
+
+**Interpretation of Results:** If the interaction term is non-significant, this suggests that within-person fluctuations in arousal (pupil state) do not reliably modulate psychometric sensitivity beyond the effects of effort condition. This could indicate that (a) effort main effects (captured by the effort factor in the model) are the primary drivers of sensitivity changes, potentially reflecting resource competition rather than moment-to-moment arousal fluctuations, (b) the relationship between arousal and sensitivity is weaker than expected in older adults, or (c) the fixed-window cognitive pupil metric may not capture the most relevant arousal dynamics for psychometric sensitivity. However, a non-significant interaction does not negate the possibility that effort-induced arousal changes affect performance at the group level (via effort main effects); it suggests that trial-wise arousal fluctuations may not be the primary mechanism. The robustness checks across quality tiers and model comparison help evaluate whether this pattern is consistent and whether the interaction term meaningfully improves model fit.
+
 ```{r pupil-psychometric-fig}
 #| label: fig-pupil-psychometric
 #| fig-cap: "Psychometric Functions by Pupil State (Primary Analysis)"
@@ -785,9 +878,13 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 }
 ```
 
-### Robustness Checks
+### Robustness Checks and Sensitivity Analyses
 
-Results were tested across multiple quality tiers (lenient ≥0.50, primary ≥0.60, strict ≥0.70) to ensure robustness to different data inclusion criteria.
+To assess the robustness of our primary findings, we conducted several sensitivity analyses:
+
+**1. Quality Tier Robustness Checks**
+
+Results were tested across multiple quality tiers (lenient ≥0.50, primary ≥0.60, strict ≥0.70) to ensure robustness to different data inclusion criteria. If the key interaction effect is consistent across all three quality tiers, this provides evidence that the finding is robust to different data quality thresholds.
 
 ```{r robustness-checks}
 #| label: tbl-robustness
@@ -845,6 +942,55 @@ if (!is.null(pupil_psychometric_effects) &&
 }
 ```
 
+**2. Model Comparison**
+
+To evaluate whether the interaction term meaningfully improves model fit, we compared the primary model (with stimulus intensity × pupil state interaction) to an alternative model without the interaction term. Models were compared using Akaike Information Criterion (AIC), where lower AIC values indicate better fit.
+
+```{r model-comparison}
+#| label: tbl-model-comparison
+#| tbl-cap: "Model Comparison: With vs. Without Interaction Term"
+
+# Load models if available
+mod_primary_path <- file.path(models_dir, "mod_pupil_psychometric_primary.rds")
+mod_no_int_path <- file.path(models_dir, "mod_pupil_psychometric_no_interaction.rds")
+
+if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
+  mod_primary <- readRDS(mod_primary_path)
+  mod_no_int <- readRDS(mod_no_int_path)
+  
+  aic_primary <- AIC(mod_primary)
+  aic_no_int <- AIC(mod_no_int)
+  delta_aic <- aic_primary - aic_no_int
+  
+  model_comparison <- tibble(
+    Model = c("With Interaction", "Without Interaction"),
+    AIC = c(aic_primary, aic_no_int),
+    `ΔAIC` = c(delta_aic, NA)
+  )
+  
+  model_comparison %>%
+    make_table(
+      col.names = c("Model", "AIC", "ΔAIC"),
+      digits = 2
+    )
+  
+  cat("\n**Interpretation:** ")
+  if (delta_aic < -2) {
+    cat("The model with the interaction term shows substantially better fit (ΔAIC < -2), supporting the inclusion of the interaction and the interpretation that pupil state modulates psychometric sensitivity.")
+  } else if (delta_aic < 0) {
+    cat("The model with the interaction term shows slightly better fit, though the difference is modest.")
+  } else {
+    cat("The model without the interaction term shows better fit, suggesting the interaction may not meaningfully improve model fit.")
+  }
+} else {
+  cat("*Model comparison results not yet available.*")
+}
+```
+
+**3. Missingness Diagnostic**
+
+As reported in the Missingness Diagnostic section above, we tested whether missing pupil data were systematically related to experimental conditions (effort, stimulus intensity, task, response time). If missingness is random or only related to non-experimental variables (e.g., individual differences in eye-tracking quality), this supports the validity of the primary analyses. If missingness is systematically related to experimental conditions, this could introduce bias and should be acknowledged in interpretation, with robustness checks helping to evaluate whether findings are sensitive to missingness patterns.
+
 ## Subject-Level PF–Pupil Coupling
 
 ```{r subject-coupling}
@@ -863,6 +1009,8 @@ if (!is.null(pf_pupil_correlations)) {
 ```
 
 Subject-level changes in pupil metrics (High–Low effort) were correlated with subject-level changes in PF parameters (High–Low effort). This analysis tests whether individuals who show stronger physiological responses to effort also show larger behavioral sensitivity changes.
+
+**Hypothesis Testing:** Hypothesis 4 predicted that subject-level changes in pupil metrics (Δpupil = High effort − Low effort) would be positively correlated with changes in thresholds (Δthreshold) and negatively correlated with changes in slopes (Δslope), indicating that individuals with stronger effort-evoked arousal responses also show larger behavioral sensitivity decrements. This hypothesis was tested using Pearson correlations between Δpupil and ΔPF parameters, separately for each task modality.
 
 ```{r subject-coupling-fig}
 #| label: fig-subject-coupling
@@ -900,16 +1048,261 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 }
 ```
 
+## Exploratory LC Integrity Analyses
+
+```{r lc-subset-bias}
+#| label: tbl-lc-subset-bias
+#| tbl-cap: "LC Integrity Subset: Comparison of Participants With vs. Without LC Data"
+
+if (!is.null(lc_subset_comparison)) {
+  lc_subset_comparison %>%
+    make_table(
+      col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
+      digits = 3
+    )
+} else if (!is.null(merged_data) && !is.null(lc_integrity) && !is.null(demographics)) {
+  # Compute subset comparison if data available
+  subjects_with_lc <- unique(lc_integrity$sub)
+  merged_data <- merged_data %>%
+    mutate(has_lc_data = sub %in% subjects_with_lc)
+  
+  # Merge demographics
+  if (!is.null(demographics)) {
+    merged_data <- merged_data %>%
+      left_join(demographics %>% select(sub, age, sex, education), by = "sub")
+  }
+  
+  # Compare groups
+  subset_comparison <- merged_data %>%
+    group_by(sub) %>%
+    summarise(
+      has_lc = first(has_lc_data),
+      age = first(age),
+      sex = first(sex),
+      education = first(education),
+      mean_accuracy = mean(correct_final, na.rm = TRUE),
+      mean_rt = mean(rt, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    filter(!is.na(has_lc))
+  
+  if (nrow(subset_comparison) > 0 && sum(subset_comparison$has_lc) > 0 && sum(!subset_comparison$has_lc) > 0) {
+    # Statistical tests
+    comparison_results <- tibble(
+      Variable = character(),
+      `With LC Data` = character(),
+      `Without LC Data` = character(),
+      `Test Statistic` = character(),
+      p = numeric()
+    )
+    
+    # Age comparison
+    if ("age" %in% names(subset_comparison) && sum(!is.na(subset_comparison$age)) > 0) {
+      age_test <- t.test(age ~ has_lc, data = subset_comparison)
+      comparison_results <- comparison_results %>%
+        add_row(
+          Variable = "Age (years)",
+          `With LC Data` = sprintf("%.1f (%.1f)", 
+                                   mean(subset_comparison$age[subset_comparison$has_lc], na.rm = TRUE),
+                                   sd(subset_comparison$age[subset_comparison$has_lc], na.rm = TRUE)),
+          `Without LC Data` = sprintf("%.1f (%.1f)", 
+                                     mean(subset_comparison$age[!subset_comparison$has_lc], na.rm = TRUE),
+                                     sd(subset_comparison$age[!subset_comparison$has_lc], na.rm = TRUE)),
+          `Test Statistic` = sprintf("t = %.2f", age_test$statistic),
+          p = age_test$p.value
+        )
+    }
+    
+    # Sex comparison
+    if ("sex" %in% names(subset_comparison)) {
+      sex_table <- table(subset_comparison$has_lc, subset_comparison$sex)
+      if (ncol(sex_table) > 0 && nrow(sex_table) > 0) {
+        sex_test <- chisq.test(sex_table)
+        comparison_results <- comparison_results %>%
+          add_row(
+            Variable = "Sex (M/F)",
+            `With LC Data` = paste(sex_table[2,], collapse = "/"),
+            `Without LC Data` = paste(sex_table[1,], collapse = "/"),
+            `Test Statistic` = sprintf("χ² = %.2f", sex_test$statistic),
+            p = sex_test$p.value
+          )
+      }
+    }
+    
+    # Education comparison
+    if ("education" %in% names(subset_comparison) && sum(!is.na(subset_comparison$education)) > 0) {
+      edu_test <- t.test(education ~ has_lc, data = subset_comparison)
+      comparison_results <- comparison_results %>%
+        add_row(
+          Variable = "Education (years)",
+          `With LC Data` = sprintf("%.1f (%.1f)", 
+                                  mean(subset_comparison$education[subset_comparison$has_lc], na.rm = TRUE),
+                                  sd(subset_comparison$education[subset_comparison$has_lc], na.rm = TRUE)),
+          `Without LC Data` = sprintf("%.1f (%.1f)", 
+                                     mean(subset_comparison$education[!subset_comparison$has_lc], na.rm = TRUE),
+                                     sd(subset_comparison$education[!subset_comparison$has_lc], na.rm = TRUE)),
+          `Test Statistic` = sprintf("t = %.2f", edu_test$statistic),
+          p = edu_test$p.value
+        )
+    }
+    
+    if (nrow(comparison_results) > 0) {
+      comparison_results %>%
+        make_table(
+          col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
+          digits = 3
+        )
+      
+      cat("\n**Interpretation:** If participants with LC data differ systematically from those without (e.g., in age, cognitive function, or behavioral performance), this limits the generalizability of LC integrity findings. Non-significant differences support the assumption that the LC subset is representative of the full sample.")
+    } else {
+      cat("*LC subset comparison not yet computed.*")
+    }
+  } else {
+    cat("*LC integrity data not available for subset comparison.*")
+  }
+} else {
+  cat("*LC subset comparison not yet available.*")
+}
+```
+
+**LC Integrity as Moderator of Pupil–Psychometric Coupling**
+
+```{r lc-psychometric-extension}
+#| label: tbl-lc-psychometric-extension
+#| tbl-cap: "Exploratory LC Integrity Extension: Three-Way Interaction"
+
+if (!is.null(lc_psychometric_effects)) {
+  lc_psychometric_effects %>%
+    filter(term %in% c("stimulus_intensity_scaled:pupil_cognitive_state_scaled",
+                       "stimulus_intensity_scaled:pupil_cognitive_state_scaled:lc_integrity_scaled",
+                       "lc_integrity_scaled")) %>%
+    select(term, estimate, std.error, statistic, p.value) %>%
+    mutate(
+      term = str_replace_all(term, c(
+        "stimulus_intensity_scaled:pupil_cognitive_state_scaled" = "Stimulus × Pupil State",
+        "stimulus_intensity_scaled:pupil_cognitive_state_scaled:lc_integrity_scaled" = "Stimulus × Pupil State × LC Integrity",
+        "lc_integrity_scaled" = "LC Integrity (main effect)"
+      ))
+    ) %>%
+    make_table(
+      col.names = c("Term", "Estimate", "SE", "z", "p"),
+      digits = 4
+    )
+  
+  cat("\n**Note:** These analyses are exploratory and should be interpreted with caution given that (a) LC integrity data were not part of the original prospectus, (b) LC data are available for only a subset of participants, and (c) the primary focus remains on pupil–psychometric coupling rather than LC integrity per se.")
+} else {
+  cat("*LC integrity extension analyses not yet available.*")
+}
+```
+
+## Summary of Hypothesis Testing
+
+```{r hypothesis-summary}
+#| label: tbl-hypothesis-summary
+#| tbl-cap: "Summary of Hypothesis Testing Results"
+
+# Create hypothesis summary table
+hypothesis_summary <- tibble(
+  Hypothesis = c(
+    "H1a: Thresholds higher under High effort",
+    "H1b: Slopes shallower under High effort",
+    "H2a: Baseline pupil larger under High effort",
+    "H2b: Task-evoked pupil larger under High effort",
+    "H3a: Negative interaction (stimulus × pupil state)",
+    "H3b: Positive interaction (alternative)",
+    "H3c: Minimal pupil trait effects",
+    "H4: ΔPupil correlated with ΔPF parameters"
+  ),
+  `Support Status` = c(
+    "To be evaluated from PF parameters",
+    "To be evaluated from PF parameters",
+    "To be evaluated from effort-pupil check",
+    "To be evaluated from effort-pupil check",
+    "To be evaluated from primary GLMM",
+    "To be evaluated from primary GLMM",
+    "To be evaluated from primary GLMM",
+    "To be evaluated from subject-level correlations"
+  ),
+  `Key Evidence` = c(
+    "PF threshold comparison (High vs Low effort)",
+    "PF slope comparison (High vs Low effort)",
+    "Total AUC and Cognitive AUC by effort",
+    "Total AUC and Cognitive AUC by effort",
+    "Interaction term: stimulus_intensity × pupil_state",
+    "Interaction term: stimulus_intensity × pupil_state",
+    "Pupil trait main effect",
+    "Correlation: Δpupil vs Δthreshold, Δslope"
+  )
+)
+
+hypothesis_summary %>%
+  make_table(
+    col.names = c("Hypothesis", "Support Status", "Key Evidence"),
+    digits = 3
+  )
+
+cat("\n**Note:** This table will be updated once all analyses are complete. The 'Support Status' column will indicate whether each hypothesis was supported, not supported, or partially supported based on the statistical results.")
+```
+
 # Discussion
 
-<!-- Add your discussion section here -->
+## Integration with Theoretical Frameworks
 
-[Discussion content will be added here, including:]
+The present findings contribute to understanding how physical effort and arousal relate to perceptual sensitivity in older adults. The results are interpreted in light of several theoretical frameworks introduced earlier: the Yerkes–Dodson law (inverted-U relationship between arousal and performance), Adaptive Gain Theory (optimal LC–NE balance for performance), and resource competition models (limited capacity for dual-task performance).
 
-- Integration with findings from younger adults (if applicable)
-- Implications for understanding physical–cognitive effort interactions in aging
-- Limitations (pupil data quality constraints, missingness patterns, sample size considerations)
-- Conclusions and future directions
+### Arousal–Performance Relationships
+
+If the primary interaction (stimulus intensity × pupil state) is significant and negative, this would support the hypothesis that higher trial-level arousal is associated with reduced psychometric sensitivity, consistent with supra-optimal arousal degrading signal quality in older adults. This pattern would align with the Yerkes–Dodson framework's prediction that older adults may be more easily pushed onto the descending limb of the arousal–performance curve [@mather2016; @huang2024]. Alternatively, if the interaction is non-significant, this suggests that moment-to-moment arousal fluctuations may not be the primary mechanism linking effort to sensitivity changes. In this case, effort main effects (which may reflect both resource competition and group-level arousal changes) may be the dominant drivers of performance differences.
+
+### Resource Competition vs. Arousal Mechanisms
+
+The chapter's focus on pupil-indexed arousal does not preclude resource competition as a contributing mechanism. Effort main effects in the GLMM capture overall High vs. Low effort differences, which may reflect both generic dual-task interference and arousal-mediated changes. If trial-wise pupil state does not significantly predict sensitivity beyond effort condition, this would suggest that resource competition or effort-induced group-level arousal changes (rather than moment-to-moment fluctuations) are the primary drivers. The psychometric function framework allows us to distinguish sensitivity changes (signal quality) from criterion shifts (response strategy), providing insight into whether effort effects reflect altered evidence quality (consistent with arousal effects on neural gain) versus strategic adjustments (consistent with resource allocation).
+
+### State vs. Trait Arousal Effects
+
+The decomposition of pupil metrics into state (within-person) and trait (between-person) components allows us to test distinct hypotheses about how arousal relates to sensitivity. If pupil state significantly predicts sensitivity (via the interaction), this supports the hypothesis that moment-to-moment arousal fluctuations modulate perceptual processing. If pupil trait shows minimal effects (as predicted by Hypothesis 3c), this suggests that stable individual differences in average arousal may be confounded with other factors (e.g., LC integrity, cognitive reserve, general health) that are better captured by direct measures of those constructs.
+
+## Implications for Aging and Arousal
+
+The findings have implications for understanding how aging modulates the relationship between physiological arousal and cognitive performance. If older adults show weaker or absent coupling between trial-wise arousal and sensitivity (compared to younger adults in Chapter 1), this could indicate age-related changes in how the LC–NE system modulates cortical gain. Alternatively, if effort main effects are robust but trial-wise coupling is weak, this suggests that older adults may be more sensitive to effort-induced arousal at the group level but less sensitive to moment-to-moment fluctuations, potentially reflecting reduced phasic LC responsiveness or altered gain modulation.
+
+## Limitations
+
+Several limitations should be considered when interpreting the findings:
+
+### Pupil Data Quality Constraints
+
+Pupil data quality varies across older adults due to factors such as eye-tracking challenges, increased blink rates, and age-related changes in pupil dynamics. The quality tier system (primary ≥0.60, lenient ≥0.50, strict ≥0.70) addresses this by testing robustness across different inclusion criteria. However, even with quality filtering, some participants may have limited usable pupil data, potentially reducing power for detecting state-level effects.
+
+### Missingness Patterns
+
+The missingness diagnostic tests whether pupil data loss is systematic (e.g., related to effort, stimulus intensity, or task). If missingness is predicted by experimental conditions, this could introduce bias. The robustness checks across quality tiers help evaluate whether findings are sensitive to missingness patterns, but systematic missingness remains a potential limitation.
+
+### Sample Size Considerations
+
+The effective sample size for detecting trial-level interactions depends on both the number of participants and the number of usable trials per participant. If many participants have sparse pupil data, power to detect state-level effects may be limited. The model comparison (AIC) and robustness checks help evaluate whether null findings reflect true absence of effects versus insufficient power.
+
+### LC Integrity Subset Limitations
+
+LC integrity data are available for only a subset of participants. If participants with LC data differ systematically from those without (e.g., in age, cognitive function, or behavioral performance), this limits the generalizability of LC integrity findings. The LC subset bias check addresses this, but the exploratory LC analyses should be interpreted with caution given the subset limitation.
+
+### Fixed-Window vs. Response-Locked Metrics
+
+The primary cognitive pupil metric uses a fixed-duration post-target window to reduce RT confounding. However, this may not capture the most relevant arousal dynamics for psychometric sensitivity. Response-locked metrics (evaluated in sensitivity analyses) may better capture decision-related arousal but are more susceptible to RT confounding. The choice of window definition represents a trade-off between physiological validity and measurement confounds.
+
+## Integration with Chapter 1 and Chapter 3
+
+Chapter 2 extends the dual-task paradigm from younger adults (Chapter 1) to older adults, testing whether arousal–sensitivity coupling is preserved or altered with age. If Chapter 1 shows robust coupling in younger adults but Chapter 2 shows weaker or absent coupling in older adults, this would suggest age-related changes in how arousal modulates perceptual sensitivity. Alternatively, if both chapters show similar patterns, this would suggest that the arousal–sensitivity relationship is relatively stable across the adult lifespan, with age effects manifesting primarily in baseline sensitivity or effort reactivity rather than in the coupling mechanism itself.
+
+Chapter 3 will use hierarchical drift diffusion modeling to decompose the behavioral patterns observed in Chapter 2 into latent decision parameters (drift rate, boundary separation, starting point, non-decision time). This will test whether arousal effects are more consistent with altered evidence quality (drift rate changes) versus strategic response adjustments (boundary separation changes), providing a mechanistic account of how physical effort and arousal reshape perceptual decisions in aging.
+
+## Conclusions and Future Directions
+
+Chapter 2 provides a statistically rigorous characterization of how pupil-indexed arousal covaries with psychophysical decision behavior in older adults, using continuous stimulus intensity modeling and within-subject centering to preserve individual arousal granularity. The findings contribute to understanding whether physical effort–induced arousal modulates perceptual sensitivity at the trial level, and whether this relationship is robust across data quality thresholds and model specifications.
+
+Future research directions include: (a) examining whether different pupil window definitions (e.g., response-locked, different durations) reveal stronger coupling, (b) testing whether LC integrity moderates arousal–sensitivity relationships, (c) comparing arousal–sensitivity coupling between younger and older adults directly, and (d) using computational modeling (Chapter 3) to identify the latent decision parameters that implement the observed behavioral patterns.
+
+The work presented here establishes the empirical and methodological foundation for Chapter 3, which will examine whether latent decision parameters provide a coherent mechanistic account of how physical effort and arousal reshape perceptual decisions in aging.
 
 # References
 
