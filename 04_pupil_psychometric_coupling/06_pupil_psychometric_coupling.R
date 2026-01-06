@@ -256,15 +256,23 @@ dat_primary <- dat_primary %>%
 # Plot psychometric functions by pupil tertile
 p1 <- dat_primary %>%
   filter(!is.na(pupil_state_tertile)) %>%
-  ggplot(aes(x = stimulus_intensity, y = choice_num, color = pupil_state_tertile)) +
+  ggplot(aes(x = stimulus_intensity, y = choice_num, 
+             color = pupil_state_tertile, fill = pupil_state_tertile)) +
   stat_summary_bin(fun = "mean", bins = 10, geom = "point", size = 2, alpha = 0.7) +
-  stat_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
+  stat_smooth(method = "glm", method.args = list(family = "binomial"), 
+              se = TRUE, alpha = 0.2, linewidth = 1.2) +
   facet_grid(task_factor ~ effort_factor) +
-  scale_color_manual(values = c("Low" = "blue", "Medium" = "gray", "High" = "red")) +
+  scale_color_manual(
+    values = c("Low" = "#2E86AB", "Medium" = "#F18F01", "High" = "#A23B72"),
+    name = "Pupil State\nTertile"
+  ) +
+  scale_fill_manual(
+    values = c("Low" = "#2E86AB", "Medium" = "#F18F01", "High" = "#A23B72"),
+    name = "Pupil State\nTertile"
+  ) +
   labs(
     x = "Stimulus Intensity",
     y = "Proportion 'Different'",
-    color = "Pupil State\nTertile",
     title = "Psychometric Functions by Pupil State"
   ) +
   theme_minimal()
@@ -294,11 +302,13 @@ p2 <- pred_data %>%
   ggplot(aes(x = stimulus_intensity_scaled, y = pred, color = pupil_state_label)) +
   geom_line(linewidth = 1.2) +
   facet_grid(task_factor ~ effort_factor) +
-  scale_color_manual(values = c("Low Pupil" = "blue", "Medium Pupil" = "gray", "High Pupil" = "red")) +
+  scale_color_manual(
+    values = c("Low Pupil" = "#2E86AB", "Medium Pupil" = "#F18F01", "High Pupil" = "#A23B72"),
+    name = "Pupil State"
+  ) +
   labs(
     x = "Stimulus Intensity (scaled)",
     y = "Predicted Probability 'Different'",
-    color = "Pupil State",
     title = "Model Predictions: Stimulus × Pupil State Interaction"
   ) +
   theme_minimal()

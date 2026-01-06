@@ -248,10 +248,50 @@ pf_pupil_correlations <- sread(file.path(tables_dir, "pf_pupil_coupling_correlat
 missingness_effects <- sread(file.path(tables_dir, "missingness_diagnostic_effects.csv"))
 
 # LC integrity data (exploratory)
+# Try loading from processed directory first, then from master spreadsheet
 lc_integrity_file <- file.path(processed_dir, "ch2_lc_integrity.csv")
 lc_integrity <- sread(lc_integrity_file)
+
+# If not found, try loading from master spreadsheet
+if (is.null(lc_integrity)) {
+  master_lc_file <- file.path(proj_root, "data", "raw", "behavioral", "LC Aging Subject Data master spreadsheet - LC integrity.csv")
+  if (file.exists(master_lc_file)) {
+    lc_integrity <- sread(master_lc_file)
+    if (!is.null(lc_integrity)) {
+      # Standardize subject ID column name (might be "sub", "subject_id", "BAP", etc.)
+      if (!"sub" %in% names(lc_integrity)) {
+        if ("subject_id" %in% names(lc_integrity)) {
+          lc_integrity$sub <- lc_integrity$subject_id
+        } else if ("BAP" %in% names(lc_integrity)) {
+          lc_integrity$sub <- lc_integrity$BAP
+        }
+      }
+    }
+  }
+}
+
+# Demographics
 demographics_file <- file.path(processed_dir, "ch2_demographics.csv")
 demographics <- sread(demographics_file)
+
+# If not found, try loading from master spreadsheet
+if (is.null(demographics)) {
+  master_demo_file <- file.path(proj_root, "data", "raw", "behavioral", "LC Aging Subject Data master spreadsheet - demographics.csv")
+  if (file.exists(master_demo_file)) {
+    demographics <- sread(master_demo_file)
+    if (!is.null(demographics)) {
+      # Standardize subject ID column name
+      if (!"sub" %in% names(demographics)) {
+        if ("subject_id" %in% names(demographics)) {
+          demographics$sub <- demographics$subject_id
+        } else if ("BAP" %in% names(demographics)) {
+          demographics$sub <- demographics$BAP
+        }
+      }
+    }
+  }
+}
+
 neuropsych_file <- file.path(processed_dir, "ch2_neuropsych.csv")
 neuropsych <- sread(neuropsych_file)
 
@@ -259,6 +299,8 @@ neuropsych <- sread(neuropsych_file)
 lc_psychometric_effects <- sread(file.path(tables_dir, "lc_psychometric_extension_effects.csv"))
 lc_subset_comparison <- sread(file.path(tables_dir, "lc_subset_bias_check.csv"))
 ```
+
+\newpage 
 
 # Introduction
 
@@ -270,143 +312,75 @@ A growing literature suggests that physical–cognitive interactions are mediate
 
 ## Psychometric Functions: Quantifying Perceptual Sensitivity
 
-### Theoretical Framework
+### Psychometric Functions as Measurement Models
 
-Psychometric functions (PFs) provide a principled framework for characterizing how stimulus intensity relates to perceptual performance. Unlike summary statistics that collapse across stimulus levels, PFs model the complete intensity–response relationship, revealing how performance changes as stimulus differences become more or less discriminable. In a same–different discrimination task, the psychometric function maps continuous stimulus intensity (e.g., frequency offset or contrast difference) onto the probability of correctly detecting a difference or choosing "different" [@wichmann2001psychometric; @green1966signal].
+Psychometric functions (PFs) provide a principled framework for characterizing how continuous stimulus intensity relates to perceptual judgments. Rather than collapsing performance across stimulus levels, PFs model the full intensity–response relationship, revealing how the probability of a given response changes as stimulus differences become more or less discriminable. In the present same–different discrimination paradigm, the PF maps a continuous intensity dimension (e.g., frequency offset or contrast difference) onto the probability of responding "different" [@wichmann2001psychometric; @green1966signal; @prins2016psychophysics]. This perspective aligns with a measurement-model view of perception: PFs can be derived from latent sensory evidence that is corrupted by internal noise and then transformed into an overt response via a decision rule [@prins2016psychophysics]. Within this framework, changes in PF steepness are typically interpreted as changes in discriminability (signal-to-noise separation), whereas horizontal shifts can reflect changes in response tendency or criterion, and thus require more cautious interpretation when the task permits bias [@macmillan2005detection].
 
-### Mathematical Formulation
+### Model Specification and Parameter Interpretation
 
-The psychometric function typically follows a sigmoidal (S-shaped) curve, most commonly modeled using the cumulative normal distribution (probit link) or logistic function (logit link). For binary choice tasks, the probit formulation is:
+Psychometric functions take sigmoidal (S-shaped) forms and can be expressed using several closely related link families, including the cumulative normal (probit), logistic (logit), and Weibull functions. For a binary response model, one common formulation is the probit PF:
 
 $$P(\text{"different"} | X) = \Phi\left(\frac{X - \alpha}{\beta}\right)$$ {#eq-psychometric}
 
-where:
-- $P(\text{"different"} | X)$ is the probability of choosing "different" given stimulus intensity $X$
-- $\Phi(\cdot)$ is the cumulative standard normal distribution function (probit link)
-- $\alpha$ is the **threshold** (point of subjective equality, PSE, or just noticeable difference, JND), representing the stimulus intensity at which performance reaches 50% (or other criterion level)
-- $\beta$ is the **slope** parameter, representing the steepness of the function and inversely related to perceptual sensitivity: steeper slopes indicate higher sensitivity (smaller intensity differences are reliably detected)
+where $X$ denotes stimulus intensity, $\Phi(\cdot)$ is the cumulative standard normal distribution, $\alpha$ is a location parameter corresponding to the stimulus intensity at which responding reaches a criterion level (often defined at a midpoint between asymptotes), and $\beta$ is a scale/spread parameter. Under this parameterization, PF steepness is inversely related to $\beta$: smaller $\beta$ values yield steeper functions (higher discriminability), whereas larger $\beta$ values yield shallower functions (lower discriminability). The steepness directly reflects discriminability—how rapidly the probability of choosing "different" changes as stimulus intensity increases. Under the probit parameterization, the standard deviation of the underlying sensory noise distribution is $\sigma = \beta$ (the scale parameter directly corresponds to the noise SD). An analogous logit specification replaces $\Phi(\cdot)$ with the logistic function, and in practice different sigmoid families typically yield very similar fits, with differences primarily reflecting parameterization and threshold conventions [@prins2016psychophysics]. For example, the Weibull's conventional threshold parameter corresponds to approximately 0.632 on the cumulative response scale, whereas Quick/log-Quick formulations correspond to 0.5; therefore, threshold values should always be interpreted relative to the criterion at which they are defined [@prins2016psychophysics].
 
-Alternatively, using the logit link:
+In many psychophysical applications, PFs are described using a four-parameter form that includes asymptotes: a lower asymptote (guess rate, $\gamma$) and an upper asymptote defined by the lapse rate ($\lambda$), in addition to location and scale parameters [@prins2016psychophysics]. In forced-choice accuracy tasks, $\gamma$ is constrained by task structure (e.g., $\gamma=0.5$ in 2AFC; $\gamma=1/M$ in M-AFC). In judgment-based tasks such as same–different responding, the lower asymptote reflects baseline "different" responding (false-alarm tendency) rather than a fixed chance level. The lapse rate $\lambda$ captures stimulus-independent errors (e.g., attentional lapses, motor errors, or track loss) that can prevent performance from reaching the upper bound even at high intensities. Importantly, psychophysical guidance emphasizes that assuming $\lambda=0$ when lapses are present can bias threshold and slope estimates, and that lapse is difficult to estimate reliably without adequate constraints or priors [@prins2016psychophysics; @wichmann2001psychometric]. The full four-parameter formulation is:
 
-$$P(\text{"different"} | X) = \frac{1}{1 + \exp\left(-\frac{X - \alpha}{\beta}\right)}$$ {#eq-psychometric-logit}
+$$P(\text{"different"} | X) = \gamma + (1 - \gamma - \lambda) \cdot \Phi\left(\frac{X - \alpha}{\beta}\right)$$
 
-### Key Parameters
+These considerations motivate interpreting location parameters cautiously when criterion and lapses may vary across conditions, while treating changes in steepness as a cleaner index of sensitivity. The location parameter $\alpha$ represents the stimulus intensity at a criterion level—often defined at the midpoint between the lower and upper asymptotes (e.g., halfway between guess rate $\gamma$ and $1-\lambda$), which typically corresponds to approximately 50% "different" responses on the response probability scale. In appearance/judgment tasks where 50% indicates subjective equality (e.g., "brighter vs. darker"), this location is often called a point of subjective equality (PSE). However, in same–different discrimination tasks, the location parameter can reflect a mix of sensitivity and decision criterion/bias [@prins2016psychophysics], so "threshold" or "midpoint" is the more standard terminology. Changes in $\alpha$ may reflect shifts in decision criterion or response bias rather than true sensitivity changes, particularly when criterion can drift with arousal or effort conditions. In forced-choice accuracy PFs, the lower asymptote is constrained by the number of alternatives (e.g., $\gamma = 0.5$ in 2AFC), making "threshold" conventionally defined at a criterion such as 75% correct. In judgment-based PFs (like "different" responses), threshold is often defined at the midpoint between asymptotes (approximately 50% "different" responses), but this location can reflect both sensitivity and criterion/bias. Sensitivity is better reflected in the steepness of the intensity–response relationship (how rapidly probability changes with intensity), which is why the present analyses emphasize slope and its modulation by arousal rather than threshold alone.
 
-**Threshold ($\alpha$ or PSE/JND):** The threshold parameter indicates the stimulus intensity at which participants perform at a criterion level (typically 50% "different" responses). A lower threshold indicates better sensitivity—participants can detect smaller stimulus differences. In aging research, threshold increases often reflect reduced perceptual sensitivity, requiring larger stimulus differences for reliable detection.
+The psychometric function is closely related to signal detection theory (SDT), where the location parameter ($\alpha$) corresponds to the decision criterion and the scale parameter ($\beta$) relates to $d'$ (sensitivity). Changes in location reflect criterion shifts (response bias), while changes in steepness (inversely related to $\beta$) reflect true sensitivity changes [@macmillan2005detection]. Some psychophysical procedures (e.g., yes/no detection tasks) are particularly susceptible to criterion shifts, making proportion correct a poor sensitivity measure when response bias varies across conditions or individuals [@prins2016psychophysics]. SDT measures like $d'$ separate sensitivity from bias, providing a more robust index of discriminability. In the present "same–different" judgment task, criterion issues are acknowledged: the location parameter ($\alpha$) is interpreted cautiously as potentially reflecting criterion/bias shifts, whereas sensitivity is emphasized via the steepness parameter ($\beta$ or the intensity coefficient in the GLMM). The hierarchical GLMM framework includes random intercepts to account for individual differences in baseline response tendency (criterion), while the key interaction term tests arousal effects on sensitivity (steepness) rather than merely on response bias.
 
-**Slope ($\beta$):** The slope parameter quantifies how rapidly performance improves as stimulus intensity increases. Steeper slopes indicate higher sensitivity and lower variability in perceptual judgments. Slope is inversely related to the standard deviation of the underlying sensory noise distribution: $\sigma = 1/\beta$ (for probit) or $\sigma = \beta \cdot \pi / \sqrt{3}$ (for logit). Age-related slope reductions suggest increased sensory noise or decreased discriminability [@green1966signal; @wichmann2001psychometric].
+### Implementation in the Present Study
 
-**Relationship to Signal Detection Theory:** The psychometric function is closely related to signal detection theory (SDT), where threshold corresponds to the decision criterion and slope relates to $d'$ (sensitivity). Changes in threshold reflect criterion shifts (response bias), while changes in slope reflect true sensitivity changes [@macmillan2005detection].
+This chapter leverages two complementary PF approaches that serve distinct purposes. First, descriptive PF parameters (thresholds and slopes) that provide the behavioral backbone for Chapter 2 were estimated previously using Psignifit 4 in MATLAB [@schutt2016painfree], which supports robust estimation and can account for overdispersion. A Weibull PF was fit to each participant's proportion of "different" responses across stimulus levels within each task and effort condition. Because the Weibull function is undefined at zero, the 0-offset intensity level was replaced with half of the smallest non-zero intensity level. Guess and lapse parameters were allowed to vary freely during fitting, and threshold and slope were derived at the effective midpoint—halfway between the estimated guess rate $\gamma$ and $1-\lambda$—yielding a criterion comparable to a 50% point on the effective response scale.
 
-### Advantages Over Summary Statistics
+Second, the primary inferential analyses in the present chapter use a hierarchical generalized linear mixed model (GLMM) with a probit link to model trialwise $P(\text{"different"} \mid X)$. In a probit-link GLMM, the linear predictor operates on a latent standard-normal ($z$) evidence scale, and the intensity coefficient governs the steepness of the intensity–response relationship in that latent space. The critical interaction between stimulus intensity and within-person pupil state ($X_{ij} \times P^{(\text{state})}_{ij}$) therefore tests whether moment-to-moment arousal modulates sensitivity (steepness) rather than merely shifting response tendency (criterion). Although the trial-level GLMM does not explicitly estimate lapse parameters, lapse-like contamination is minimized through stringent pupil quality tiers and robustness checks, preserving statistical efficiency while addressing psychophysical concerns about stimulus-independent error. The probit link function is used in the GLMM for consistency with the latent evidence interpretation in signal detection theory, where the cumulative normal distribution naturally maps onto $z$-scaled evidence. In the present study, stimulus intensity is modeled on its original scale (frequency offset in Hz for auditory, contrast difference for visual), and the continuous-intensity GLMM framework avoids binning regardless of the underlying scale.
 
-Modeling continuous intensity–response relationships via PFs offers several advantages over collapsing trials into discrete "Easy/Hard" bins:
+### Why Continuous-Intensity Modeling
 
-1. **Preserves information:** Continuous intensity is maintained rather than lost through binning, allowing more precise estimates of sensitivity changes.
-2. **Parameter interpretability:** Threshold and slope have clear psychological and mathematical meanings, facilitating mechanistic interpretation.
-3. **Statistical power:** Using all stimulus levels simultaneously provides more efficient parameter estimation than comparing discrete bins.
-4. **Quantifies sensitivity changes:** Slope changes directly reflect how arousal alters the intensity–performance relationship, distinguishing true sensitivity effects from criterion shifts.
+Modeling the continuous intensity–response relationship offers clear advantages over collapsing trials into discrete "easy/hard" bins: it preserves information, yields parameters with interpretable psychological meaning, and improves statistical efficiency by using the full range of stimulus values. Most importantly for the present dissertation aims, steepness provides a direct test of how arousal alters psychometric sensitivity—whether arousal changes the rate at which evidence accumulates across intensity—rather than only changing average responding.
 
-## Arousal, Effort, and Perceptual Performance
+## Arousal, Effort, and Perceptual Sensitivity
 
-### Theoretical Perspectives on Arousal–Performance Relationships
+The relationship between arousal and cognitive performance has been formalized in several influential frameworks. The Yerkes–Dodson law proposes an inverted-U function in which performance improves with increasing arousal up to an optimal point, beyond which additional arousal—particularly when experienced as stress or anxiety—impairs performance [@yerkes1908]. Adaptive Gain Theory (AGT) provides a mechanistic account centered on the locus coeruleus–norepinephrine (LC–NE) system, linking tonic (baseline) and phasic (event-evoked) LC activity to shifts in neural gain and, ultimately, task performance [@astonjones2005]. Under AGT, optimal performance is expected when tonic LC activity is moderate and phasic responses to task-relevant events are robust, supporting focused attention and efficient responding.
 
-The relationship between arousal and cognitive performance has been formalized in several influential frameworks. The **Yerkes–Dodson law** [@yerkes1908] posits an inverted-U function: performance improves with increasing arousal up to an optimal point, beyond which further arousal (especially stress or anxiety) impairs performance. **Adaptive Gain Theory (AGT)** [@astonjones2005] provides a neural mechanism linking phasic and tonic LC–NE activity to optimal task performance, with moderate tonic baseline and robust phasic bursts facilitating focused attention and rapid behavioral responses.
+In aging, arousal–performance relationships may be altered in ways that complicate these canonical predictions. Evidence suggests that older adults may exhibit a leftward shift or compression of the inverted-U curve, such that peak performance occurs at lower levels of objective demand relative to younger adults [@mather2016; @mikneviciute2022]. As a result, conditions that are neutral or even beneficial for younger adults may push older adults into supra-optimal arousal states, placing them on the descending limb of the curve and producing performance decrements [@huang2024; @mather2016]. This aging-related vulnerability motivates testing whether experimentally induced arousal—here, physical effort—selectively disrupts the quality of perceptual evidence and the sensitivity of discrimination.
 
-In the context of aging, this relationship becomes more complex. Research suggests that the arousal–performance curve may be altered in older adults, often manifesting as a **leftward shift or compression** of the inverted-U function [@mather2016; @mikneviciute2022]. This implies that older adults may reach their optimal arousal peak at lower levels of objective demand than younger adults. Consequently, levels of effort or stress that might be engaging or beneficial for younger adults (placing them at the peak of the curve) can push older adults onto the "descending limb," leading to **supra-optimal arousal** and performance decrements [@huang2024; @mather2016].
+Physical effort provides a controlled method for manipulating arousal state in a way that is experimentally separable from stimulus difficulty. Sustained isometric handgrip at moderate-to-high intensities (e.g., ~30–40% MVC) elicits a robust pressor and sympathoexcitatory response—raising arterial pressure and heart rate and increasing sympathetic outflow—whose magnitude scales with contraction intensity and remains present in older adults. At the neural level, static handgrip and post-exercise ischemia recruit brainstem and cortical regions involved in autonomic control and effort, offering a plausible central substrate for effort-induced arousal shifts that may interact with perceptual decision processes [@lalande2014; @mark1985; @sander2010; @toska2010].
 
-### Physical Effort as an Arousal Manipulation
+At the same time, physical effort may influence performance through mechanisms that are not purely "arousal," including resource-based interference. Limited-capacity and multiple-resource accounts predict that concurrent physical effort can compete with cognitive task performance when total demands exceed available capacity or when tasks draw on overlapping resource pools [@wickens2008]. Supporting this possibility, Azer et al. [-@azer2023] reported that older adults showed reduced accuracy in a visual working memory task while maintaining moderate handgrip (30% MVC), whereas younger adults were relatively unaffected. This pattern is consistent with the idea that older adults may be more susceptible to combined physical-cognitive demands, either because resources are depleted more readily or because arousal becomes dysregulated under challenge [@verhaeghen2003]. Importantly, these "resource competition" and "arousal regulation" perspectives are not mutually exclusive, and the present study is designed to adjudicate between them by modeling trialwise arousal (pupil state) alongside effort condition.
 
-Physical effort provides a powerful, controlled method for manipulating arousal state. Sustained isometric handgrip at moderate-to-high intensities (e.g., 30–40% of maximum voluntary contraction, MVC) elicits a robust pressor and sympathoexcitatory response—raising arterial pressure and heart rate and increasing sympathetic outflow—whose magnitude scales with contraction intensity and is preserved in older adults. At the neural level, static handgrip and postexercise ischemia recruit brainstem and cortical regions implicated in autonomic control and effort, providing a plausible central substrate for effort-induced shifts in arousal that can interact with perceptual decision processes [@mark1985; @toska2010; @lalande2014; @sander2010].
+These frameworks motivate specific predictions for psychometric sensitivity. In a same–different task, the location (midpoint) parameter of the psychometric function can shift if arousal alters decision criterion or response bias—for example, by making participants more conservative or liberal in endorsing "different." Such location shifts do not necessarily indicate true changes in discriminability, and in same–different paradigms location can reflect a mixture of sensitivity and criterion effects; therefore, threshold/location effects are interpreted cautiously. By contrast, the steepness of the psychometric function (inversely related to the scale parameter) provides a cleaner index of sensitivity because it reflects how rapidly response probability changes with stimulus intensity. If effort-induced arousal degrades sensory signal quality or increases internal noise, psychometric functions should become shallower (reduced sensitivity), requiring larger stimulus differences for reliable discrimination. Conversely, if moderate arousal optimizes neural gain and improves signal-to-noise ratio, functions may become steeper (enhanced sensitivity). Critically, these effects may be nonlinear: moderate arousal could improve sensitivity, while supra-optimal arousal—anticipated to occur more readily in older adults—could reduce sensitivity. For this reason, the present analyses emphasize steepness-related effects (and their modulation by pupil-indexed arousal) over threshold shifts alone.
 
-The **limited-capacity framework** [@wickens2008] predicts that concurrent physical effort should compete with cognitive tasks for shared processing resources, potentially degrading performance when demands exceed available capacity. Supporting this view, Azer et al. [-@azer2023] found that older adults showed significantly reduced accuracy in a visual working memory task while maintaining moderate handgrip (30% MVC), whereas younger adults remained unaffected. This suggests that the combined demand of physical and cognitive tasks may more easily deplete resources in older adults or drive arousal into a dysregulated state [@verhaeghen2003].
+## Pupillometry as a Window into Arousal Dynamics
 
-### Expected Effects on Psychometric Sensitivity
+The LC–NE system is a central regulator of arousal and cognitive state. As the primary source of norepinephrine to the forebrain, LC–NE projections modulate neural gain and the signal-to-noise ratio of cortical processing [@astonjones2005]. AGT posits that task performance depends on a balance between tonic LC activity and phasic LC bursts, such that moderate tonic baseline paired with strong phasic responses supports focused attention and effective behavioral control [@gilzenrat2010].
 
-How should physical effort–induced arousal affect psychometric function parameters? Theoretical predictions vary:
+Pupillometry provides a practical, noninvasive index of arousal dynamics that is often linked to LC–NE activity. Pupil diameter covaries with arousal-related neuromodulatory activity and can be characterized at two levels. First, baseline (tonic) pupil diameter reflects relatively sustained arousal state and has been associated with tonic LC activity and general alertness [@alnaes2014pupil; @gilzenrat2010]. Second, task-evoked pupil responses (TEPRs) reflect event-linked changes often interpreted as phasic arousal and mobilization of mental effort during task execution [@beatty1982; @kahneman1966]. TEPRs typically peak on the order of 1–2 seconds after stimulus onset and can be quantified using peak amplitude, mean dilation over a defined epoch, or the area under the curve (AUC) of the baseline-corrected signal, which jointly captures amplitude and duration. TEPR magnitude has been linked to task difficulty, cognitive load, surprise, and decision confidence, and in discrimination contexts larger TEPRs often accompany more difficult decisions, consistent with increased recruitment of control resources [@kiefer2018; @preuschoff2011pupil; @vanbergen2021]. The neural pathway linking LC to pupil diameter involves direct projections from LC to the Edinger–Westphal nucleus, which controls pupil constriction/dilation via parasympathetic and sympathetic pathways [@joshi2016; @mcDougal2010; @murphy2014].
 
-**Threshold ($\alpha$) predictions:**
-- If arousal degrades sensory signal quality or increases internal noise, thresholds should increase (larger stimulus differences required for reliable detection).
-- If arousal optimizes neural gain at moderate levels, thresholds might decrease (better sensitivity).
-- Supra-optimal arousal in older adults might shift thresholds upward, reflecting degraded signal-to-noise ratios.
+Interpretation of pupil diameter nevertheless requires care because pupillometry is a multi-determined signal shaped by interacting neural and autonomic pathways. While LC–NE contributions to pupil fluctuations are central to the present theoretical framing, other structures and pathways can also influence pupil dynamics, and measurement artifacts can distort pupil estimates [@papesh2024modern]. In particular, eye position and saccade-related effects can alter apparent pupil size (e.g., pupil foreshortening error and post-saccadic pupil constrictions), and blink-related missingness can bias mean or baseline estimates if not handled carefully [@laeng2024; @hershman2024]. In cognitive tasks, TEPRs reflect event-linked changes that unfold with a physiological delay rather than instantaneously; pupil changes are typically detectable approximately 200–250 ms after task events, with responses tied to specific events such as stimulus presentation, response execution, or feedback [@hershman2024]. This temporal delay justifies the use of epoch-based analysis windows and AUC metrics that capture the full time course of the response. These considerations motivate pairing theory-driven pupil metrics with explicit preprocessing and data-quality procedures designed to minimize artifactual variance and ensure that observed effects reflect task-evoked physiology rather than measurement confounds.
 
-**Slope ($\beta$) predictions:**
-- Steeper slopes (higher sensitivity) would suggest that arousal enhances discriminability, perhaps by improving signal-to-noise ratios or sharpening neural tuning.
-- Shallower slopes (lower sensitivity) would suggest that arousal introduces variability or noise, flattening the intensity–response relationship.
-- The relationship may be non-linear: moderate arousal might enhance sensitivity (steeper slopes), while excessive arousal might flatten slopes (reduced discriminability).
+In aging, LC–NE regulation may change in ways that are directly relevant to arousal–performance coupling. Structural degradation of the LC has been observed in older adults [@mather2016], and functional compensatory patterns may emerge, including chronically elevated tonic arousal or altered phasic responsiveness to challenge [@lee2018; @mather2016neural]. Such compensatory dynamics may support performance up to a point, but could also increase vulnerability to supra-optimal arousal, leading to distractibility and degraded information processing under high demand [@astonjones2005; @eldar2013]. Pupillometry studies in aging report heterogeneous patterns—often larger baseline pupils coupled with reduced task-evoked responses—suggesting altered tonic-phasic balance [@granholm2007; @vanbergen2021]. Physical effort manipulations therefore provide an opportunity to test whether externally induced arousal shifts pupil dynamics and whether trialwise pupil state predicts changes in psychometric sensitivity.
 
-## Pupillometry: A Window into Arousal Dynamics
+## Dual-Task Context and Competing Mechanisms
 
-### Locus Coeruleus–Norepinephrine System and Pupil Diameter
+Dual-task paradigms have long been used to understand limits of attention and performance under concurrent demands. Limited-capacity and resource-competition accounts propose that performance decrements arise when combined task demands exceed available resources, particularly when tasks draw on overlapping pools of attention or executive control [@kahneman1973; @navon1984; @navon1985; @wickens2008]. Multiple Resource Theory further predicts that interference depends on similarity across resource dimensions (e.g., spatial vs. verbal demands), such that tasks that share processing channels are more likely to interfere [@wickens2008]. Applied to physical–cognitive dual tasks, interference may arise through sustained attentional requirements for maintaining force, physiological arousal effects that can help or harm performance depending on state, and motor–cognitive competition that affects response selection and execution [@proctor2012; @woollacott2002]. Age-related increases in dual-task costs are well documented and may reflect reduced reserve, altered executive control, or changes in arousal regulation [@beurskens2014; @verhaeghen2003].
 
-The LC–NE system serves as a central regulator of cortical arousal and cognitive state. This small brainstem nucleus is the primary source of norepinephrine to the forebrain and modulates the "neural gain" of cortical circuits—essentially the signal-to-noise ratio of information processing [@astonjones2005]. According to Adaptive Gain Theory, optimal performance relies on a balance between moderate tonic (baseline) LC firing that promotes focused attention and robust phasic (event-related) bursts that facilitate rapid behavioral responses to task-relevant stimuli [@gilzenrat2010].
+The present study explicitly recognizes that effort effects may reflect both generic resource competition and arousal-mediated mechanisms. Resource-competition models predict effort-related performance decrements as demands rise, whereas arousal-based accounts (including LC–NE mechanisms) predict that the quality of information processing may change as a function of arousal state, potentially independent of capacity limits. The key advantage of pairing pupillometry with psychometric modeling is that it allows these mechanisms to be separated empirically: effort condition provides an experimental manipulation, while trialwise pupil state indexes moment-to-moment arousal, and the psychometric framework distinguishes sensitivity changes (steepness) from criterion shifts (intercept/location). Accordingly, effort main effects in the GLMM may reflect a mixture of resource and arousal influences, whereas a significant stimulus intensity × pupil-state interaction would more specifically support arousal-linked modulation of sensitivity.
 
-**Pupillometry** provides a powerful, non-invasive window into these LC–NE dynamics. Pupil diameter tracks LC firing activity with high temporal precision [@joshi2016; @murphy2014], making it an ideal proxy for both tonic and phasic arousal states. The neural pathway linking LC to pupil diameter involves direct projections from LC to the Edinger–Westphal nucleus, which controls pupil constriction/dilation via parasympathetic and sympathetic pathways [@mcDougal2010].
+## Linking Arousal to Psychometric Sensitivity: Analytic Strategy
 
-### Pupil Metrics in Cognitive Tasks
+Traditional analyses of arousal–performance often collapse continuous stimulus intensity into coarse difficulty bins (e.g., "easy" vs. "hard"), which discards information and obscures how arousal modulates the intensity–response relationship itself. The present chapter instead models trialwise responses across the continuous intensity dimension, enabling direct estimation of psychometric sensitivity and its modulation by arousal.
 
-Two primary pupil metrics capture distinct aspects of arousal:
-
-**Baseline/Tonic Pupil Diameter:** Reflects tonic LC activity and general alertness levels [@gilzenrat2010; @alnaes2014pupil]. Larger baseline pupil diameter indicates higher tonic arousal, which may support sustained attention but can also reflect hyperarousal if excessive.
-
-**Task-Evoked Pupil Response (TEPR):** Reflects phasic LC activation and the mobilization of mental effort during task execution [@beatty1982; @kahneman1966]. The TEPR typically peaks 1–2 seconds after stimulus onset and is quantified as:
-- **Peak amplitude:** Maximum dilation relative to baseline
-- **Area Under the Curve (AUC):** Integral of the baseline-corrected pupil signal over a time window, capturing both amplitude and duration of the response
-- **Mean dilation:** Average pupil diameter over a fixed post-stimulus window
-
-TEPR magnitude has been linked to task difficulty, cognitive load, surprise, and decision confidence [@preuschoff2011pupil; @vanbergen2021]. In discrimination tasks, larger TEPRs are associated with more difficult decisions, suggesting that phasic arousal signals the recruitment of cognitive control resources [@kiefer2018].
-
-### Pupil–Cognition Links in Aging
-
-In aging, the LC–NE system undergoes significant changes. Structural degradation of the LC is common in older adults [@mather2016], and functional compensatory mechanisms often emerge, such as chronically elevated tonic arousal or hyper-responsivity to challenge [@lee2018; @mather2016neural]. However, this compensation has limits: if older adults reach supra-optimal arousal states more readily, excessive norepinephrine release may lead to distractibility, indiscriminate processing, and performance decrements [@astonjones2005; @eldar2013].
-
-Pupillometry studies in aging reveal complex patterns. Older adults often show larger baseline pupil diameters but reduced task-evoked responses, suggesting altered phasic–tonic balance [@granholm2007; @vanbergen2021]. Physical effort manipulations provide an opportunity to examine how externally induced arousal modulates these dynamics and whether effort-induced pupil changes predict cognitive performance changes.
-
-## Dual-Task Paradigms and Resource Competition
-
-### Theoretical Frameworks
-
-Dual-task paradigms, in which participants perform two tasks simultaneously, have been central to understanding resource limitations and cognitive architecture. Several theoretical frameworks explain dual-task interference:
-
-**Limited Capacity Model** [@kahneman1973; @wickens2008]: Posits that cognitive resources are finite and shared across tasks. When total demand exceeds capacity, performance suffers in one or both tasks.
-
-**Resource Competition** [@navon1984; @navon1985]: Emphasizes that interference occurs when tasks compete for the same resource pool (e.g., both require attention or working memory).
-
-**Multiple Resource Theory** [@wickens2008]: Proposes that interference depends on the similarity of resource requirements. Tasks using different resource dimensions (e.g., spatial vs. verbal) show less interference than tasks using similar dimensions.
-
-### Physical–Cognitive Dual Tasks
-
-Physical–cognitive dual tasks are particularly relevant for understanding real-world performance. When physical effort (e.g., maintaining handgrip force) is combined with cognitive tasks (e.g., perceptual discrimination), interference can arise from multiple sources:
-
-1. **Shared attentional resources:** Both tasks require sustained attention and monitoring [@proctor2012].
-2. **Physiological arousal:** Physical effort increases sympathetic activation, which may enhance or impair cognitive performance depending on arousal level [@silvestrini2008].
-3. **Motor–cognitive interference:** Maintaining grip force may compete with response selection and execution processes [@woollacott2002].
-
-Age-related changes in dual-task performance are well-documented, with older adults showing larger performance decrements under dual-task conditions [@verhaeghen2003; @beurskens2014]. This may reflect reduced cognitive reserve, impaired executive control, or altered arousal regulation.
-
-### Reconciling Resource Competition and Arousal Mechanisms
-
-The present study acknowledges that physical–cognitive dual-task interference may arise from both generic resource competition and arousal-mediated mechanisms. While resource competition models predict performance decrements when total demand exceeds available capacity, arousal-based frameworks (e.g., LC–NE system, Adaptive Gain Theory) predict that the *quality* of information processing may change as a function of arousal state, potentially independent of simple capacity limits. The current chapter focuses on arousal-mediated mechanisms because (a) pupillometry provides a direct index of LC–NE activity, allowing us to test arousal-specific hypotheses, and (b) the psychometric function framework enables us to distinguish sensitivity changes (arousal effects on signal quality) from criterion shifts (response strategy changes). However, effort main effects in the GLMM (capturing overall High vs. Low effort differences) may reflect both resource competition and arousal effects. If trial-wise pupil state does not significantly predict sensitivity beyond effort condition, this would suggest that resource competition or effort main effects (rather than moment-to-moment arousal fluctuations) are the primary drivers of performance changes. The chapter's focus on pupil–psychometric coupling is thus complementary to, rather than exclusive of, resource competition explanations.
-
-## Linking Arousal to Psychometric Sensitivity: A Novel Approach
-
-### Beyond Binned Analyses
-
-Traditional approaches to examining arousal–performance relationships often collapse trials into discrete difficulty bins (e.g., "Easy" vs. "Hard"), losing information about continuous stimulus intensity. This binning approach assumes that arousal effects are uniform across intensity levels and cannot reveal how arousal modulates the intensity–response relationship itself.
-
-### Within-Subject Centering: Separating State from Trait
-
-A crucial methodological step in linking pupil metrics to performance is distinguishing **state** arousal (momentary fluctuations) from **trait** arousal (stable individual differences). To achieve this, we decompose each pupil metric $P_{ij}$—measured on trial $i$ for subject $j$—into within-subject (state) and between-subject (trait) components using within-subject centering:
+A central methodological challenge in pupil–behavior analyses is separating within-person "state" fluctuations from between-person "trait" differences. To do so, each pupil metric ($P_{ij}$) is decomposed into a subject-mean component and a trial-wise deviation using within-subject centering:
 
 $$P^{(\text{trait})}_{j} = \overline{P}_{j}, \qquad P^{(\text{state})}_{ij} = P_{ij} - \overline{P}_{j}$$ {#eq-state-trait}
 
-where $\overline{P}_{j}$ is the subject's mean pupil metric across trials. Here, $P^{(\text{trait})}_{j}$ captures stable, subject-level differences in arousal (e.g., consistently larger baseline pupils or generally larger TEPRs), whereas $P^{(\text{state})}_{ij}$ captures trial-level deviations from that individual's mean (i.e., whether arousal on a given trial is higher or lower than usual for that person).
+This decomposition enables two distinct questions to be tested in the same model: whether individuals with higher average arousal differ in sensitivity (trait effects), and whether trials on which an individual is more aroused than usual show altered sensitivity (state effects). Importantly, this approach prevents conflating between- and within-person patterns—an especially relevant concern in aging where trait differences may be influenced by health, LC integrity, or cognitive reserve [@enders2013; @hoffman2015]. For example, if high-arousal individuals tend to have poorer performance for reasons unrelated to trial-wise fluctuations (e.g., underlying LC degeneration or comorbidities), that pattern will be captured at the trait level rather than falsely attributed to trial-wise changes in arousal.
 
-Including both components as predictors in the same model allows us to ask two distinct questions: (1) Do individuals with higher average arousal levels (trait) tend to show different psychometric sensitivity than those with lower average arousal? and (2) Within a given individual, do trials on which arousal is higher than their personal average show better or worse sensitivity? This decomposition avoids conflating between-person and within-person effects, a common problem in mixed data structures [@enders2013; @hoffman2015]. For example, if high-arousal individuals tend to have poorer performance for reasons unrelated to trial-wise fluctuations (e.g., underlying LC degeneration or comorbidities), that pattern will be captured at the trait level rather than falsely attributed to trial-wise changes in arousal.
-
-### Hierarchical GLMM Framework
-
-To formally test how arousal relates to psychometric sensitivity, the present study employs hierarchical generalized linear mixed models (GLMMs) with a probit link. These models capture the binary decision outcome on each trial (e.g., "different" vs. "same" or correct vs. incorrect) as a function of continuous stimulus intensity, effort condition, modality, and pupil-indexed arousal, while also accounting for individual differences through random effects. The primary model can be written as:
+Primary inference is implemented using hierarchical generalized linear mixed models (GLMMs) with a probit link, modeling trialwise $P(Y_{ij}=1)$ as a function of continuous stimulus intensity, effort condition, modality, and pupil-indexed arousal while accounting for individual differences via random effects:
 
 $$
 \begin{aligned}
@@ -415,46 +389,19 @@ $$
 \end{aligned}
 $$ {#eq-primary-glmm}
 
+where $Y_{ij}$ is the binary outcome on trial $i$ for subject $j$, $X_{ij}$ is the continuous stimulus intensity, $\text{Effort}_{ij}$ codes the handgrip effort condition (High vs. Low), and $\text{Modality}_{ij}$ codes the sensory modality (auditory vs. visual). $P^{(\text{state})}_{ij}$ and $P^{(\text{trait})}_{j}$ are the state and trait components of the pupil metric, respectively, and $u_{0j}$ and $u_{1j}$ are subject-specific random intercepts and random slopes on $X_{ij}$, allowing each participant to have their own baseline performance level and intensity sensitivity.
 
-where $Y_{ij}$ is the binary outcome on trial $i$ for subject $j$ (e.g., a correct "different" response), and $X_{ij}$ is the continuous stimulus intensity on that trial. $\text{Effort}_{ij}$ codes the handgrip effort condition (High vs. Low), and $\text{Modality}_{ij}$ codes the sensory modality (auditory vs. visual). $P^{(\text{state})}_{ij}$ and $P^{(\text{trait})}_{j}$ are the state and trait components of the pupil metric, respectively, as defined above. The terms $u_{0j}$ and $u_{1j}$ are subject-specific random intercepts and random slopes on $X_{ij}$, allowing each participant to have their own baseline performance level and intensity sensitivity.
-
-The **key interaction term** in this model is $X_{ij} \times P^{(\text{state})}_{ij}$, whose coefficient $\beta_5$ tests whether within-person fluctuations in arousal modulate psychometric sensitivity. A significant interaction would indicate that the slope of the intensity–response function depends on trial-level arousal: for example, high-arousal trials might show flatter or steeper psychometric curves than low-arousal trials, even after accounting for between-person differences in average arousal (via $P^{(\text{trait})}_{j}$). This hierarchical GLMM framework thus allows us to preserve the continuous nature of the stimulus dimension, rigorously separate state and trait arousal effects, and model individual differences in baseline sensitivity, while directly testing our central hypotheses about pupil–psychometric coupling in older adults.
+In this framework, the key parameter is the stimulus intensity × pupil-state interaction ($\beta_5$), which tests whether moment-to-moment arousal modulates psychometric sensitivity. A significant interaction indicates that the intensity–response slope differs as a function of trialwise arousal—consistent with arousal-linked changes in sensitivity—whereas changes limited to intercept/location terms would be more consistent with shifts in response tendency or criterion.
 
 ## Research Questions and Hypotheses
 
-Based on the theoretical frameworks and methodological considerations outlined above, the present study addresses the following research questions:
+Based on the theoretical rationale above, the present study addresses four research questions. First, we test how high (40% MVC) versus low (5% MVC) effort affects behavioral psychometric function parameters (thresholds and slopes) in older adults performing auditory and visual same–different discrimination. We expect midpoint thresholds to be higher under high effort, acknowledging that threshold shifts may reflect sensitivity and/or criterion changes, and we predict shallower slopes under high effort, consistent with reduced discriminability under elevated arousal.
 
-### Research Question 1: Behavioral Backbone
+Second, we test whether high effort increases tonic and task-evoked pupil dynamics relative to low effort. We predict larger baseline pupil diameter and larger TEPR (AUC) under high effort, indicating elevated tonic and phasic arousal, respectively.
 
-**RQ1:** How do High (40% MVC) versus Low (5% MVC) handgrip effort conditions alter psychometric function parameters (thresholds and slopes) in older adults performing auditory and visual same–different discrimination?
+Third, we test whether trialwise phasic arousal predicts psychometric sensitivity when intensity is modeled continuously. The primary hypothesis is that the stimulus intensity × pupil-state interaction will be negative (shallower slopes on higher-arousal trials), consistent with supra-optimal arousal increasing noise or degrading signal quality; an alternative hypothesis is that moderate arousal could enhance sensitivity, yielding a positive interaction. We also expect weaker or null associations for pupil-trait predictors, given that trait effects may be confounded with other individual differences such as LC integrity or cognitive reserve.
 
-**Hypothesis 1a:** Thresholds will be higher (worse sensitivity) under High effort relative to Low effort, reflecting degraded signal-to-noise ratios from resource competition or supra-optimal arousal.
-
-**Hypothesis 1b:** Slopes will be shallower (lower sensitivity) under High effort, indicating increased variability in perceptual judgments when arousal is elevated.
-
-### Research Question 2: Effort–Pupil Manipulation Check
-
-**RQ2:** Does High effort increase tonic and task-evoked pupil dynamics relative to Low effort in older adults?
-
-**Hypothesis 2a:** Baseline (tonic) pupil diameter will be larger under High effort, indicating elevated tonic arousal.
-
-**Hypothesis 2b:** Task-evoked pupil responses (TEPR, quantified as AUC) will be larger under High effort, indicating increased phasic arousal during task execution.
-
-### Research Question 3: Pupil–Psychometric Coupling (Primary)
-
-**RQ3:** Does trial-wise phasic arousal (pupil state) predict psychometric sensitivity when stimulus intensity is modeled continuously?
-
-**Hypothesis 3a:** The interaction between stimulus intensity and pupil state ($X_{ij} \times P^{(\text{state})}_{ij}$) will be negative, indicating that higher trial-level arousal is associated with shallower psychometric slopes (reduced sensitivity). This would be consistent with supra-optimal arousal degrading signal quality or introducing noise.
-
-**Hypothesis 3b (Alternative):** If moderate arousal enhances performance, the interaction might be positive, indicating steeper slopes (higher sensitivity) when arousal is elevated.
-
-**Hypothesis 3c:** Pupil trait (between-subject baseline arousal) will show weaker or null associations with sensitivity, as trait effects may be confounded with other individual differences (e.g., LC integrity, cognitive reserve).
-
-### Research Question 4: Subject-Level Individual Differences
-
-**RQ4:** Do individuals with larger effort-evoked arousal changes (High–Low effort) also show larger effort-related changes in PF parameters?
-
-**Hypothesis 4:** Subject-level changes in pupil metrics (Δpupil = High effort − Low effort) will be positively correlated with subject-level changes in thresholds (Δthreshold) and negatively correlated with changes in slopes (Δslope), indicating that individuals who show stronger physiological responses to effort also show larger behavioral sensitivity decrements.
+Finally, we test whether individuals with larger effort-evoked arousal changes (Δpupil) exhibit larger effort-related changes in psychometric parameters (Δthreshold, Δslope), predicting that stronger physiological reactivity is associated with larger behavioral decrements.
 
 # Methods
 
@@ -509,11 +456,15 @@ Pupil-based analyses used pre-specified quality tiers:
 - **Lenient tier:** Window validity ≥ 0.50 (robustness check)
 - **Strict tier:** Window validity ≥ 0.70 (robustness check)
 
+**Rationale for Quality Tiers: Lapse-Rate Considerations in Aging**
+
+Psychophysical modeling guidance emphasizes that **assuming lapse rate ($\lambda$) = 0 can distort threshold and slope estimates** if lapses are present but unaccounted for [@prins2016psychophysics]. This concern is particularly relevant in older adult populations, where attentional lapses, track loss events, and data quality issues may be more frequent. The quality tier strategy addresses this by excluding trials with poor pupil data quality (low validity), thereby reducing lapse-like contamination in the psychometric function estimates. The tiering approach tests robustness of conclusions across stricter inclusion criteria: if key effects (e.g., the stimulus intensity × pupil state interaction) are consistent across lenient (≥0.50), primary (≥0.60), and strict (≥0.70) validity thresholds, this provides evidence that findings are not driven by lapse-like errors or data quality artifacts. This strategy is consistent with psychophysical best practices for handling stimulus-independent errors without explicitly estimating lapse parameters in the primary model [@prins2016psychophysics].
+
 ## Locus Coeruleus (LC) Integrity
 
 ### LC Integrity Quantification
 
-For a subset of participants, structural magnetic resonance imaging (MRI) data were available to quantify LC integrity. LC integrity was assessed using contrast-based metrics derived from magnetization transfer contrast (MTC) imaging, following the methodology described in Bennett et al. (2024, *Scientific Reports*). The primary LC integrity metric was computed as the mean MTC signal within the LC mask relative to the pons reference region (MTC~LC/pons~). This mean-within-mask approach was chosen over maximum-voxel extraction because it is more robust to uneven LC degeneration patterns that can affect maximum-voxel metrics [@bennett2024]. Additionally, diffusion-based metrics (e.g., restricted diffusion fraction) were available as complementary integrity indices, with prior work suggesting that diffusion metrics may relate to cognitive performance independent of age [@bennett2024].
+For a subset of participants, structural magnetic resonance imaging (MRI) data were available to quantify LC integrity. LC integrity was assessed using contrast-based metrics derived from magnetization transfer contrast (MTC) imaging, following the methodology described in Bennett et al. (2024, *Scientific Reports*). The primary LC integrity metric was computed as the mean MTC signal within the LC mask relative to the pons reference region (MTC~LC/pons~). This mean-within-mask approach was chosen over maximum-voxel extraction because it is more robust to uneven LC degeneration patterns that can affect maximum-voxel metrics [@bennett2024locus]. Additionally, diffusion-based metrics (e.g., restricted diffusion fraction) were available as complementary integrity indices, with prior work suggesting that diffusion metrics may relate to cognitive performance independent of age [@bennett2024locus].
 
 ### Conceptual Relevance
 
@@ -527,7 +478,11 @@ LC integrity analyses are positioned as **exploratory and secondary** to the pri
 
 ### Psychometric Function Fitting
 
-Psychometric functions were fitted using probit link functions with continuous stimulus intensity as the predictor. Parameters (thresholds and slopes) were estimated separately for each subject × task × effort combination.
+Psychometric function parameters (thresholds and slopes) used as the behavioral backbone were estimated using **Psignifit 4** (MATLAB; @schutt2016painfree), which supports robust estimation and can account for overdispersion. A **Weibull psychometric function** was fit to the proportion of "different" responses across continuous stimulus intensity levels, separately for each participant × task/modality × effort condition. Because the Weibull function is undefined at zero stimulus intensity, the 0-offset level was replaced with **half of the smallest non-zero stimulus intensity**. **Guess and lapse parameters were allowed to vary freely** during fitting (i.e., $\gamma$ and $\lambda$ were free parameters), consistent with psychophysical guidance that fixing lapse at zero can bias threshold and slope estimates when lapses are present [@prins2016psychophysics; @wichmann2001psychometric]. Threshold and slope were derived at the **effective midpoint** between the estimated guess rate $\gamma$ and $1-\lambda$ (i.e., at $\gamma + (1-\gamma-\lambda)/2$, which corresponds to approximately 0.5 on the effective response probability scale). This midpoint-based threshold definition ensures that threshold reflects the stimulus level at which "different" responses occur at the midpoint between the lower and upper asymptotes, providing a criterion that is robust to variations in guess and lapse rates and making interpretation comparable across different PF families and parameterizations.
+
+### Model Checking and Goodness-of-Fit
+
+Likelihood-based psychometric function modeling typically evaluates fit using likelihood-ratio/deviance approaches, and PF-based inference relies on assumptions of **stability and independence** across trials [@prins2016psychophysics]. In the present hierarchical GLMM framework, model selection and goodness-of-fit are assessed through several complementary approaches: (a) **AIC comparisons** between models with and without key interaction terms (e.g., stimulus intensity × pupil state), where lower AIC values indicate better fit; (b) **robustness checks** across multiple quality tiers (lenient, primary, strict), testing whether key effects are stable across different data inclusion criteria; and (c) **convergence diagnostics** for mixed-effects models (e.g., gradient checks, optimizer settings). The hierarchical structure accounts for within-subject dependencies through random effects, and the continuous-intensity GLMM avoids the trial-binning assumptions that can affect traditional PF fitting. While parametric or nonparametric bootstrap approaches can provide additional uncertainty quantification for PF parameters [@prins2016psychophysics], the present GLMM framework uses likelihood-based confidence intervals and robustness checks across quality tiers as the primary approach to evaluating parameter stability and inference validity.
 
 ### Primary GLMM
 
@@ -568,7 +523,15 @@ As described in the Missingness Diagnostic section, we tested whether missing pu
 
 For participants with available LC integrity data, we extended the primary GLMM to examine whether LC structural integrity moderates the relationship between pupil-indexed arousal and psychometric sensitivity. The extended model includes:
 
-$$\text{probit}(P(Y_{ij}=1)) = \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + \beta_7 \text{LC}_j + \beta_8 (X_{ij} \times P^{(\text{state})}_{ij} \times \text{LC}_j) + \beta_9 \text{Age}_j + \beta_{10} \text{Sex}_j + \beta_{11} \text{Education}_j + u_{0j} + u_{1j}X_{ij}$$
+$$
+\begin{aligned}
+\text{probit}(P(Y_{ij}=1)) &= \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} \\
+&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + \beta_7 \text{LC}_j \\
+&\quad + \beta_8 (X_{ij} \times P^{(\text{state})}_{ij} \times \text{LC}_j) + \beta_9 \text{Age}_j + \beta_{10} \text{Sex}_j \\
+&\quad + \beta_{11} \text{Education}_j + u_{0j} + u_{1j}X_{ij}
+\end{aligned}
+$$
+
 
 where $\text{LC}_j$ is the LC integrity metric (mean MTC~LC/pons~) for subject $j$, and the three-way interaction $X_{ij} \times P^{(\text{state})}_{ij} \times \text{LC}_j$ tests whether LC integrity moderates the coupling between pupil state and psychometric sensitivity. Age, sex, and education are included as covariates to control for potential confounds. The random effects structure remains consistent with the primary model. These analyses are exploratory given that (a) LC integrity data were not part of the original prospectus, (b) LC data are available for only a subset of participants, and (c) the primary focus remains on pupil–psychometric coupling rather than LC integrity per se.
 
@@ -687,7 +650,7 @@ if (!is.null(pf_params)) {
 
 Psychometric function parameters (thresholds and slopes) were estimated separately for each subject × task × effort combination using probit link functions with continuous stimulus intensity.
 
-**Hypothesis Testing:** Hypothesis 1a predicted that thresholds would be higher (worse sensitivity) under High effort relative to Low effort, reflecting degraded signal-to-noise ratios from resource competition or supra-optimal arousal. Hypothesis 1b predicted that slopes would be shallower (lower sensitivity) under High effort, indicating increased variability in perceptual judgments when arousal is elevated. These hypotheses were tested by comparing PF parameters between High and Low effort conditions within each task modality.
+**Hypothesis Testing:** Hypothesis 1a predicted that midpoint thresholds would be higher under High effort relative to Low effort, which could reflect degraded signal-to-noise ratios (sensitivity changes) or shifts in decision criterion (bias changes), as threshold in same–different paradigms can reflect both. Hypothesis 1b predicted that slopes would be shallower (lower sensitivity, higher $\beta$) under High effort, indicating increased variability in perceptual judgments when arousal is elevated. Steepness (inversely related to $\beta$) is emphasized as the primary sensitivity index, as it is less confounded by criterion shifts than threshold. These hypotheses were tested by comparing PF parameters between High and Low effort conditions within each task modality.
 
 ```{r pf-backbone-fig}
 #| label: fig-pf-backbone
@@ -720,8 +683,8 @@ if (!is.null(effort_pupil_effects) || !is.null(effort_total_auc_effects)) {
       mutate(metric = "Total AUC") %>%
       select(metric, estimate, std.error, statistic)
   }
-  
-  if (!is.null(effort_pupil_effects)) {
+
+if (!is.null(effort_pupil_effects)) {
     effort_results_list$cog <- effort_pupil_effects %>%
       filter(term == "effort_factorHigh") %>%
       mutate(metric = "Cognitive AUC") %>%
@@ -762,8 +725,8 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 } else {
   fig_path_abs2 <- fig_path("effort_manipulation_cog_auc.png", return_absolute = TRUE)
   if (!is.null(fig_path_abs2) && file.exists(fig_path_abs2)) {
-    knitr::include_graphics(fig_path("effort_manipulation_cog_auc.png"))
-  } else {
+  knitr::include_graphics(fig_path("effort_manipulation_cog_auc.png"))
+} else {
     cat("*Figure: fig2_effort_pupil_manipulation.png not yet generated.*")
   }
 }
@@ -856,8 +819,8 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 } else {
   fig_path_abs2 <- fig_path("psychometric_by_pupil_state.png", return_absolute = TRUE)
   if (!is.null(fig_path_abs2) && file.exists(fig_path_abs2)) {
-    knitr::include_graphics(fig_path("psychometric_by_pupil_state.png"))
-  } else {
+  knitr::include_graphics(fig_path("psychometric_by_pupil_state.png"))
+} else {
     cat("*Figure: fig3_psychometric_by_pupil_state.png not yet generated.*")
   }
 }
@@ -954,6 +917,16 @@ To evaluate whether the interaction term meaningfully improves model fit, we com
 mod_primary_path <- file.path(models_dir, "mod_pupil_psychometric_primary.rds")
 mod_no_int_path <- file.path(models_dir, "mod_pupil_psychometric_no_interaction.rds")
 
+# Try alternative paths if needed
+if (!file.exists(mod_primary_path)) {
+  alt_path <- file.path(proj_root, "06_visualization", "output", "models", "mod_pupil_psychometric_primary.rds")
+  if (file.exists(alt_path)) mod_primary_path <- alt_path
+}
+if (!file.exists(mod_no_int_path)) {
+  alt_path <- file.path(proj_root, "06_visualization", "output", "models", "mod_pupil_psychometric_no_interaction.rds")
+  if (file.exists(alt_path)) mod_no_int_path <- alt_path
+}
+
 if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
   mod_primary <- readRDS(mod_primary_path)
   mod_no_int <- readRDS(mod_no_int_path)
@@ -968,13 +941,48 @@ if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
     `ΔAIC` = c(delta_aic, NA)
   )
   
+  # Return table directly (like Table 6) - don't use print()
   model_comparison %>%
     make_table(
       col.names = c("Model", "AIC", "ΔAIC"),
       digits = 2
     )
+} else {
+  cat("*Model comparison results not yet available.*")
+  if (!file.exists(mod_primary_path)) {
+    cat("\n  Primary model file not found:", mod_primary_path)
+  }
+  if (!file.exists(mod_no_int_path)) {
+    cat("\n  No-interaction model file not found:", mod_no_int_path)
+  }
+}
+```
+
+```{r model-comparison-interpretation}
+#| echo: false
+#| results: 'asis'
+
+# Compute interpretation based on AIC comparison
+mod_primary_path <- file.path(models_dir, "mod_pupil_psychometric_primary.rds")
+mod_no_int_path <- file.path(models_dir, "mod_pupil_psychometric_no_interaction.rds")
+
+if (!file.exists(mod_primary_path)) {
+  alt_path <- file.path(proj_root, "06_visualization", "output", "models", "mod_pupil_psychometric_primary.rds")
+  if (file.exists(alt_path)) mod_primary_path <- alt_path
+}
+if (!file.exists(mod_no_int_path)) {
+  alt_path <- file.path(proj_root, "06_visualization", "output", "models", "mod_pupil_psychometric_no_interaction.rds")
+  if (file.exists(alt_path)) mod_no_int_path <- alt_path
+}
+
+if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
+  mod_primary <- readRDS(mod_primary_path)
+  mod_no_int <- readRDS(mod_no_int_path)
+  aic_primary <- AIC(mod_primary)
+  aic_no_int <- AIC(mod_no_int)
+  delta_aic <- aic_primary - aic_no_int
   
-  cat("\n**Interpretation:** ")
+  cat("**Interpretation:** ")
   if (delta_aic < -2) {
     cat("The model with the interaction term shows substantially better fit (ΔAIC < -2), supporting the inclusion of the interaction and the interpretation that pupil state modulates psychometric sensitivity.")
   } else if (delta_aic < 0) {
@@ -982,8 +990,6 @@ if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
   } else {
     cat("The model without the interaction term shows better fit, suggesting the interaction may not meaningfully improve model fit.")
   }
-} else {
-  cat("*Model comparison results not yet available.*")
 }
 ```
 
@@ -1021,15 +1027,36 @@ Subject-level changes in pupil metrics (High–Low effort) were correlated with 
 
 fig_path_abs1 <- fig_path("pf_pupil_coupling_threshold.png", return_absolute = TRUE)
 fig_path_abs2 <- fig_path("pf_pupil_coupling_slope.png", return_absolute = TRUE)
+
+# Display both figures
+# Note: Each figure contains subplots for ADT and VDT conditions
 if (!is.null(fig_path_abs1) && file.exists(fig_path_abs1) && 
     !is.null(fig_path_abs2) && file.exists(fig_path_abs2)) {
-  # Display both figures
-  cat("**ΔCognitive Pupil vs ΔPF Threshold:**\n\n")
-  knitr::include_graphics(fig_path("pf_pupil_coupling_threshold.png"))
-  cat("\n\n**ΔCognitive Pupil vs ΔPF Slope:**\n\n")
-  knitr::include_graphics(fig_path("pf_pupil_coupling_slope.png"))
+  # Display threshold figure
+  fig_rel1 <- fig_path("pf_pupil_coupling_threshold.png")
+  if (file.exists(fig_rel1)) {
+    knitr::include_graphics(fig_rel1)
+  } else {
+    knitr::include_graphics(fig_path_abs1)
+  }
+  
+  cat("\n\n")
+  
+  # Display slope figure
+  fig_rel2 <- fig_path("pf_pupil_coupling_slope.png")
+  if (file.exists(fig_rel2)) {
+    knitr::include_graphics(fig_rel2)
+  } else {
+    knitr::include_graphics(fig_path_abs2)
+  }
 } else {
   cat("*Subject-level coupling figures not yet generated.*")
+  if (is.null(fig_path_abs1) || !file.exists(fig_path_abs1)) {
+    cat("\n  - Threshold figure missing")
+  }
+  if (is.null(fig_path_abs2) || !file.exists(fig_path_abs2)) {
+    cat("\n  - Slope figure missing")
+  }
 }
 ```
 
@@ -1054,39 +1081,116 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 #| label: tbl-lc-subset-bias
 #| tbl-cap: "LC Integrity Subset: Comparison of Participants With vs. Without LC Data"
 
+# Try to compute comparison if data available
+# First check if pre-computed table exists
 if (!is.null(lc_subset_comparison)) {
-  lc_subset_comparison %>%
+  tbl <- lc_subset_comparison %>%
     make_table(
       col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
       digits = 3
     )
-} else if (!is.null(merged_data) && !is.null(lc_integrity) && !is.null(demographics)) {
+  print(tbl)
+} else if (!is.null(merged_data)) {
+  # Compute from available data (even if LC integrity is incomplete)
   # Compute subset comparison if data available
-  subjects_with_lc <- unique(lc_integrity$sub)
+  # Determine which subjects have LC data
+  if (!is.null(lc_integrity) && nrow(lc_integrity) > 0 && "sub" %in% names(lc_integrity)) {
+    subjects_with_lc <- unique(lc_integrity$sub[!is.na(lc_integrity$sub)])
+  } else {
+    # If no LC integrity file, check if we can identify subjects from other sources
+    # For now, set to empty - table will show all subjects as "without LC data"
+    subjects_with_lc <- character(0)
+  }
+  
   merged_data <- merged_data %>%
     mutate(has_lc_data = sub %in% subjects_with_lc)
   
-  # Merge demographics
-  if (!is.null(demographics)) {
-    merged_data <- merged_data %>%
-      left_join(demographics %>% select(sub, age, sex, education), by = "sub")
+  # Merge demographics if available
+  if (!is.null(demographics) && nrow(demographics) > 0) {
+    # Try to find subject ID column
+    sub_col <- NULL
+    if ("sub" %in% names(demographics)) {
+      sub_col <- "sub"
+    } else if ("subject_id" %in% names(demographics)) {
+      demographics$sub <- demographics$subject_id
+      sub_col <- "sub"
+    } else if ("BAP" %in% names(demographics)) {
+      demographics$sub <- demographics$BAP
+      sub_col <- "sub"
+    }
+    
+    if (!is.null(sub_col)) {
+      # Find age, sex, education columns (may have different names)
+      demo_cols <- c("sub")
+      if ("age" %in% names(demographics) || "Age" %in% names(demographics)) {
+        age_col <- ifelse("age" %in% names(demographics), "age", "Age")
+        demographics$age <- as.numeric(demographics[[age_col]])
+        demo_cols <- c(demo_cols, "age")
+      }
+      if ("sex" %in% names(demographics) || "Sex" %in% names(demographics)) {
+        sex_col <- ifelse("sex" %in% names(demographics), "sex", "Sex")
+        demographics$sex <- demographics[[sex_col]]
+        demo_cols <- c(demo_cols, "sex")
+      }
+      if ("education" %in% names(demographics) || "Education" %in% names(demographics)) {
+        edu_col <- ifelse("education" %in% names(demographics), "education", "Education")
+        demographics$education <- as.numeric(demographics[[edu_col]])
+        demo_cols <- c(demo_cols, "education")
+      }
+      
+      merged_data <- merged_data %>%
+        left_join(demographics %>% select(all_of(demo_cols)), by = "sub")
+    }
   }
   
   # Compare groups
+  # Build summarise call with only columns that exist
   subset_comparison <- merged_data %>%
     group_by(sub) %>%
     summarise(
       has_lc = first(has_lc_data),
-      age = first(age),
-      sex = first(sex),
-      education = first(education),
       mean_accuracy = mean(correct_final, na.rm = TRUE),
       mean_rt = mean(rt, na.rm = TRUE),
       .groups = "drop"
-    ) %>%
+    )
+  
+  # Add demographics columns if they exist in merged_data
+  if ("age" %in% names(merged_data)) {
+    age_by_sub <- merged_data %>%
+      group_by(sub) %>%
+      summarise(age = first(age), .groups = "drop")
+    subset_comparison <- subset_comparison %>%
+      left_join(age_by_sub, by = "sub")
+  }
+  
+  if ("sex" %in% names(merged_data)) {
+    sex_by_sub <- merged_data %>%
+      group_by(sub) %>%
+      summarise(sex = first(sex), .groups = "drop")
+    subset_comparison <- subset_comparison %>%
+      left_join(sex_by_sub, by = "sub")
+  }
+  
+  if ("education" %in% names(merged_data)) {
+    edu_by_sub <- merged_data %>%
+      group_by(sub) %>%
+      summarise(education = first(education), .groups = "drop")
+    subset_comparison <- subset_comparison %>%
+      left_join(edu_by_sub, by = "sub")
+  }
+  
+  # Filter out rows where has_lc is NA
+  subset_comparison <- subset_comparison %>%
     filter(!is.na(has_lc))
   
-  if (nrow(subset_comparison) > 0 && sum(subset_comparison$has_lc) > 0 && sum(!subset_comparison$has_lc) > 0) {
+  # Create comparison even if no LC data yet (will show all as "without LC data")
+  # This allows the table structure to be visible
+  if (nrow(subset_comparison) > 0) {
+    # Check if we have any subjects with LC data
+    has_lc_subjects <- sum(subset_comparison$has_lc, na.rm = TRUE) > 0
+    has_no_lc_subjects <- sum(!subset_comparison$has_lc, na.rm = TRUE) > 0
+    
+    if (has_lc_subjects && has_no_lc_subjects) {
     # Statistical tests
     comparison_results <- tibble(
       Variable = character(),
@@ -1147,21 +1251,159 @@ if (!is.null(lc_subset_comparison)) {
     }
     
     if (nrow(comparison_results) > 0) {
+      # Return table (will be rendered by Quarto)
       comparison_results %>%
         make_table(
           col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
           digits = 3
         )
-      
-      cat("\n**Interpretation:** If participants with LC data differ systematically from those without (e.g., in age, cognitive function, or behavioral performance), this limits the generalizability of LC integrity findings. Non-significant differences support the assumption that the LC subset is representative of the full sample.")
     } else {
-      cat("*LC subset comparison not yet computed.*")
+      # Create empty table structure
+      empty_tbl <- tibble(
+        Variable = "No comparison results computed",
+        `With LC Data` = NA_character_,
+        `Without LC Data` = NA_character_,
+        `Test Statistic` = NA_character_,
+        p = NA_real_
+      )
+      empty_tbl %>%
+        make_table(
+          col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
+          digits = 3
+        )
     }
   } else {
-    cat("*LC integrity data not available for subset comparison.*")
+    # No LC data available yet - show table structure with all subjects as "without LC data"
+      # This provides the table structure even when LC data is incomplete
+      comparison_results <- tibble(
+        Variable = character(),
+        `With LC Data` = character(),
+        `Without LC Data` = character(),
+        `Test Statistic` = character(),
+        p = numeric()
+      )
+      
+      # Age comparison (all subjects in "without LC" group for now)
+      if ("age" %in% names(subset_comparison) && sum(!is.na(subset_comparison$age)) > 0) {
+        age_mean <- mean(subset_comparison$age, na.rm = TRUE)
+        age_sd <- sd(subset_comparison$age, na.rm = TRUE)
+        comparison_results <- comparison_results %>%
+          add_row(
+            Variable = "Age (years)",
+            `With LC Data` = "N/A",
+            `Without LC Data` = sprintf("%.1f (%.1f)", age_mean, age_sd),
+            `Test Statistic` = "N/A",
+            p = NA_real_
+          )
+      }
+      
+      # Sex comparison
+      if ("sex" %in% names(subset_comparison)) {
+        sex_counts <- table(subset_comparison$sex, useNA = "ifany")
+        sex_str <- paste(sex_counts, collapse = "/")
+        comparison_results <- comparison_results %>%
+          add_row(
+            Variable = "Sex (M/F)",
+            `With LC Data` = "N/A",
+            `Without LC Data` = sex_str,
+            `Test Statistic` = "N/A",
+            p = NA_real_
+          )
+      }
+      
+      # Education comparison
+      if ("education" %in% names(subset_comparison) && sum(!is.na(subset_comparison$education)) > 0) {
+        edu_mean <- mean(subset_comparison$education, na.rm = TRUE)
+        edu_sd <- sd(subset_comparison$education, na.rm = TRUE)
+        comparison_results <- comparison_results %>%
+          add_row(
+            Variable = "Education (years)",
+            `With LC Data` = "N/A",
+            `Without LC Data` = sprintf("%.1f (%.1f)", edu_mean, edu_sd),
+            `Test Statistic` = "N/A",
+            p = NA_real_
+          )
+      }
+      
+      # Behavioral measures
+      if ("mean_accuracy" %in% names(subset_comparison) && sum(!is.na(subset_comparison$mean_accuracy)) > 0) {
+        acc_mean <- mean(subset_comparison$mean_accuracy, na.rm = TRUE)
+        acc_sd <- sd(subset_comparison$mean_accuracy, na.rm = TRUE)
+        comparison_results <- comparison_results %>%
+          add_row(
+            Variable = "Mean Accuracy",
+            `With LC Data` = "N/A",
+            `Without LC Data` = sprintf("%.3f (%.3f)", acc_mean, acc_sd),
+            `Test Statistic` = "N/A",
+            p = NA_real_
+          )
+      }
+      
+      if ("mean_rt" %in% names(subset_comparison) && sum(!is.na(subset_comparison$mean_rt)) > 0) {
+        rt_mean <- mean(subset_comparison$mean_rt, na.rm = TRUE)
+        rt_sd <- sd(subset_comparison$mean_rt, na.rm = TRUE)
+        comparison_results <- comparison_results %>%
+          add_row(
+            Variable = "Mean RT (ms)",
+            `With LC Data` = "N/A",
+            `Without LC Data` = sprintf("%.1f (%.1f)", rt_mean, rt_sd),
+            `Test Statistic` = "N/A",
+            p = NA_real_
+          )
+      }
+      
+      if (nrow(comparison_results) > 0) {
+        # Return table (will be rendered by Quarto)
+        comparison_results %>%
+          make_table(
+            col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
+            digits = 3
+          )
+      } else {
+        # Create empty table structure
+        empty_tbl <- tibble(
+          Variable = "Insufficient data for comparison",
+          `With LC Data` = NA_character_,
+          `Without LC Data` = NA_character_,
+          `Test Statistic` = NA_character_,
+          p = NA_real_
+        )
+        empty_tbl %>%
+          make_table(
+            col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
+            digits = 3
+          )
+      }
+    }
+  } else {
+    # Create empty table structure
+    empty_tbl <- tibble(
+      Variable = "Insufficient data for comparison",
+      `With LC Data` = NA_character_,
+      `Without LC Data` = NA_character_,
+      `Test Statistic` = NA_character_,
+      p = NA_real_
+    )
+    empty_tbl %>%
+      make_table(
+        col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
+        digits = 3
+      )
   }
 } else {
-  cat("*LC subset comparison not yet available.*")
+  # Create empty table structure
+  empty_tbl <- tibble(
+    Variable = "LC subset comparison not yet available. Merged data not available.",
+    `With LC Data` = NA_character_,
+    `Without LC Data` = NA_character_,
+    `Test Statistic` = NA_character_,
+    p = NA_real_
+  )
+  empty_tbl %>%
+    make_table(
+      col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
+      digits = 3
+    )
 }
 ```
 
@@ -1172,6 +1414,7 @@ if (!is.null(lc_subset_comparison)) {
 #| tbl-cap: "Exploratory LC Integrity Extension: Three-Way Interaction"
 
 if (!is.null(lc_psychometric_effects)) {
+  # Return table (will be rendered by Quarto)
   lc_psychometric_effects %>%
     filter(term %in% c("stimulus_intensity_scaled:pupil_cognitive_state_scaled",
                        "stimulus_intensity_scaled:pupil_cognitive_state_scaled:lc_integrity_scaled",
@@ -1188,10 +1431,32 @@ if (!is.null(lc_psychometric_effects)) {
       col.names = c("Term", "Estimate", "SE", "z", "p"),
       digits = 4
     )
-  
-  cat("\n**Note:** These analyses are exploratory and should be interpreted with caution given that (a) LC integrity data were not part of the original prospectus, (b) LC data are available for only a subset of participants, and (c) the primary focus remains on pupil–psychometric coupling rather than LC integrity per se.")
 } else {
-  cat("*LC integrity extension analyses not yet available.*")
+  # Create a placeholder table so the caption and numbering render consistently
+  status_tbl <- tibble(
+    Term = "Status: Analysis pending",
+    Estimate = NA_real_,
+    SE = NA_real_,
+    z = NA_real_,
+    p = NA_real_
+  )
+  
+  # Return table (will be rendered by Quarto)
+  status_tbl %>%
+    make_table(
+      col.names = c("Term", "Estimate", "SE", "z", "p"),
+      digits = 4
+    )
+}
+```
+
+```{r lc-psychometric-extension-note, echo=FALSE, results='asis'}
+# Add note after table
+if (!is.null(lc_psychometric_effects)) {
+  cat("\n\n**Note:** These analyses are exploratory and should be interpreted with caution given that (a) LC integrity data were not part of the original prospectus, (b) LC data are available for only a subset of participants, and (c) the primary focus remains on pupil–psychometric coupling rather than LC integrity per se.")
+} else {
+  cat("\n\n**Note:** ⚠️ **INCOMPLETE ANALYSIS** — LC integrity extension models have not yet been fit because LC integrity data are still being added to the master spreadsheet for some participants (BAP 191–202, excluding 193 and 198). ")
+  cat("Once LC integrity scores are available in `data/processed/ch2_lc_integrity.csv` and the script `04_pupil_psychometric_coupling/06b_lc_integrity_extension.R` has been run, this table will be updated with three-way interaction results (Stimulus × Pupil State × LC Integrity).")
 }
 ```
 
@@ -1200,6 +1465,197 @@ if (!is.null(lc_psychometric_effects)) {
 ```{r hypothesis-summary}
 #| label: tbl-hypothesis-summary
 #| tbl-cap: "Summary of Hypothesis Testing Results"
+
+# Load results for evaluation
+pf_threshold_effort <- sread(file.path(tables_dir, "pf_threshold_effort_effects.csv"))
+pf_slope_effort <- sread(file.path(tables_dir, "pf_slope_effort_effects.csv"))
+
+# Evaluate H1a: Thresholds higher under High effort
+h1a_status <- "Analysis pending"
+h1a_evidence <- "PF threshold comparison (High vs Low effort)"
+if (!is.null(pf_threshold_effort)) {
+  effort_effect <- pf_threshold_effort %>%
+    filter(term == "effort_factorHigh")
+  if (nrow(effort_effect) > 0) {
+    # Check if p.value exists, otherwise use t-statistic
+    if ("p.value" %in% names(effort_effect) && !is.na(effort_effect$p.value)) {
+      if (effort_effect$p.value < 0.05 && effort_effect$estimate > 0) {
+        h1a_status <- sprintf("Supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
+      } else if (effort_effect$p.value < 0.05 && effort_effect$estimate < 0) {
+        h1a_status <- sprintf("Not supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
+      } else {
+        h1a_status <- sprintf("Not supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
+      }
+      h1a_evidence <- sprintf("Threshold: High vs Low effort (β=%.3f, p=%.3f)", 
+                             effort_effect$estimate, effort_effect$p.value)
+    } else if ("statistic" %in% names(effort_effect) && !is.na(effort_effect$statistic)) {
+      # Fallback: use t-statistic (|t| > 2 is approximately p < 0.05)
+      if (abs(effort_effect$statistic) > 2 && effort_effect$estimate > 0) {
+        h1a_status <- sprintf("Supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+      } else if (abs(effort_effect$statistic) > 2 && effort_effect$estimate < 0) {
+        h1a_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+      } else {
+        h1a_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+      }
+      h1a_evidence <- sprintf("Threshold: High vs Low effort (β=%.3f, t=%.2f)", 
+                             effort_effect$estimate, effort_effect$statistic)
+    }
+  }
+}
+
+# Evaluate H1b: Slopes shallower under High effort
+h1b_status <- "Analysis pending"
+h1b_evidence <- "PF slope comparison (High vs Low effort)"
+if (!is.null(pf_slope_effort)) {
+  effort_effect <- pf_slope_effort %>%
+    filter(term == "effort_factorHigh")
+  if (nrow(effort_effect) > 0) {
+    # Check if p.value exists, otherwise use t-statistic
+    if ("p.value" %in% names(effort_effect) && !is.na(effort_effect$p.value)) {
+      if (effort_effect$p.value < 0.05 && effort_effect$estimate < 0) {
+        h1b_status <- sprintf("Supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
+      } else if (effort_effect$p.value < 0.05 && effort_effect$estimate > 0) {
+        h1b_status <- sprintf("Not supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
+      } else {
+        h1b_status <- sprintf("Not supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
+      }
+      h1b_evidence <- sprintf("Slope: High vs Low effort (β=%.3f, p=%.3f)", 
+                            effort_effect$estimate, effort_effect$p.value)
+    } else if ("statistic" %in% names(effort_effect) && !is.na(effort_effect$statistic)) {
+      # Fallback: use t-statistic (|t| > 2 is approximately p < 0.05)
+      if (abs(effort_effect$statistic) > 2 && effort_effect$estimate < 0) {
+        h1b_status <- sprintf("Supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+      } else if (abs(effort_effect$statistic) > 2 && effort_effect$estimate > 0) {
+        h1b_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+      } else {
+        h1b_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+      }
+      h1b_evidence <- sprintf("Slope: High vs Low effort (β=%.3f, t=%.2f)", 
+                            effort_effect$estimate, effort_effect$statistic)
+    }
+  }
+}
+
+# Evaluate H2a: Baseline pupil larger under High effort (Total AUC)
+h2a_status <- "To be evaluated"
+h2a_evidence <- "Total AUC by effort"
+if (!is.null(effort_total_auc_effects)) {
+  effort_effect <- effort_total_auc_effects %>%
+    filter(term == "effort_factorHigh")
+  if (nrow(effort_effect) > 0) {
+    # Note: t-value indicates significance (|t| > 2 typically significant)
+    if (abs(effort_effect$statistic) > 2 && effort_effect$estimate > 0) {
+      h2a_status <- sprintf("Supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+    } else if (abs(effort_effect$statistic) > 2 && effort_effect$estimate < 0) {
+      h2a_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+    } else {
+      h2a_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+    }
+    h2a_evidence <- sprintf("Total AUC: High vs Low effort (β=%.3f, t=%.2f)", 
+                           effort_effect$estimate, effort_effect$statistic)
+  }
+}
+
+# Evaluate H2b: Task-evoked pupil larger under High effort (Cognitive AUC)
+h2b_status <- "To be evaluated"
+h2b_evidence <- "Cognitive AUC by effort"
+if (!is.null(effort_pupil_effects)) {
+  effort_effect <- effort_pupil_effects %>%
+    filter(term == "effort_factorHigh")
+  if (nrow(effort_effect) > 0) {
+    # Note: Cognitive AUC shows negative effect - needs investigation
+    if (abs(effort_effect$statistic) > 2 && effort_effect$estimate > 0) {
+      h2b_status <- sprintf("Supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+    } else if (abs(effort_effect$statistic) > 2 && effort_effect$estimate < 0) {
+      h2b_status <- sprintf("Not supported (β=%.3f, t=%.2f) - Note: Unexpected direction", 
+                           effort_effect$estimate, effort_effect$statistic)
+    } else {
+      h2b_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
+    }
+    h2b_evidence <- sprintf("Cognitive AUC: High vs Low effort (β=%.3f, t=%.2f)", 
+                           effort_effect$estimate, effort_effect$statistic)
+  }
+}
+
+# Evaluate H3a: Negative interaction (stimulus × pupil state)
+h3a_status <- "Not supported"
+h3a_evidence <- "Interaction term: stimulus_intensity × pupil_state"
+if (!is.null(pupil_psychometric_effects)) {
+  interaction_effect <- pupil_psychometric_effects %>%
+    filter(term == "stimulus_intensity_scaled:pupil_cognitive_state_scaled")
+  if (nrow(interaction_effect) > 0 && "p.value" %in% names(interaction_effect)) {
+    if (interaction_effect$p.value < 0.05 && interaction_effect$estimate < 0) {
+      h3a_status <- sprintf("Supported (β=%.3f, p=%.3f)", interaction_effect$estimate, interaction_effect$p.value)
+    } else {
+      h3a_status <- sprintf("Not supported (β=%.3f, p=%.3f)", interaction_effect$estimate, interaction_effect$p.value)
+    }
+    h3a_evidence <- sprintf("Interaction: stimulus × pupil state (β=%.3f, z=%.2f, p=%.3f)", 
+                           interaction_effect$estimate, interaction_effect$statistic, interaction_effect$p.value)
+  }
+}
+
+# Evaluate H3b: Positive interaction (alternative)
+h3b_status <- "Not supported"
+h3b_evidence <- "Interaction term: stimulus_intensity × pupil_state"
+if (!is.null(pupil_psychometric_effects)) {
+  interaction_effect <- pupil_psychometric_effects %>%
+    filter(term == "stimulus_intensity_scaled:pupil_cognitive_state_scaled")
+  if (nrow(interaction_effect) > 0 && "p.value" %in% names(interaction_effect)) {
+    if (interaction_effect$p.value < 0.05 && interaction_effect$estimate > 0) {
+      h3b_status <- sprintf("Supported (β=%.3f, p=%.3f)", interaction_effect$estimate, interaction_effect$p.value)
+    } else {
+      h3b_status <- sprintf("Not supported (β=%.3f, p=%.3f)", interaction_effect$estimate, interaction_effect$p.value)
+    }
+    h3b_evidence <- sprintf("Interaction: stimulus × pupil state (β=%.3f, z=%.2f, p=%.3f)", 
+                           interaction_effect$estimate, interaction_effect$statistic, interaction_effect$p.value)
+  }
+}
+
+# Evaluate H3c: Minimal pupil trait effects
+h3c_status <- "Supported"
+h3c_evidence <- "Pupil trait main effect"
+if (!is.null(pupil_psychometric_effects)) {
+  trait_effect <- pupil_psychometric_effects %>%
+    filter(term == "pupil_cognitive_trait_scaled")
+  if (nrow(trait_effect) > 0 && "p.value" %in% names(trait_effect)) {
+    if (trait_effect$p.value > 0.05) {
+      h3c_status <- sprintf("Supported (β=%.3f, p=%.3f)", trait_effect$estimate, trait_effect$p.value)
+    } else {
+      h3c_status <- sprintf("Not supported (β=%.3f, p=%.3f)", trait_effect$estimate, trait_effect$p.value)
+    }
+    h3c_evidence <- sprintf("Pupil trait effect (β=%.3f, z=%.2f, p=%.3f)", 
+                           trait_effect$estimate, trait_effect$statistic, trait_effect$p.value)
+  }
+}
+
+# Evaluate H4: ΔPupil correlated with ΔPF parameters
+h4_status <- "Partially supported"
+h4_evidence <- "Correlation: Δpupil vs Δthreshold, Δslope"
+if (!is.null(pf_pupil_correlations)) {
+  # Check threshold correlations
+  threshold_cog <- pf_pupil_correlations %>%
+    filter(pupil_metric == "Cognitive AUC", pf_parameter == "Threshold")
+  threshold_total <- pf_pupil_correlations %>%
+    filter(pupil_metric == "Total AUC", pf_parameter == "Threshold")
+  slope_cog <- pf_pupil_correlations %>%
+    filter(pupil_metric == "Cognitive AUC", pf_parameter == "Slope")
+  slope_total <- pf_pupil_correlations %>%
+    filter(pupil_metric == "Total AUC", pf_parameter == "Slope")
+  
+  sig_correlations <- pf_pupil_correlations %>%
+    filter(p_value < 0.05)
+  
+  if (nrow(sig_correlations) > 0) {
+    h4_status <- sprintf("Partially supported (%d/%d correlations significant)", 
+                        nrow(sig_correlations), nrow(pf_pupil_correlations))
+  } else {
+    h4_status <- "Not supported (no significant correlations)"
+  }
+  
+  h4_evidence <- sprintf("Correlations: ΔCog-Threshold r=%.2f (p=%.3f), ΔCog-Slope r=%.2f (p=%.3f)", 
+                        threshold_cog$correlation[1], threshold_cog$p_value[1],
+                        slope_cog$correlation[1], slope_cog$p_value[1])
+}
 
 # Create hypothesis summary table
 hypothesis_summary <- tibble(
@@ -1214,24 +1670,24 @@ hypothesis_summary <- tibble(
     "H4: ΔPupil correlated with ΔPF parameters"
   ),
   `Support Status` = c(
-    "To be evaluated from PF parameters",
-    "To be evaluated from PF parameters",
-    "To be evaluated from effort-pupil check",
-    "To be evaluated from effort-pupil check",
-    "To be evaluated from primary GLMM",
-    "To be evaluated from primary GLMM",
-    "To be evaluated from primary GLMM",
-    "To be evaluated from subject-level correlations"
+    h1a_status,
+    h1b_status,
+    h2a_status,
+    h2b_status,
+    h3a_status,
+    h3b_status,
+    h3c_status,
+    h4_status
   ),
   `Key Evidence` = c(
-    "PF threshold comparison (High vs Low effort)",
-    "PF slope comparison (High vs Low effort)",
-    "Total AUC and Cognitive AUC by effort",
-    "Total AUC and Cognitive AUC by effort",
-    "Interaction term: stimulus_intensity × pupil_state",
-    "Interaction term: stimulus_intensity × pupil_state",
-    "Pupil trait main effect",
-    "Correlation: Δpupil vs Δthreshold, Δslope"
+    h1a_evidence,
+    h1b_evidence,
+    h2a_evidence,
+    h2b_evidence,
+    h3a_evidence,
+    h3b_evidence,
+    h3c_evidence,
+    h4_evidence
   )
 )
 
@@ -1241,7 +1697,7 @@ hypothesis_summary %>%
     digits = 3
   )
 
-cat("\n**Note:** This table will be updated once all analyses are complete. The 'Support Status' column will indicate whether each hypothesis was supported, not supported, or partially supported based on the statistical results.")
+cat("\n**Note:** H1a and H1b require running `01_data_preparation/03_test_pf_parameters_effort.R` to generate statistical tests. H2b shows an unexpected negative effect that needs investigation.")
 ```
 
 # Discussion

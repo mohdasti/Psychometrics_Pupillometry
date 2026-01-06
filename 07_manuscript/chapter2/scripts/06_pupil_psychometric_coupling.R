@@ -298,11 +298,13 @@ p2 <- pred_data %>%
   ggplot(aes(x = stimulus_intensity_scaled, y = pred, color = pupil_state_label)) +
   geom_line(size = 1.2) +
   facet_grid(task_factor ~ effort_factor) +
-  scale_color_manual(values = c("Low Pupil" = "blue", "Medium Pupil" = "gray", "High Pupil" = "red")) +
+  scale_color_manual(
+    values = c("Low Pupil" = "#2E86AB", "Medium Pupil" = "#F18F01", "High Pupil" = "#A23B72"),
+    name = "Pupil State"
+  ) +
   labs(
     x = "Stimulus Intensity (scaled)",
     y = "Predicted Probability 'Different'",
-    color = "Pupil State",
     title = "Model Predictions: Stimulus × Pupil State Interaction"
   ) +
   theme_minimal()

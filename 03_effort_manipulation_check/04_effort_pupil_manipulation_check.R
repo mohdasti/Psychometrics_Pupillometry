@@ -134,7 +134,7 @@ if ("total_auc" %in% names(dat_analysis)) {
     geom_boxplot(alpha = 0.7, outlier.shape = NA) +
     geom_jitter(width = 0.2, alpha = 0.3, size = 0.5) +
     facet_wrap(~ task_factor) +
-    scale_fill_manual(values = c("Low" = "lightblue", "High" = "darkred")) +
+    scale_fill_manual(values = c("Low" = "#2E86AB", "High" = "#A23B72")) +
     labs(
       x = "Effort Condition",
       y = "Total AUC (baseline-corrected)",
@@ -165,7 +165,7 @@ if ("cog_auc" %in% names(dat_analysis)) {
     geom_boxplot(alpha = 0.7, outlier.shape = NA) +
     geom_jitter(width = 0.2, alpha = 0.3, size = 0.5) +
     facet_wrap(~ task_factor) +
-    scale_fill_manual(values = c("Low" = "lightblue", "High" = "darkred")) +
+    scale_fill_manual(values = c("Low" = "#2E86AB", "High" = "#A23B72")) +
     labs(
       x = "Effort Condition",
       y = "Cognitive AUC (fixed post-target window)",

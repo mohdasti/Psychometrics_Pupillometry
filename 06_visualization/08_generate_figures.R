@@ -18,12 +18,61 @@ cat("Loading data for figure generation...\n")
 dat_file <- merged_trial_file
 dat <- read_csv(dat_file, show_col_types = FALSE)
 
+# Check for quality tier column and create if missing
+# The data might have gate_pupil_primary or we need to create quality_primary
+if (!"quality_primary" %in% names(dat)) {
+  if ("gate_pupil_primary" %in% names(dat)) {
+    dat$quality_primary <- dat$gate_pupil_primary
+    cat("Using gate_pupil_primary as quality_primary\n")
+  } else if ("baseline_quality" %in% names(dat) && "cog_quality" %in% names(dat)) {
+    # Create quality_primary based on quality thresholds
+    dat$quality_primary <- dat$baseline_quality >= 0.60 & dat$cog_quality >= 0.60
+    cat("Created quality_primary from baseline_quality and cog_quality\n")
+  } else {
+    # If no quality columns exist, set all to TRUE (no filtering)
+    dat$quality_primary <- TRUE
+    warning("No quality columns found. Setting all trials as quality_primary = TRUE")
+  }
+}
+
+# Check for pupil state/trait columns and create if missing
+# These are computed by the quality tiers script (within-subject centering)
+if (!"pupil_cognitive_state" %in% names(dat) || !"pupil_cognitive_trait" %in% names(dat)) {
+  if ("cog_auc" %in% names(dat)) {
+    cat("Computing pupil state/trait components from cog_auc...\n")
+    # Compute trait (subject mean)
+    subject_means <- dat %>%
+      filter(!is.na(cog_auc)) %>%
+      group_by(sub) %>%
+      summarise(
+        pupil_cognitive_trait = mean(cog_auc, na.rm = TRUE),
+        pupil_total_auc_trait = if("total_auc" %in% names(dat)) mean(total_auc, na.rm = TRUE) else NA,
+        .groups = "drop"
+      )
+    
+    # Merge back and compute state (deviation from trait)
+    dat <- dat %>%
+      left_join(subject_means, by = "sub") %>%
+      mutate(
+        pupil_cognitive_state = ifelse(!is.na(cog_auc) & !is.na(pupil_cognitive_trait),
+                                      cog_auc - pupil_cognitive_trait, NA),
+        pupil_total_auc_state = if("total_auc" %in% names(dat) && "pupil_total_auc_trait" %in% names(dat)) {
+          ifelse(!is.na(total_auc) & !is.na(pupil_total_auc_trait),
+                 total_auc - pupil_total_auc_trait, NA)
+        } else NA
+      )
+    cat("Created pupil_cognitive_state and pupil_cognitive_trait\n")
+  } else {
+    warning("cog_auc not found. Cannot compute pupil state/trait. Some figures will be skipped.")
+  }
+}
+
 pf_file <- pf_params_file
 if (file.exists(pf_file)) {
   pf_params <- read_csv(pf_file, show_col_types = FALSE)
 } else {
   pf_params <- NULL
-  warning("PF parameters not found. Some figures will be skipped.")
+  cat("Note: PF parameters file not found. Some figures will be skipped.\n")
 }
 
 # ============================================================================
@@ -59,7 +108,7 @@ p1 <- dat_fig1 %>%
   stat_summary_bin(fun = "mean", bins = 8, geom = "point", size = 2, alpha = 0.7) +
   stat_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
   facet_wrap(~ task_factor, scales = "free_x") +
-  scale_color_manual(values = c("Low" = "blue", "High" = "red")) +
+  scale_color_manual(values = c("Low" = "#2E86AB", "High" = "#A23B72")) +
   labs(
     x = "Stimulus Intensity",
     y = "Proportion 'Different'",
@@ -74,10 +123,17 @@ ggsave(file.path(figures_dir, "fig1_psychometric_by_effort.png"),
 cat("✓ Saved: fig1_psychometric_by_effort.png\n")
 
 # ============================================================================
-# FIGURE 2: Effort-Pupil Manipulation Check (Summary)
+# FIGURE 2: Effort-Pupil Manipulation Check (Raincloud Plot)
 # ============================================================================
 
 cat("\n=== Figure 2: Effort-Pupil Manipulation Check ===\n")
+
+# Check for ggdist (recommended for proper half-violins)
+has_ggdist <- requireNamespace("ggdist", quietly = TRUE)
+if (!has_ggdist) {
+  cat("  Note: Install 'ggdist' for better raincloud plots: install.packages('ggdist')\n")
+  cat("  Using fallback violin plots for now.\n")
+}
 
 dat_fig2 <- dat %>%
   filter(quality_primary == TRUE) %>%
@@ -102,20 +158,116 @@ if (n_removed_fig2 > 0) {
   cat("  Note: Removed", n_removed_fig2, "rows with non-finite pupil values for plotting\n")
 }
 
-p2a <- dat_fig2_plot %>%
-  ggplot(aes(x = effort_factor, y = value, fill = effort_factor)) +
-  geom_boxplot(alpha = 0.7, outlier.shape = NA) +
-  geom_jitter(width = 0.2, alpha = 0.3, size = 0.5) +
+# Create raincloud plot with mirrored half-violins
+# Use ggdist::stat_slab for proper half-violins with better density estimation
+p2a <- ggplot(dat_fig2_plot, aes(x = effort_factor, y = value, fill = effort_factor, color = effort_factor)) +
+  # Mirrored half-violins: Low extends LEFT, High extends RIGHT
+  {
+    if (has_ggdist) {
+      list(
+        # Low effort: half-violin extending LEFT
+        ggdist::stat_slab(
+          data = dat_fig2_plot %>% filter(effort_factor == "Low"),
+          aes(fill = effort_factor, group = interaction(task_factor, metric_label, effort_factor)),
+          side = "left",
+          alpha = 0.8,
+          width = 0.8,
+          justification = 1.0,
+          normalize = "panels",  # Normalize within each panel (facet) for better visibility
+          trim = FALSE,
+          slab_type = "pdf",  # Use probability density function
+          adjust = 2.0  # Increase bandwidth adjustment for smoother, more visible distributions
+        ),
+        # High effort: half-violin extending RIGHT
+        ggdist::stat_slab(
+          data = dat_fig2_plot %>% filter(effort_factor == "High"),
+          aes(fill = effort_factor, group = interaction(task_factor, metric_label, effort_factor)),
+          side = "right",
+          alpha = 0.8,
+          width = 0.8,
+          justification = 0.0,
+          normalize = "panels",  # Normalize within each panel (facet) for better visibility
+          trim = FALSE,
+          slab_type = "pdf",  # Use probability density function
+          adjust = 2.0  # Increase bandwidth adjustment for smoother, more visible distributions
+        )
+      )
+    } else {
+      # Fallback: use geom_violin with manual positioning
+      list(
+        # Low effort: position to the left
+        geom_violin(
+          data = dat_fig2_plot %>% filter(effort_factor == "Low"),
+          alpha = 0.7,
+          trim = FALSE,
+          scale = "count",  # Use "count" for better visibility
+          width = 0.5,
+          position = position_nudge(x = -0.2),
+          color = NA
+        ),
+        # High effort: position to the right
+        geom_violin(
+          data = dat_fig2_plot %>% filter(effort_factor == "High"),
+          alpha = 0.7,
+          trim = FALSE,
+          scale = "count",  # Use "count" for better visibility
+          width = 0.5,
+          position = position_nudge(x = 0.2),
+          color = NA
+        )
+      )
+    }
+  } +
+  # Boxplots inside violins
+  geom_boxplot(
+    width = 0.15,
+    alpha = 0.9,
+    outlier.shape = NA,
+    position = position_dodge(width = 0),
+    fill = "grey90",
+    color = "grey70",
+    linewidth = 0.7,
+    show.legend = FALSE
+  ) +
+  # Connecting lines (by subject, for paired data visualization)
+  geom_line(
+    aes(group = sub),
+    alpha = 0.3,
+    linewidth = 0.4,
+    color = "grey60",
+    position = position_dodge(width = 0),
+    show.legend = FALSE
+  ) +
+  # Individual points
+  geom_point(
+    alpha = 0.5,
+    size = 1.5,
+    position = position_dodge(width = 0),
+    show.legend = FALSE
+  ) +
+  # Facet by metric and task
   facet_grid(metric_label ~ task_factor, scales = "free_y") +
-  scale_fill_manual(values = c("Low" = "lightblue", "High" = "darkred")) +
+  # Custom colors
+  scale_fill_manual(values = c("Low" = "#2E86AB", "High" = "#A23B72")) +
+  scale_color_manual(values = c("Low" = "#2E86AB", "High" = "#A23B72")) +
+  # Labels
   labs(
     x = "Effort Condition",
     y = "Pupil Metric (baseline-corrected)",
     fill = "Effort",
+    color = "Effort",
     title = "Effort-Pupil Manipulation Check"
   ) +
-  theme_minimal() +
-  theme(legend.position = "none")
+  # Theme
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "top",
+    strip.text = element_text(face = "bold", size = 12),
+    strip.background = element_blank(),  # Remove grey background for minimal look
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),  # Remove panel borders for cleaner look
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5)
+  )
 
 ggsave(file.path(figures_dir, "fig2_effort_pupil_manipulation.png"),
        p2a, width = 10, height = 8, dpi = 300)
@@ -150,15 +302,23 @@ if (!"choice_num" %in% names(dat_fig3)) {
 
 p3 <- dat_fig3 %>%
   filter(!is.na(pupil_state_tertile)) %>%
-  ggplot(aes(x = stimulus_intensity, y = choice_num, color = pupil_state_tertile)) +
+  ggplot(aes(x = stimulus_intensity, y = choice_num, 
+             color = pupil_state_tertile, fill = pupil_state_tertile)) +
   stat_summary_bin(fun = "mean", bins = 8, geom = "point", size = 2, alpha = 0.7) +
-  stat_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
+  stat_smooth(method = "glm", method.args = list(family = "binomial"), 
+              se = TRUE, alpha = 0.2, linewidth = 1.2) +
   facet_grid(task_factor ~ effort_factor) +
-  scale_color_manual(values = c("Low" = "blue", "Medium" = "gray", "High" = "red")) +
+  scale_color_manual(
+    values = c("Low" = "#2E86AB", "Medium" = "#F18F01", "High" = "#A23B72"),
+    name = "Pupil State\nTertile"
+  ) +
+  scale_fill_manual(
+    values = c("Low" = "#2E86AB", "Medium" = "#F18F01", "High" = "#A23B72"),
+    name = "Pupil State\nTertile"
+  ) +
   labs(
     x = "Stimulus Intensity",
     y = "Proportion 'Different'",
-    color = "Pupil State\nTertile",
     title = "Psychometric Functions by Pupil State (Primary Analysis)"
   ) +
   theme_minimal() +
@@ -182,6 +342,7 @@ dat_fig4 <- dat %>%
   )
 
 p4 <- dat_fig4 %>%
+  filter(is.finite(rt)) %>%  # Remove rows with non-finite RT values
   group_by(task_factor, effort_factor, pupil_usable) %>%
   summarise(
     mean_stimulus_intensity = mean(stimulus_intensity, na.rm = TRUE),
@@ -189,11 +350,12 @@ p4 <- dat_fig4 %>%
     n = n(),
     .groups = "drop"
   ) %>%
+  filter(is.finite(mean_rt)) %>%  # Remove groups with no valid RT data
   mutate(usable_label = ifelse(pupil_usable, "Usable", "Missing")) %>%
   ggplot(aes(x = effort_factor, y = mean_rt, fill = usable_label)) +
   geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
   facet_wrap(~ task_factor) +
-  scale_fill_manual(values = c("Usable" = "green", "Missing" = "red")) +
+  scale_fill_manual(values = c("Usable" = "#2E7D32", "Missing" = "#1565C0")) +
   labs(
     x = "Effort Condition",
     y = "Mean RT (seconds)",

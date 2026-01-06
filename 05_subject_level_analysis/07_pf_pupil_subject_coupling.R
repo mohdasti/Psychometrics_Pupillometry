@@ -192,7 +192,7 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
     p1 <- coupling_data_complete %>%
     ggplot(aes(x = delta_cog_auc, y = delta_threshold)) +
     geom_point(alpha = 0.6, size = 2) +
-    geom_smooth(method = "lm", se = TRUE, color = "red") +
+    geom_smooth(method = "lm", se = TRUE, color = "#A23B72") +
     facet_wrap(~ task) +
     labs(
       x = "ΔCognitive Pupil (High - Low Effort)",
@@ -209,7 +209,7 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
     p2 <- coupling_data_complete %>%
     ggplot(aes(x = delta_cog_auc, y = delta_slope)) +
     geom_point(alpha = 0.6, size = 2) +
-    geom_smooth(method = "lm", se = TRUE, color = "red") +
+    geom_smooth(method = "lm", se = TRUE, color = "#A23B72") +
     facet_wrap(~ task) +
     labs(
       x = "ΔCognitive Pupil (High - Low Effort)",
