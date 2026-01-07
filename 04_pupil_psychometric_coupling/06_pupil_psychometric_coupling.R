@@ -275,7 +275,8 @@ p1 <- dat_primary %>%
     y = "Proportion 'Different'",
     title = "Psychometric Functions by Pupil State"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "bottom")
 
 ggsave(file.path(figures_dir, "psychometric_by_pupil_state.png"),
        p1, width = 10, height = 8, dpi = 300)
@@ -311,7 +312,8 @@ p2 <- pred_data %>%
     y = "Predicted Probability 'Different'",
     title = "Model Predictions: Stimulus × Pupil State Interaction"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "bottom")
 
 ggsave(file.path(figures_dir, "pupil_psychometric_interaction.png"),
        p2, width = 10, height = 8, dpi = 300)

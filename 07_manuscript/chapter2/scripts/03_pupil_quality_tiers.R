@@ -2,11 +2,27 @@
 # ================================================================================
 # Purpose: Define quality tiers based on window validity thresholds
 #          Compute within-subject centered pupil metrics (state vs trait)
+#          Updated January 2026: Includes gap-aware QC metrics per FILTERING_GUIDE.md
 # Input: ch2_triallevel_merged.csv
 # Output: Updated dataset with quality tier flags and centered pupil metrics
 #
+# Quality Tiers:
+#   - Primary: baseline ≥ 0.60 AND cognitive ≥ 0.60 
+#             AND cog_auc_max_gap_ms ≤ 250 (if exists)
+#             AND cog_window_duration ≥ 0.5 (if exists)
+#             AND cog_auc_n_valid ≥ 100 (if exists)
+#   - Lenient: baseline ≥ 0.50 AND cognitive ≥ 0.50
+#             AND cog_auc_max_gap_ms ≤ 250 (if exists)
+#             AND cog_window_duration ≥ 0.3 (if exists)
+#   - Strict: baseline ≥ 0.70 AND cognitive ≥ 0.70
+#            AND cog_auc_max_gap_ms ≤ 250 (if exists)
+#            AND cog_window_duration ≥ 0.5 (if exists)
+#            AND cog_auc_n_valid ≥ 100 (if exists)
+#
+# See chapter2_materials/docs/FILTERING_GUIDE.md for detailed rationale
+#
 # Author: Mohammad Dastgheib
-# Date: Created for Chapter 2 analysis
+# Date: Created for Chapter 2 analysis, updated January 2026
 
 library(tidyverse)
 library(here)
@@ -22,29 +38,84 @@ dat_file <- file.path(processed_dir, "ch2_triallevel_merged.csv")
 dat <- read_csv(dat_file, show_col_types = FALSE)
 
 # ============================================================================
-# DEFINE QUALITY TIERS
+# DEFINE QUALITY TIERS (WITH GAP-AWARE FILTERING)
+# ============================================================================
+# Updated January 2026: Includes gap-aware QC metrics per FILTERING_GUIDE.md
+# Gap-aware metrics help identify trials with problematic missing data patterns
+# even when overall quality looks acceptable (e.g., large gaps during peak response)
 # ============================================================================
 
-cat("\n=== Defining Quality Tiers ===\n")
+cat("\n=== Defining Quality Tiers (with Gap-Aware Filtering) ===\n")
 
 # Check if quality columns exist
 if (!"baseline_quality" %in% names(dat) || !"cog_quality" %in% names(dat)) {
   stop("ERROR: Required quality columns (baseline_quality, cog_quality) not found")
 }
 
-# Primary tier: baseline ≥ 0.60 AND cognitive ≥ 0.60
-dat$quality_primary <- dat$baseline_quality >= 0.60 & dat$cog_quality >= 0.60
+# Check for gap-aware QC metrics (may not exist in all datasets)
+has_gap_metrics <- all(c("cog_auc_max_gap_ms", "cog_window_duration", "cog_auc_n_valid") %in% names(dat))
+if (has_gap_metrics) {
+  cat("✓ Gap-aware QC metrics found - applying gap-aware filtering\n")
+} else {
+  cat("⚠ Gap-aware QC metrics not found - using percentage-validity only\n")
+  cat("  Missing: cog_auc_max_gap_ms, cog_window_duration, cog_auc_n_valid\n")
+}
 
-# Lenient tier: baseline ≥ 0.50 AND cognitive ≥ 0.50
-dat$quality_lenient <- dat$baseline_quality >= 0.50 & dat$cog_quality >= 0.50
+# Base quality thresholds (percentage-validity)
+base_primary <- dat$baseline_quality >= 0.60 & dat$cog_quality >= 0.60
+base_lenient <- dat$baseline_quality >= 0.50 & dat$cog_quality >= 0.50
+base_strict <- dat$baseline_quality >= 0.70 & dat$cog_quality >= 0.70
 
-# Strict tier: baseline ≥ 0.70 AND cognitive ≥ 0.70
-dat$quality_strict <- dat$baseline_quality >= 0.70 & dat$cog_quality >= 0.70
+# Gap-aware filtering (Option A: only apply if metrics exist)
+# Primary (Strict): baseline ≥ 0.60 AND cognitive ≥ 0.60 
+#                   AND cog_auc_max_gap_ms ≤ 250 (if exists)
+#                   AND cog_window_duration ≥ 0.5 (if exists)
+#                   AND cog_auc_n_valid ≥ 100 (if exists)
+if (has_gap_metrics) {
+  gap_primary <- (is.na(dat$cog_auc_max_gap_ms) | dat$cog_auc_max_gap_ms <= 250) &
+                 (is.na(dat$cog_window_duration) | dat$cog_window_duration >= 0.5) &
+                 (is.na(dat$cog_auc_n_valid) | dat$cog_auc_n_valid >= 100)
+  dat$quality_primary <- base_primary & gap_primary
+} else {
+  dat$quality_primary <- base_primary
+}
 
-cat("Quality tier sample sizes:\n")
-cat("  Primary (≥0.60): ", sum(dat$quality_primary, na.rm = TRUE), " trials\n")
-cat("  Lenient (≥0.50): ", sum(dat$quality_lenient, na.rm = TRUE), " trials\n")
-cat("  Strict (≥0.70):  ", sum(dat$quality_strict, na.rm = TRUE), " trials\n")
+# Lenient: baseline ≥ 0.50 AND cognitive ≥ 0.50
+#          AND cog_auc_max_gap_ms ≤ 250 (if exists)
+#          AND cog_window_duration ≥ 0.3 (if exists) - allows faster RTs
+if (has_gap_metrics) {
+  gap_lenient <- (is.na(dat$cog_auc_max_gap_ms) | dat$cog_auc_max_gap_ms <= 250) &
+                 (is.na(dat$cog_window_duration) | dat$cog_window_duration >= 0.3)
+  dat$quality_lenient <- base_lenient & gap_lenient
+} else {
+  dat$quality_lenient <- base_lenient
+}
+
+# Strict: baseline ≥ 0.70 AND cognitive ≥ 0.70
+#         AND cog_auc_max_gap_ms ≤ 250 (if exists)
+#         AND cog_window_duration ≥ 0.5 (if exists)
+#         AND cog_auc_n_valid ≥ 100 (if exists)
+if (has_gap_metrics) {
+  gap_strict <- (is.na(dat$cog_auc_max_gap_ms) | dat$cog_auc_max_gap_ms <= 250) &
+               (is.na(dat$cog_window_duration) | dat$cog_window_duration >= 0.5) &
+               (is.na(dat$cog_auc_n_valid) | dat$cog_auc_n_valid >= 100)
+  dat$quality_strict <- base_strict & gap_strict
+} else {
+  dat$quality_strict <- base_strict
+}
+
+cat("\nQuality tier sample sizes:\n")
+cat("  Primary (≥0.60 + gap-aware): ", sum(dat$quality_primary, na.rm = TRUE), " trials\n")
+cat("  Lenient (≥0.50 + gap-aware): ", sum(dat$quality_lenient, na.rm = TRUE), " trials\n")
+cat("  Strict (≥0.70 + gap-aware):  ", sum(dat$quality_strict, na.rm = TRUE), " trials\n")
+
+if (has_gap_metrics) {
+  n_with_gap_metrics <- sum(!is.na(dat$cog_auc_max_gap_ms))
+  n_excluded_by_gap <- sum(base_primary, na.rm = TRUE) - sum(dat$quality_primary, na.rm = TRUE)
+  cat("\nGap-aware filtering impact:\n")
+  cat("  Trials with gap metrics: ", n_with_gap_metrics, "\n")
+  cat("  Additional exclusions by gap criteria: ", n_excluded_by_gap, " trials\n")
+}
 
 # Check if gate_pupil_primary already exists and compare
 if ("gate_pupil_primary" %in% names(dat)) {

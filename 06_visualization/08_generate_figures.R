@@ -168,27 +168,27 @@ p2a <- ggplot(dat_fig2_plot, aes(x = effort_factor, y = value, fill = effort_fac
         # Low effort: half-violin extending LEFT
         ggdist::stat_slab(
           data = dat_fig2_plot %>% filter(effort_factor == "Low"),
-          aes(fill = effort_factor, group = interaction(task_factor, metric_label, effort_factor)),
+          aes(fill = effort_factor, group = interaction(task_factor, metric_label, effort_factor), 
+              thickness = after_stat(pdf)),
           side = "left",
           alpha = 0.8,
           width = 0.8,
           justification = 1.0,
           normalize = "panels",  # Normalize within each panel (facet) for better visibility
           trim = FALSE,
-          slab_type = "pdf",  # Use probability density function
           adjust = 2.0  # Increase bandwidth adjustment for smoother, more visible distributions
         ),
         # High effort: half-violin extending RIGHT
         ggdist::stat_slab(
           data = dat_fig2_plot %>% filter(effort_factor == "High"),
-          aes(fill = effort_factor, group = interaction(task_factor, metric_label, effort_factor)),
+          aes(fill = effort_factor, group = interaction(task_factor, metric_label, effort_factor),
+              thickness = after_stat(pdf)),
           side = "right",
           alpha = 0.8,
           width = 0.8,
           justification = 0.0,
           normalize = "panels",  # Normalize within each panel (facet) for better visibility
           trim = FALSE,
-          slab_type = "pdf",  # Use probability density function
           adjust = 2.0  # Increase bandwidth adjustment for smoother, more visible distributions
         )
       )
@@ -261,7 +261,7 @@ p2a <- ggplot(dat_fig2_plot, aes(x = effort_factor, y = value, fill = effort_fac
   # Theme
   theme_minimal(base_size = 13) +
   theme(
-    legend.position = "top",
+    legend.position = "bottom",
     strip.text = element_text(face = "bold", size = 12),
     strip.background = element_blank(),  # Remove grey background for minimal look
     panel.grid.minor = element_blank(),
@@ -362,7 +362,8 @@ p4 <- dat_fig4 %>%
     fill = "Pupil Data",
     title = "Missingness Diagnostic: RT by Pupil Data Availability"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "bottom")
 
 ggsave(file.path(figures_dir, "fig4_missingness_diagnostic.png"),
        p4, width = 8, height = 6, dpi = 300)
