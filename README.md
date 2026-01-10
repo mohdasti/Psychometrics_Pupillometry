@@ -1,6 +1,6 @@
 # Pupil-Indexed Arousal and Psychometric Sensitivity in Older Adults
 
-[![DOI](https://zenodo.org/badge/1124053644.svg)](https://doi.org/10.5281/zenodo.18205183) [![R](https://img.shields.io/badge/R-276DC3?logo=r&logoColor=white)](https://www.r-project.org/) [![Quarto](https://img.shields.io/badge/Quarto-0F4C75?logo=quarto&logoColor=white)](https://quarto.org/) [![Markdown](https://img.shields.io/badge/Markdown-000000?logo=markdown&logoColor=white)](https://www.markdownguide.org/)
+[![DOI](https://zenodo.org/badge/1124053644.svg)](https://doi.org/10.5281/zenodo.18205183) [![R](https://img.shields.io/badge/R-4.5.2-276DC3?logo=r&logoColor=white)](https://www.r-project.org/) [![Quarto](https://img.shields.io/badge/Quarto-1.7.33-0F4C75?logo=quarto&logoColor=white)](https://quarto.org/) [![Markdown](https://img.shields.io/badge/Markdown-000000?logo=markdown&logoColor=white)](https://www.markdownguide.org/)
 
 This repository contains the analysis pipeline for investigating how physical effort–induced and pupil-indexed arousal relates to perceptual discrimination at the psychometric level in healthy older adults. The project uses a dual-task paradigm combining handgrip effort with auditory and visual perceptual discrimination, and integrates pupillometry with psychometric function analysis.
 
