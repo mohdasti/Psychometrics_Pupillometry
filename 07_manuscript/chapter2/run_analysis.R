@@ -66,3 +66,5 @@ cat("2. Render Quarto report: quarto render", report_file, "\n")
 cat("3. Check figures in:", figures_dir, "\n")
 cat("4. Review tables in:", tables_dir, "\n")
 
+
+

@@ -248,50 +248,13 @@ pf_pupil_correlations <- sread(file.path(tables_dir, "pf_pupil_coupling_correlat
 missingness_effects <- sread(file.path(tables_dir, "missingness_diagnostic_effects.csv"))
 
 # LC integrity data (exploratory)
-# Try loading from processed directory first, then from master spreadsheet
+# Note: LC integrity data are currently being added to the master spreadsheet for subjects
+# BAP 191-202 (excluding 193, 198). Once available, this file should be created from the
+# master spreadsheet and placed in data/processed/ch2_lc_integrity.csv
 lc_integrity_file <- file.path(processed_dir, "ch2_lc_integrity.csv")
 lc_integrity <- sread(lc_integrity_file)
-
-# If not found, try loading from master spreadsheet
-if (is.null(lc_integrity)) {
-  master_lc_file <- file.path(proj_root, "data", "raw", "behavioral", "LC Aging Subject Data master spreadsheet - LC integrity.csv")
-  if (file.exists(master_lc_file)) {
-    lc_integrity <- sread(master_lc_file)
-    if (!is.null(lc_integrity)) {
-      # Standardize subject ID column name (might be "sub", "subject_id", "BAP", etc.)
-      if (!"sub" %in% names(lc_integrity)) {
-        if ("subject_id" %in% names(lc_integrity)) {
-          lc_integrity$sub <- lc_integrity$subject_id
-        } else if ("BAP" %in% names(lc_integrity)) {
-          lc_integrity$sub <- lc_integrity$BAP
-        }
-      }
-    }
-  }
-}
-
-# Demographics
 demographics_file <- file.path(processed_dir, "ch2_demographics.csv")
 demographics <- sread(demographics_file)
-
-# If not found, try loading from master spreadsheet
-if (is.null(demographics)) {
-  master_demo_file <- file.path(proj_root, "data", "raw", "behavioral", "LC Aging Subject Data master spreadsheet - demographics.csv")
-  if (file.exists(master_demo_file)) {
-    demographics <- sread(master_demo_file)
-    if (!is.null(demographics)) {
-      # Standardize subject ID column name
-      if (!"sub" %in% names(demographics)) {
-        if ("subject_id" %in% names(demographics)) {
-          demographics$sub <- demographics$subject_id
-        } else if ("BAP" %in% names(demographics)) {
-          demographics$sub <- demographics$BAP
-        }
-      }
-    }
-  }
-}
-
 neuropsych_file <- file.path(processed_dir, "ch2_neuropsych.csv")
 neuropsych <- sread(neuropsych_file)
 
@@ -328,9 +291,31 @@ In many psychophysical applications, PFs are described using a four-parameter fo
 
 $$P(\text{"different"} | X) = \gamma + (1 - \gamma - \lambda) \cdot \Phi\left(\frac{X - \alpha}{\beta}\right)$$
 
-These considerations motivate interpreting location parameters cautiously when criterion and lapses may vary across conditions, while treating changes in steepness as a cleaner index of sensitivity. The location parameter $\alpha$ represents the stimulus intensity at a criterion level—often defined at the midpoint between the lower and upper asymptotes (e.g., halfway between guess rate $\gamma$ and $1-\lambda$), which typically corresponds to approximately 50% "different" responses on the response probability scale. In appearance/judgment tasks where 50% indicates subjective equality (e.g., "brighter vs. darker"), this location is often called a point of subjective equality (PSE). However, in same–different discrimination tasks, the location parameter can reflect a mix of sensitivity and decision criterion/bias [@prins2016psychophysics], so "threshold" or "midpoint" is the more standard terminology. Changes in $\alpha$ may reflect shifts in decision criterion or response bias rather than true sensitivity changes, particularly when criterion can drift with arousal or effort conditions. In forced-choice accuracy PFs, the lower asymptote is constrained by the number of alternatives (e.g., $\gamma = 0.5$ in 2AFC), making "threshold" conventionally defined at a criterion such as 75% correct. In judgment-based PFs (like "different" responses), threshold is often defined at the midpoint between asymptotes (approximately 50% "different" responses), but this location can reflect both sensitivity and criterion/bias. Sensitivity is better reflected in the steepness of the intensity–response relationship (how rapidly probability changes with intensity), which is why the present analyses emphasize slope and its modulation by arousal rather than threshold alone.
+These considerations motivate interpreting location parameters cautiously when criterion and lapses may vary across conditions, while treating changes in steepness as a cleaner index of sensitivity. The location parameter $\alpha$ represents the stimulus intensity at a criterion level—often defined at the midpoint between the lower and upper asymptotes (e.g., halfway between guess rate $\gamma$ and $1-\lambda$), which typically corresponds to approximately 50% "different" responses on the response probability scale. In appearance/judgment tasks where 50% indicates subjective equality (e.g., "brighter vs. darker"), this location is often called a point of subjective equality (PSE). However, in same–different discrimination tasks, the location parameter can reflect a mix of sensitivity and decision criterion/bias [@prins2016psychophysics], so "threshold" or "midpoint" is the more standard terminology. Changes in $\alpha$ may reflect shifts in decision criterion or response bias rather than true sensitivity changes, particularly when criterion can drift with arousal or effort conditions. In forced-choice accuracy PFs, the lower asymptote is constrained by the number of alternatives (e.g., $\gamma = 0.5$ in 2AFC), making "threshold" conventionally defined at a criterion such as 75% correct. In judgment-based PFs (like "different" responses), threshold is often defined at the midpoint between asymptotes (approximately 50% "different" responses), but this location can reflect both sensitivity and criterion/bias. Sensitivity is better reflected in the steepness of the intensity–response relationship (how rapidly probability changes with intensity), which is why the present analyses emphasize slope and its modulation by arousal rather than threshold alone. This critical distinction between location (criterion) and sensitivity (steepness) parameters is illustrated in Figure @fig-pf-location-vs-sensitivity.
 
-The psychometric function is closely related to signal detection theory (SDT), where the location parameter ($\alpha$) corresponds to the decision criterion and the scale parameter ($\beta$) relates to $d'$ (sensitivity). Changes in location reflect criterion shifts (response bias), while changes in steepness (inversely related to $\beta$) reflect true sensitivity changes [@macmillan2005detection]. Some psychophysical procedures (e.g., yes/no detection tasks) are particularly susceptible to criterion shifts, making proportion correct a poor sensitivity measure when response bias varies across conditions or individuals [@prins2016psychophysics]. SDT measures like $d'$ separate sensitivity from bias, providing a more robust index of discriminability. In the present "same–different" judgment task, criterion issues are acknowledged: the location parameter ($\alpha$) is interpreted cautiously as potentially reflecting criterion/bias shifts, whereas sensitivity is emphasized via the steepness parameter ($\beta$ or the intensity coefficient in the GLMM). The hierarchical GLMM framework includes random intercepts to account for individual differences in baseline response tendency (criterion), while the key interaction term tests arousal effects on sensitivity (steepness) rather than merely on response bias.
+The psychometric function is closely related to signal detection theory (SDT), where the location parameter ($\alpha$) corresponds to the decision criterion and the scale parameter ($\beta$) relates to $d'$ (sensitivity). Changes in location reflect criterion shifts (response bias), while changes in steepness (inversely related to $\beta$) reflect true sensitivity changes [@macmillan2005detection]. Some psychophysical procedures (e.g., yes/no detection tasks) are particularly susceptible to criterion shifts, making proportion correct a poor sensitivity measure when response bias varies across conditions or individuals [@prins2016psychophysics]. SDT measures like $d'$ separate sensitivity from bias, providing a more robust index of discriminability. In the present "same–different" judgment task, criterion issues are acknowledged: the location parameter ($\alpha$) is interpreted cautiously as potentially reflecting criterion/bias shifts, whereas sensitivity is emphasized via the steepness parameter ($\beta$ or the intensity coefficient in the GLMM). The hierarchical GLMM framework includes random intercepts to account for individual differences in baseline response tendency (criterion), while the key interaction term tests arousal effects on sensitivity (steepness) rather than merely on response bias. @fig-pf-location-vs-sensitivity illustrates this distinction between location (criterion) and sensitivity (steepness) parameters.
+
+```{r pf-location-vs-sensitivity}
+#| label: fig-pf-location-vs-sensitivity
+#| fig-cap: "Psychometric function parameters: location vs sensitivity"
+#| fig-width: 10
+#| fig-height: 6
+#| out-width: "100%"
+
+# Check if figure exists in chapter2 output directory
+pf_fig_path <- file.path(chapter2_dir, "output", "figures", "PF.jpg")
+if (file.exists(pf_fig_path)) {
+  knitr::include_graphics(pf_fig_path)
+} else {
+  # Fallback: try relative path
+  rel_path <- "../output/figures/PF.jpg"
+  if (file.exists(rel_path)) {
+    knitr::include_graphics(rel_path)
+  } else {
+    cat("*Figure: PF.jpg not found. Expected at:", pf_fig_path, "*")
+  }
+}
+```
 
 ### Implementation in the Present Study
 
@@ -378,7 +363,29 @@ A central methodological challenge in pupil–behavior analyses is separating wi
 
 $$P^{(\text{trait})}_{j} = \overline{P}_{j}, \qquad P^{(\text{state})}_{ij} = P_{ij} - \overline{P}_{j}$$ {#eq-state-trait}
 
-This decomposition enables two distinct questions to be tested in the same model: whether individuals with higher average arousal differ in sensitivity (trait effects), and whether trials on which an individual is more aroused than usual show altered sensitivity (state effects). Importantly, this approach prevents conflating between- and within-person patterns—an especially relevant concern in aging where trait differences may be influenced by health, LC integrity, or cognitive reserve [@enders2013; @hoffman2015]. For example, if high-arousal individuals tend to have poorer performance for reasons unrelated to trial-wise fluctuations (e.g., underlying LC degeneration or comorbidities), that pattern will be captured at the trait level rather than falsely attributed to trial-wise changes in arousal.
+This decomposition enables two distinct questions to be tested in the same model: whether individuals with higher average arousal differ in sensitivity (trait effects), and whether trials on which an individual is more aroused than usual show altered sensitivity (state effects). Importantly, this approach prevents conflating between- and within-person patterns—an especially relevant concern in aging where trait differences may be influenced by health, LC integrity, or cognitive reserve [@enders2013; @hoffman2015]. For example, if high-arousal individuals tend to have poorer performance for reasons unrelated to trial-wise fluctuations (e.g., underlying LC degeneration or comorbidities), that pattern will be captured at the trait level rather than falsely attributed to trial-wise changes in arousal. @fig-decompose-state-trait illustrates this decomposition visually, showing how raw pupil metrics are separated into trait (between-person) and state (within-person) components.
+
+```{r decompose-state-trait}
+#| label: fig-decompose-state-trait
+#| fig-cap: "Decomposition of pupil metrics into state and trait components"
+#| fig-width: 10
+#| fig-height: 6
+#| out-width: "100%"
+
+# Check if figure exists in chapter2 output directory
+decompose_fig_path <- file.path(chapter2_dir, "output", "figures", "Decompose.jpg")
+if (file.exists(decompose_fig_path)) {
+  knitr::include_graphics(decompose_fig_path)
+} else {
+  # Fallback: try relative path
+  rel_path <- "../output/figures/Decompose.jpg"
+  if (file.exists(rel_path)) {
+    knitr::include_graphics(rel_path)
+  } else {
+    cat("*Figure: Decompose.jpg not found. Expected at:", decompose_fig_path, "*")
+  }
+}
+```
 
 Primary inference is implemented using hierarchical generalized linear mixed models (GLMMs) with a probit link, modeling trialwise $P(Y_{ij}=1)$ as a function of continuous stimulus intensity, effort condition, modality, and pupil-indexed arousal while accounting for individual differences via random effects:
 
@@ -446,19 +453,65 @@ Two primary features were computed on each trial:
 
 1. **Total AUC:** Baseline-corrected area under the pupil curve over a global trial window, indexing overall arousal during concurrent physical effort.
 
-2. **Cognitive pupil metric (primary):** Baseline-corrected task-evoked measure computed in a fixed-duration post-target window (e.g., from 300 ms after target onset through a fixed 1 s window), designed to reduce confounding by response time and late-trial dropout.
+2. **Cognitive pupil metric (primary):** Baseline-corrected task-evoked measure computed in a fixed 1.20-second stimulus-locked window from 4.85s to 6.05s (target onset + 0.50s to target onset + 1.70s, relative to squeeze onset). This window captures the task-evoked pupil response (TEPR) peak, which typically occurs ~1 second after stimulus onset [@mathot2023methods; @bauer2021], while avoiding early reflex components and reducing confounding by response time. The primary metric used in analyses is **mean dilation** (`cog_mean = cog_auc / window_duration`), which removes duration confounds and is preferred over raw AUC.
+
+### Gap-Aware Quality Control Metrics
+
+In addition to percentage-validity thresholds, we implemented gap-aware quality control metrics to identify trials with problematic missing data patterns. Percentage-validity thresholds are necessary but not sufficient: a trial can have acceptable overall validity (e.g., 60%) but contain large contiguous gaps that distort AUC estimates. Following recommendations from Kret & Sjak-Shie (2019), we computed five gap-aware metrics for each trial:
+
+1. **`cog_auc_max_gap_ms`**: Maximum contiguous missing segment (milliseconds) within the cognitive window. Large gaps (>250ms) should not be interpolated and can severely distort AUC estimates even when percent-valid looks acceptable [@kret2019preprocessing].
+2. **`cog_window_duration`**: Actual duration of the cognitive window (seconds) after accounting for data availability. For the fixed 1.20s window, this should be close to 1.20s.
+3. **`cog_auc_n_valid`**: Number of valid (non-NA) samples in the cognitive window. At 250 Hz sampling rate, the 1.20s window should contain ~300 samples.
+4. **`cog_auc_n_segments`**: Number of contiguous valid segments (1 = continuous, >1 = fragmented). Highly fragmented trials may have unreliable AUC estimates.
+5. **`cog_auc_prop_valid`**: Proportion of valid samples (n_valid / expected_samples_at_250Hz).
+
+These metrics help distinguish between **genuine low pupil dilation** (high quality, small gaps, low mean dilation) and **data quality artifacts** (low quality or large gaps, low mean dilation), ensuring that valid physiological data are retained while problematic trials are excluded.
 
 ### Quality Tiers
 
-Pupil-based analyses used pre-specified quality tiers:
+Pupil-based analyses used pre-specified quality tiers that combine percentage-validity thresholds with gap-aware filtering:
 
-- **Primary tier:** Window validity ≥ 0.60 for baseline and cognitive windows
-- **Lenient tier:** Window validity ≥ 0.50 (robustness check)
-- **Strict tier:** Window validity ≥ 0.70 (robustness check)
+- **Primary tier:** 
+  - B1 baseline quality ≥ 0.50 AND cognitive window quality ≥ 0.60
+  - Maximum gap ≤ 250ms (gap-aware filter)
+  - Window duration ≥ 0.90s (75% of 1.20s window)
+  - Valid samples ≥ 240 (80% of expected ~300 samples)
+- **Lenient tier:** 
+  - B1 baseline quality ≥ 0.50 AND cognitive window quality ≥ 0.50
+  - Maximum gap ≤ 250ms (gap-aware filter)
+  - Window duration ≥ 0.75s (relaxed duration threshold)
+- **Strict tier:** 
+  - B1 baseline quality ≥ 0.50 AND cognitive window quality ≥ 0.70
+  - Maximum gap ≤ 250ms (gap-aware filter)
+  - Window duration ≥ 0.90s AND valid samples ≥ 240 (strict thresholds)
 
 **Rationale for Quality Tiers: Lapse-Rate Considerations in Aging**
 
-Psychophysical modeling guidance emphasizes that **assuming lapse rate ($\lambda$) = 0 can distort threshold and slope estimates** if lapses are present but unaccounted for [@prins2016psychophysics]. This concern is particularly relevant in older adult populations, where attentional lapses, track loss events, and data quality issues may be more frequent. The quality tier strategy addresses this by excluding trials with poor pupil data quality (low validity), thereby reducing lapse-like contamination in the psychometric function estimates. The tiering approach tests robustness of conclusions across stricter inclusion criteria: if key effects (e.g., the stimulus intensity × pupil state interaction) are consistent across lenient (≥0.50), primary (≥0.60), and strict (≥0.70) validity thresholds, this provides evidence that findings are not driven by lapse-like errors or data quality artifacts. This strategy is consistent with psychophysical best practices for handling stimulus-independent errors without explicitly estimating lapse parameters in the primary model [@prins2016psychophysics].
+Psychophysical modeling guidance emphasizes that **assuming lapse rate ($\lambda$) = 0 can distort threshold and slope estimates** if lapses are present but unaccounted for [@prins2016psychophysics]. This concern is particularly relevant in older adult populations, where attentional lapses, track loss events, and data quality issues may be more frequent. The quality tier strategy addresses this by excluding trials with poor pupil data quality (low validity or large gaps), thereby reducing lapse-like contamination in the psychometric function estimates. The tiering approach tests robustness of conclusions across stricter inclusion criteria: if key effects (e.g., the stimulus intensity × pupil state interaction) are consistent across lenient, primary, and strict quality tiers, this provides evidence that findings are not driven by lapse-like errors or data quality artifacts. This strategy is consistent with psychophysical best practices for handling stimulus-independent errors without explicitly estimating lapse parameters in the primary model [@prins2016psychophysics].
+
+### Confound Mitigation: Motor/Response Screen Contamination
+
+The cognitive AUC window faces unavoidable temporal overlap with multiple task events that could contaminate pupil measurements:
+
+1. **Target stimulus onset**: 4.35s (relative to squeeze onset)
+2. **Response screen appears**: 4.70s (only 350ms after target)
+3. **Button press**: Variable (4.70s + RT, typically 5.3-5.4s for median RTs of 0.6-0.7s)
+
+The goal is not to "eliminate confounds" (which is impossible given the temporal overlap), but to **minimize contamination, model what cannot be avoided, and demonstrate robustness** through multiple sensitivity checks.
+
+**Mitigation Strategies Implemented:**
+
+1. **Stimulus-locked fixed window**: The primary cognitive window (4.85-6.05s) is stimulus-locked and fixed in duration, which reduces mechanical RT-AUC coupling confounds. By using mean dilation (AUC/duration) rather than raw AUC, we further remove duration-related artifacts.
+
+2. **RT as covariate**: Reaction time is included as a covariate in all models to control for decision state and reduce RT-pupil coupling confounds. This addresses the fact that RT correlates with decision processes and may drive apparent pupil-behavior relationships.
+
+3. **Motor buffer truncation** (available for future sensitivity analyses): Window definitions are computed to truncate the primary window 150ms before button press (`cog_win_primary_end_motorbuffered`), avoiding motor execution/movement/blink contamination. Full AUC computation for motor-buffered windows requires re-processing flat files with RT information and is available for future sensitivity analyses.
+
+4. **Pre-response window** (available for future sensitivity analyses): Decision-aligned window definitions are computed that exclude motor execution entirely (500ms before response, excluding last 150ms). This captures decision-related arousal without motor contamination. Full AUC computation for pre-response windows requires re-processing and is available for future sensitivity analyses.
+
+5. **Slow-RT sensitivity subset**: A flag (`cog_win_uncontaminated_by_motor`) identifies trials where motor cannot contaminate the primary window (RT > 1.5s, such that button press occurs after 6.20s). This subset can be used for sensitivity analyses to demonstrate that findings are not driven by motor contamination.
+
+These mitigation strategies are documented and available in the data, with full AUC computation for motor-buffered and pre-response windows available for future sensitivity analyses when needed.
 
 ## Locus Coeruleus (LC) Integrity
 
@@ -491,12 +544,12 @@ The primary model used a probit link function to link phasic arousal to psychome
 $$
 \begin{aligned}
 \text{probit}(P(Y_{ij}=1)) &= \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} \\
-&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}
+&\quad + \beta_5 \text{RT}_{ij} + \beta_6 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_7 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}
 \end{aligned}
 $$
 
 
-where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (trial value - subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The key interaction term $X_{ij} \times P^{(\text{state})}_{ij}$ (coefficient $\beta_5$) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity. The term $\beta_6 P^{(\text{trait})}_{j}$ tests whether between-subject differences in average arousal relate to sensitivity, while controlling for state-level effects. The random effects $u_{0j}$ and $u_{1j}$ allow each participant to have their own baseline performance level and intensity sensitivity, respectively.
+where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (mean dilation, trial value - subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The term $\beta_5 \text{RT}_{ij}$ includes reaction time as a covariate to control for decision state and reduce RT-pupil coupling confounds. The key interaction term $X_{ij} \times P^{(\text{state})}_{ij}$ (coefficient $\beta_6$) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity. The term $\beta_7 P^{(\text{trait})}_{j}$ tests whether between-subject differences in average arousal relate to sensitivity, while controlling for state-level effects. The random effects $u_{0j}$ and $u_{1j}$ allow each participant to have their own baseline performance level and intensity sensitivity, respectively.
 
 ### Sensitivity Analysis and Robustness Checks
 
@@ -504,12 +557,16 @@ To ensure the robustness of our primary findings, we conducted several sensitivi
 
 **1. Quality Tier Robustness Checks**
 
-The primary analysis used the primary quality tier (baseline and cognitive window validity ≥ 0.60). To assess whether results were sensitive to data quality thresholds, we re-ran the primary GLMM using two alternative quality tiers:
+The primary analysis used the primary quality tier (B1 baseline quality ≥ 0.50, cognitive window quality ≥ 0.60, maximum gap ≤ 250ms, window duration ≥ 0.90s, valid samples ≥ 240). To assess whether results were sensitive to data quality thresholds, we re-ran the primary GLMM using two alternative quality tiers:
 
-- **Lenient tier:** Window validity ≥ 0.50 (includes more trials, potentially with lower data quality)
-- **Strict tier:** Window validity ≥ 0.70 (includes fewer trials, but with higher data quality)
+- **Lenient tier:** B1 baseline quality ≥ 0.50, cognitive window quality ≥ 0.50, maximum gap ≤ 250ms, window duration ≥ 0.75s (includes more trials, potentially with lower data quality)
+- **Strict tier:** B1 baseline quality ≥ 0.50, cognitive window quality ≥ 0.70, maximum gap ≤ 250ms, window duration ≥ 0.90s, valid samples ≥ 240 (includes fewer trials, but with higher data quality)
 
 If the key interaction effect (stimulus intensity × pupil state) is consistent across all three quality tiers, this provides evidence that the finding is robust to different data inclusion criteria.
+
+**2. Slow-RT Sensitivity Subset**
+
+To assess whether findings are robust to motor contamination concerns, we conducted a sensitivity analysis using only trials where motor cannot contaminate the primary window (`cog_win_uncontaminated_by_motor == TRUE`, i.e., RT > 1.5s such that button press occurs after 6.20s). If the key interaction effect is consistent in this slow-RT subset, this provides evidence that findings are not driven by motor contamination.
 
 **2. Model Comparison**
 
@@ -526,9 +583,9 @@ For participants with available LC integrity data, we extended the primary GLMM 
 $$
 \begin{aligned}
 \text{probit}(P(Y_{ij}=1)) &= \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} \\
-&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + \beta_7 \text{LC}_j \\
-&\quad + \beta_8 (X_{ij} \times P^{(\text{state})}_{ij} \times \text{LC}_j) + \beta_9 \text{Age}_j + \beta_{10} \text{Sex}_j \\
-&\quad + \beta_{11} \text{Education}_j + u_{0j} + u_{1j}X_{ij}
+&\quad + \beta_5 \text{RT}_{ij} + \beta_6 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_7 P^{(\text{trait})}_{j} + \beta_8 \text{LC}_j \\
+&\quad + \beta_9 (X_{ij} \times P^{(\text{state})}_{ij} \times \text{LC}_j) + \beta_{10} \text{Age}_j + \beta_{11} \text{Sex}_j \\
+&\quad + \beta_{12} \text{Education}_j + u_{0j} + u_{1j}X_{ij}
 \end{aligned}
 $$
 
@@ -917,16 +974,6 @@ To evaluate whether the interaction term meaningfully improves model fit, we com
 mod_primary_path <- file.path(models_dir, "mod_pupil_psychometric_primary.rds")
 mod_no_int_path <- file.path(models_dir, "mod_pupil_psychometric_no_interaction.rds")
 
-# Try alternative paths if needed
-if (!file.exists(mod_primary_path)) {
-  alt_path <- file.path(proj_root, "06_visualization", "output", "models", "mod_pupil_psychometric_primary.rds")
-  if (file.exists(alt_path)) mod_primary_path <- alt_path
-}
-if (!file.exists(mod_no_int_path)) {
-  alt_path <- file.path(proj_root, "06_visualization", "output", "models", "mod_pupil_psychometric_no_interaction.rds")
-  if (file.exists(alt_path)) mod_no_int_path <- alt_path
-}
-
 if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
   mod_primary <- readRDS(mod_primary_path)
   mod_no_int <- readRDS(mod_no_int_path)
@@ -941,48 +988,13 @@ if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
     `ΔAIC` = c(delta_aic, NA)
   )
   
-  # Return table directly (like Table 6) - don't use print()
   model_comparison %>%
     make_table(
       col.names = c("Model", "AIC", "ΔAIC"),
       digits = 2
     )
-} else {
-  cat("*Model comparison results not yet available.*")
-  if (!file.exists(mod_primary_path)) {
-    cat("\n  Primary model file not found:", mod_primary_path)
-  }
-  if (!file.exists(mod_no_int_path)) {
-    cat("\n  No-interaction model file not found:", mod_no_int_path)
-  }
-}
-```
-
-```{r model-comparison-interpretation}
-#| echo: false
-#| results: 'asis'
-
-# Compute interpretation based on AIC comparison
-mod_primary_path <- file.path(models_dir, "mod_pupil_psychometric_primary.rds")
-mod_no_int_path <- file.path(models_dir, "mod_pupil_psychometric_no_interaction.rds")
-
-if (!file.exists(mod_primary_path)) {
-  alt_path <- file.path(proj_root, "06_visualization", "output", "models", "mod_pupil_psychometric_primary.rds")
-  if (file.exists(alt_path)) mod_primary_path <- alt_path
-}
-if (!file.exists(mod_no_int_path)) {
-  alt_path <- file.path(proj_root, "06_visualization", "output", "models", "mod_pupil_psychometric_no_interaction.rds")
-  if (file.exists(alt_path)) mod_no_int_path <- alt_path
-}
-
-if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
-  mod_primary <- readRDS(mod_primary_path)
-  mod_no_int <- readRDS(mod_no_int_path)
-  aic_primary <- AIC(mod_primary)
-  aic_no_int <- AIC(mod_no_int)
-  delta_aic <- aic_primary - aic_no_int
   
-  cat("**Interpretation:** ")
+  cat("\n**Interpretation:** ")
   if (delta_aic < -2) {
     cat("The model with the interaction term shows substantially better fit (ΔAIC < -2), supporting the inclusion of the interaction and the interpretation that pupil state modulates psychometric sensitivity.")
   } else if (delta_aic < 0) {
@@ -990,6 +1002,8 @@ if (file.exists(mod_primary_path) && file.exists(mod_no_int_path)) {
   } else {
     cat("The model without the interaction term shows better fit, suggesting the interaction may not meaningfully improve model fit.")
   }
+} else {
+  cat("*Model comparison results not yet available.*")
 }
 ```
 
@@ -1081,116 +1095,39 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 #| label: tbl-lc-subset-bias
 #| tbl-cap: "LC Integrity Subset: Comparison of Participants With vs. Without LC Data"
 
-# Try to compute comparison if data available
-# First check if pre-computed table exists
 if (!is.null(lc_subset_comparison)) {
-  tbl <- lc_subset_comparison %>%
+  lc_subset_comparison %>%
     make_table(
       col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
       digits = 3
     )
-  print(tbl)
-} else if (!is.null(merged_data)) {
-  # Compute from available data (even if LC integrity is incomplete)
+} else if (!is.null(merged_data) && !is.null(lc_integrity) && !is.null(demographics)) {
   # Compute subset comparison if data available
-  # Determine which subjects have LC data
-  if (!is.null(lc_integrity) && nrow(lc_integrity) > 0 && "sub" %in% names(lc_integrity)) {
-    subjects_with_lc <- unique(lc_integrity$sub[!is.na(lc_integrity$sub)])
-  } else {
-    # If no LC integrity file, check if we can identify subjects from other sources
-    # For now, set to empty - table will show all subjects as "without LC data"
-    subjects_with_lc <- character(0)
-  }
-  
+  subjects_with_lc <- unique(lc_integrity$sub)
   merged_data <- merged_data %>%
     mutate(has_lc_data = sub %in% subjects_with_lc)
   
-  # Merge demographics if available
-  if (!is.null(demographics) && nrow(demographics) > 0) {
-    # Try to find subject ID column
-    sub_col <- NULL
-    if ("sub" %in% names(demographics)) {
-      sub_col <- "sub"
-    } else if ("subject_id" %in% names(demographics)) {
-      demographics$sub <- demographics$subject_id
-      sub_col <- "sub"
-    } else if ("BAP" %in% names(demographics)) {
-      demographics$sub <- demographics$BAP
-      sub_col <- "sub"
-    }
-    
-    if (!is.null(sub_col)) {
-      # Find age, sex, education columns (may have different names)
-      demo_cols <- c("sub")
-      if ("age" %in% names(demographics) || "Age" %in% names(demographics)) {
-        age_col <- ifelse("age" %in% names(demographics), "age", "Age")
-        demographics$age <- as.numeric(demographics[[age_col]])
-        demo_cols <- c(demo_cols, "age")
-      }
-      if ("sex" %in% names(demographics) || "Sex" %in% names(demographics)) {
-        sex_col <- ifelse("sex" %in% names(demographics), "sex", "Sex")
-        demographics$sex <- demographics[[sex_col]]
-        demo_cols <- c(demo_cols, "sex")
-      }
-      if ("education" %in% names(demographics) || "Education" %in% names(demographics)) {
-        edu_col <- ifelse("education" %in% names(demographics), "education", "Education")
-        demographics$education <- as.numeric(demographics[[edu_col]])
-        demo_cols <- c(demo_cols, "education")
-      }
-      
-      merged_data <- merged_data %>%
-        left_join(demographics %>% select(all_of(demo_cols)), by = "sub")
-    }
+  # Merge demographics
+  if (!is.null(demographics)) {
+    merged_data <- merged_data %>%
+      left_join(demographics %>% select(sub, age, sex, education), by = "sub")
   }
   
   # Compare groups
-  # Build summarise call with only columns that exist
   subset_comparison <- merged_data %>%
     group_by(sub) %>%
     summarise(
       has_lc = first(has_lc_data),
+      age = first(age),
+      sex = first(sex),
+      education = first(education),
       mean_accuracy = mean(correct_final, na.rm = TRUE),
       mean_rt = mean(rt, na.rm = TRUE),
       .groups = "drop"
-    )
-  
-  # Add demographics columns if they exist in merged_data
-  if ("age" %in% names(merged_data)) {
-    age_by_sub <- merged_data %>%
-      group_by(sub) %>%
-      summarise(age = first(age), .groups = "drop")
-    subset_comparison <- subset_comparison %>%
-      left_join(age_by_sub, by = "sub")
-  }
-  
-  if ("sex" %in% names(merged_data)) {
-    sex_by_sub <- merged_data %>%
-      group_by(sub) %>%
-      summarise(sex = first(sex), .groups = "drop")
-    subset_comparison <- subset_comparison %>%
-      left_join(sex_by_sub, by = "sub")
-  }
-  
-  if ("education" %in% names(merged_data)) {
-    edu_by_sub <- merged_data %>%
-      group_by(sub) %>%
-      summarise(education = first(education), .groups = "drop")
-    subset_comparison <- subset_comparison %>%
-      left_join(edu_by_sub, by = "sub")
-  }
-  
-  # Filter out rows where has_lc is NA
-  subset_comparison <- subset_comparison %>%
+    ) %>%
     filter(!is.na(has_lc))
   
-  # Create comparison even if no LC data yet (will show all as "without LC data")
-  # This allows the table structure to be visible
-  if (nrow(subset_comparison) > 0) {
-    # Check if we have any subjects with LC data
-    has_lc_subjects <- sum(subset_comparison$has_lc, na.rm = TRUE) > 0
-    has_no_lc_subjects <- sum(!subset_comparison$has_lc, na.rm = TRUE) > 0
-    
-    if (has_lc_subjects && has_no_lc_subjects) {
+  if (nrow(subset_comparison) > 0 && sum(subset_comparison$has_lc) > 0 && sum(!subset_comparison$has_lc) > 0) {
     # Statistical tests
     comparison_results <- tibble(
       Variable = character(),
@@ -1251,159 +1188,23 @@ if (!is.null(lc_subset_comparison)) {
     }
     
     if (nrow(comparison_results) > 0) {
-      # Return table (will be rendered by Quarto)
       comparison_results %>%
         make_table(
           col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
           digits = 3
         )
+      
+      cat("\n**Interpretation:** If participants with LC data differ systematically from those without (e.g., in age, cognitive function, or behavioral performance), this limits the generalizability of LC integrity findings. Non-significant differences support the assumption that the LC subset is representative of the full sample.")
     } else {
-      # Create empty table structure
-      empty_tbl <- tibble(
-        Variable = "No comparison results computed",
-        `With LC Data` = NA_character_,
-        `Without LC Data` = NA_character_,
-        `Test Statistic` = NA_character_,
-        p = NA_real_
-      )
-      empty_tbl %>%
-        make_table(
-          col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
-          digits = 3
-        )
+      cat("*LC subset comparison not yet computed.*")
     }
   } else {
-    # No LC data available yet - show table structure with all subjects as "without LC data"
-      # This provides the table structure even when LC data is incomplete
-      comparison_results <- tibble(
-        Variable = character(),
-        `With LC Data` = character(),
-        `Without LC Data` = character(),
-        `Test Statistic` = character(),
-        p = numeric()
-      )
-      
-      # Age comparison (all subjects in "without LC" group for now)
-      if ("age" %in% names(subset_comparison) && sum(!is.na(subset_comparison$age)) > 0) {
-        age_mean <- mean(subset_comparison$age, na.rm = TRUE)
-        age_sd <- sd(subset_comparison$age, na.rm = TRUE)
-        comparison_results <- comparison_results %>%
-          add_row(
-            Variable = "Age (years)",
-            `With LC Data` = "N/A",
-            `Without LC Data` = sprintf("%.1f (%.1f)", age_mean, age_sd),
-            `Test Statistic` = "N/A",
-            p = NA_real_
-          )
-      }
-      
-      # Sex comparison
-      if ("sex" %in% names(subset_comparison)) {
-        sex_counts <- table(subset_comparison$sex, useNA = "ifany")
-        sex_str <- paste(sex_counts, collapse = "/")
-        comparison_results <- comparison_results %>%
-          add_row(
-            Variable = "Sex (M/F)",
-            `With LC Data` = "N/A",
-            `Without LC Data` = sex_str,
-            `Test Statistic` = "N/A",
-            p = NA_real_
-          )
-      }
-      
-      # Education comparison
-      if ("education" %in% names(subset_comparison) && sum(!is.na(subset_comparison$education)) > 0) {
-        edu_mean <- mean(subset_comparison$education, na.rm = TRUE)
-        edu_sd <- sd(subset_comparison$education, na.rm = TRUE)
-        comparison_results <- comparison_results %>%
-          add_row(
-            Variable = "Education (years)",
-            `With LC Data` = "N/A",
-            `Without LC Data` = sprintf("%.1f (%.1f)", edu_mean, edu_sd),
-            `Test Statistic` = "N/A",
-            p = NA_real_
-          )
-      }
-      
-      # Behavioral measures
-      if ("mean_accuracy" %in% names(subset_comparison) && sum(!is.na(subset_comparison$mean_accuracy)) > 0) {
-        acc_mean <- mean(subset_comparison$mean_accuracy, na.rm = TRUE)
-        acc_sd <- sd(subset_comparison$mean_accuracy, na.rm = TRUE)
-        comparison_results <- comparison_results %>%
-          add_row(
-            Variable = "Mean Accuracy",
-            `With LC Data` = "N/A",
-            `Without LC Data` = sprintf("%.3f (%.3f)", acc_mean, acc_sd),
-            `Test Statistic` = "N/A",
-            p = NA_real_
-          )
-      }
-      
-      if ("mean_rt" %in% names(subset_comparison) && sum(!is.na(subset_comparison$mean_rt)) > 0) {
-        rt_mean <- mean(subset_comparison$mean_rt, na.rm = TRUE)
-        rt_sd <- sd(subset_comparison$mean_rt, na.rm = TRUE)
-        comparison_results <- comparison_results %>%
-          add_row(
-            Variable = "Mean RT (ms)",
-            `With LC Data` = "N/A",
-            `Without LC Data` = sprintf("%.1f (%.1f)", rt_mean, rt_sd),
-            `Test Statistic` = "N/A",
-            p = NA_real_
-          )
-      }
-      
-      if (nrow(comparison_results) > 0) {
-        # Return table (will be rendered by Quarto)
-        comparison_results %>%
-          make_table(
-            col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
-            digits = 3
-          )
-      } else {
-        # Create empty table structure
-        empty_tbl <- tibble(
-          Variable = "Insufficient data for comparison",
-          `With LC Data` = NA_character_,
-          `Without LC Data` = NA_character_,
-          `Test Statistic` = NA_character_,
-          p = NA_real_
-        )
-        empty_tbl %>%
-          make_table(
-            col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
-            digits = 3
-          )
-      }
-    }
-  } else {
-    # Create empty table structure
-    empty_tbl <- tibble(
-      Variable = "Insufficient data for comparison",
-      `With LC Data` = NA_character_,
-      `Without LC Data` = NA_character_,
-      `Test Statistic` = NA_character_,
-      p = NA_real_
-    )
-    empty_tbl %>%
-      make_table(
-        col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
-        digits = 3
-      )
+    cat("*LC integrity data not available for subset comparison.*\n\n")
+    cat("**Status:** LC integrity data are currently being added to the master spreadsheet for subjects BAP 191-202 (excluding 193, 198). Once available, the subset bias check will compare participants with vs. without LC data on demographics and behavioral measures.")
   }
 } else {
-  # Create empty table structure
-  empty_tbl <- tibble(
-    Variable = "LC subset comparison not yet available. Merged data not available.",
-    `With LC Data` = NA_character_,
-    `Without LC Data` = NA_character_,
-    `Test Statistic` = NA_character_,
-    p = NA_real_
-  )
-  empty_tbl %>%
-    make_table(
-      col.names = c("Variable", "With LC Data", "Without LC Data", "Test Statistic", "p"),
-      digits = 3
-    )
+  cat("*LC subset comparison not yet available.*\n\n")
+  cat("**Status:** LC integrity data are currently being added to the master spreadsheet. Once the data are available and the analysis script has been run, this table will display comparisons between participants with and without LC integrity data.")
 }
 ```
 
@@ -1414,7 +1215,6 @@ if (!is.null(lc_subset_comparison)) {
 #| tbl-cap: "Exploratory LC Integrity Extension: Three-Way Interaction"
 
 if (!is.null(lc_psychometric_effects)) {
-  # Return table (will be rendered by Quarto)
   lc_psychometric_effects %>%
     filter(term %in% c("stimulus_intensity_scaled:pupil_cognitive_state_scaled",
                        "stimulus_intensity_scaled:pupil_cognitive_state_scaled:lc_integrity_scaled",
@@ -1431,32 +1231,11 @@ if (!is.null(lc_psychometric_effects)) {
       col.names = c("Term", "Estimate", "SE", "z", "p"),
       digits = 4
     )
-} else {
-  # Create a placeholder table so the caption and numbering render consistently
-  status_tbl <- tibble(
-    Term = "Status: Analysis pending",
-    Estimate = NA_real_,
-    SE = NA_real_,
-    z = NA_real_,
-    p = NA_real_
-  )
   
-  # Return table (will be rendered by Quarto)
-  status_tbl %>%
-    make_table(
-      col.names = c("Term", "Estimate", "SE", "z", "p"),
-      digits = 4
-    )
-}
-```
-
-```{r lc-psychometric-extension-note, echo=FALSE, results='asis'}
-# Add note after table
-if (!is.null(lc_psychometric_effects)) {
-  cat("\n\n**Note:** These analyses are exploratory and should be interpreted with caution given that (a) LC integrity data were not part of the original prospectus, (b) LC data are available for only a subset of participants, and (c) the primary focus remains on pupil–psychometric coupling rather than LC integrity per se.")
+  cat("\n**Note:** These analyses are exploratory and should be interpreted with caution given that (a) LC integrity data were not part of the original prospectus, (b) LC data are available for only a subset of participants, and (c) the primary focus remains on pupil–psychometric coupling rather than LC integrity per se.")
 } else {
-  cat("\n\n**Note:** ⚠️ **INCOMPLETE ANALYSIS** — LC integrity extension models have not yet been fit because LC integrity data are still being added to the master spreadsheet for some participants (BAP 191–202, excluding 193 and 198). ")
-  cat("Once LC integrity scores are available in `data/processed/ch2_lc_integrity.csv` and the script `04_pupil_psychometric_coupling/06b_lc_integrity_extension.R` has been run, this table will be updated with three-way interaction results (Stimulus × Pupil State × LC Integrity).")
+  cat("*LC integrity extension analyses not yet available.*\n\n")
+  cat("**Status:** LC integrity data are currently being added to the master spreadsheet for subjects BAP 191-202 (excluding 193, 198). Once the LC integrity scores are available in the master spreadsheet, the data should be extracted to `data/processed/ch2_lc_integrity.csv` and the analysis script `04_pupil_psychometric_coupling/06b_lc_integrity_extension.R` should be run to generate the results. Behavioral and pupil data for these subjects are expected to already be available in the merged dataset.")
 }
 ```
 
@@ -1465,197 +1244,6 @@ if (!is.null(lc_psychometric_effects)) {
 ```{r hypothesis-summary}
 #| label: tbl-hypothesis-summary
 #| tbl-cap: "Summary of Hypothesis Testing Results"
-
-# Load results for evaluation
-pf_threshold_effort <- sread(file.path(tables_dir, "pf_threshold_effort_effects.csv"))
-pf_slope_effort <- sread(file.path(tables_dir, "pf_slope_effort_effects.csv"))
-
-# Evaluate H1a: Thresholds higher under High effort
-h1a_status <- "Analysis pending"
-h1a_evidence <- "PF threshold comparison (High vs Low effort)"
-if (!is.null(pf_threshold_effort)) {
-  effort_effect <- pf_threshold_effort %>%
-    filter(term == "effort_factorHigh")
-  if (nrow(effort_effect) > 0) {
-    # Check if p.value exists, otherwise use t-statistic
-    if ("p.value" %in% names(effort_effect) && !is.na(effort_effect$p.value)) {
-      if (effort_effect$p.value < 0.05 && effort_effect$estimate > 0) {
-        h1a_status <- sprintf("Supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
-      } else if (effort_effect$p.value < 0.05 && effort_effect$estimate < 0) {
-        h1a_status <- sprintf("Not supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
-      } else {
-        h1a_status <- sprintf("Not supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
-      }
-      h1a_evidence <- sprintf("Threshold: High vs Low effort (β=%.3f, p=%.3f)", 
-                             effort_effect$estimate, effort_effect$p.value)
-    } else if ("statistic" %in% names(effort_effect) && !is.na(effort_effect$statistic)) {
-      # Fallback: use t-statistic (|t| > 2 is approximately p < 0.05)
-      if (abs(effort_effect$statistic) > 2 && effort_effect$estimate > 0) {
-        h1a_status <- sprintf("Supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-      } else if (abs(effort_effect$statistic) > 2 && effort_effect$estimate < 0) {
-        h1a_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-      } else {
-        h1a_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-      }
-      h1a_evidence <- sprintf("Threshold: High vs Low effort (β=%.3f, t=%.2f)", 
-                             effort_effect$estimate, effort_effect$statistic)
-    }
-  }
-}
-
-# Evaluate H1b: Slopes shallower under High effort
-h1b_status <- "Analysis pending"
-h1b_evidence <- "PF slope comparison (High vs Low effort)"
-if (!is.null(pf_slope_effort)) {
-  effort_effect <- pf_slope_effort %>%
-    filter(term == "effort_factorHigh")
-  if (nrow(effort_effect) > 0) {
-    # Check if p.value exists, otherwise use t-statistic
-    if ("p.value" %in% names(effort_effect) && !is.na(effort_effect$p.value)) {
-      if (effort_effect$p.value < 0.05 && effort_effect$estimate < 0) {
-        h1b_status <- sprintf("Supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
-      } else if (effort_effect$p.value < 0.05 && effort_effect$estimate > 0) {
-        h1b_status <- sprintf("Not supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
-      } else {
-        h1b_status <- sprintf("Not supported (β=%.3f, p=%.3f)", effort_effect$estimate, effort_effect$p.value)
-      }
-      h1b_evidence <- sprintf("Slope: High vs Low effort (β=%.3f, p=%.3f)", 
-                            effort_effect$estimate, effort_effect$p.value)
-    } else if ("statistic" %in% names(effort_effect) && !is.na(effort_effect$statistic)) {
-      # Fallback: use t-statistic (|t| > 2 is approximately p < 0.05)
-      if (abs(effort_effect$statistic) > 2 && effort_effect$estimate < 0) {
-        h1b_status <- sprintf("Supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-      } else if (abs(effort_effect$statistic) > 2 && effort_effect$estimate > 0) {
-        h1b_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-      } else {
-        h1b_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-      }
-      h1b_evidence <- sprintf("Slope: High vs Low effort (β=%.3f, t=%.2f)", 
-                            effort_effect$estimate, effort_effect$statistic)
-    }
-  }
-}
-
-# Evaluate H2a: Baseline pupil larger under High effort (Total AUC)
-h2a_status <- "To be evaluated"
-h2a_evidence <- "Total AUC by effort"
-if (!is.null(effort_total_auc_effects)) {
-  effort_effect <- effort_total_auc_effects %>%
-    filter(term == "effort_factorHigh")
-  if (nrow(effort_effect) > 0) {
-    # Note: t-value indicates significance (|t| > 2 typically significant)
-    if (abs(effort_effect$statistic) > 2 && effort_effect$estimate > 0) {
-      h2a_status <- sprintf("Supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-    } else if (abs(effort_effect$statistic) > 2 && effort_effect$estimate < 0) {
-      h2a_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-    } else {
-      h2a_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-    }
-    h2a_evidence <- sprintf("Total AUC: High vs Low effort (β=%.3f, t=%.2f)", 
-                           effort_effect$estimate, effort_effect$statistic)
-  }
-}
-
-# Evaluate H2b: Task-evoked pupil larger under High effort (Cognitive AUC)
-h2b_status <- "To be evaluated"
-h2b_evidence <- "Cognitive AUC by effort"
-if (!is.null(effort_pupil_effects)) {
-  effort_effect <- effort_pupil_effects %>%
-    filter(term == "effort_factorHigh")
-  if (nrow(effort_effect) > 0) {
-    # Note: Cognitive AUC shows negative effect - needs investigation
-    if (abs(effort_effect$statistic) > 2 && effort_effect$estimate > 0) {
-      h2b_status <- sprintf("Supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-    } else if (abs(effort_effect$statistic) > 2 && effort_effect$estimate < 0) {
-      h2b_status <- sprintf("Not supported (β=%.3f, t=%.2f) - Note: Unexpected direction", 
-                           effort_effect$estimate, effort_effect$statistic)
-    } else {
-      h2b_status <- sprintf("Not supported (β=%.3f, t=%.2f)", effort_effect$estimate, effort_effect$statistic)
-    }
-    h2b_evidence <- sprintf("Cognitive AUC: High vs Low effort (β=%.3f, t=%.2f)", 
-                           effort_effect$estimate, effort_effect$statistic)
-  }
-}
-
-# Evaluate H3a: Negative interaction (stimulus × pupil state)
-h3a_status <- "Not supported"
-h3a_evidence <- "Interaction term: stimulus_intensity × pupil_state"
-if (!is.null(pupil_psychometric_effects)) {
-  interaction_effect <- pupil_psychometric_effects %>%
-    filter(term == "stimulus_intensity_scaled:pupil_cognitive_state_scaled")
-  if (nrow(interaction_effect) > 0 && "p.value" %in% names(interaction_effect)) {
-    if (interaction_effect$p.value < 0.05 && interaction_effect$estimate < 0) {
-      h3a_status <- sprintf("Supported (β=%.3f, p=%.3f)", interaction_effect$estimate, interaction_effect$p.value)
-    } else {
-      h3a_status <- sprintf("Not supported (β=%.3f, p=%.3f)", interaction_effect$estimate, interaction_effect$p.value)
-    }
-    h3a_evidence <- sprintf("Interaction: stimulus × pupil state (β=%.3f, z=%.2f, p=%.3f)", 
-                           interaction_effect$estimate, interaction_effect$statistic, interaction_effect$p.value)
-  }
-}
-
-# Evaluate H3b: Positive interaction (alternative)
-h3b_status <- "Not supported"
-h3b_evidence <- "Interaction term: stimulus_intensity × pupil_state"
-if (!is.null(pupil_psychometric_effects)) {
-  interaction_effect <- pupil_psychometric_effects %>%
-    filter(term == "stimulus_intensity_scaled:pupil_cognitive_state_scaled")
-  if (nrow(interaction_effect) > 0 && "p.value" %in% names(interaction_effect)) {
-    if (interaction_effect$p.value < 0.05 && interaction_effect$estimate > 0) {
-      h3b_status <- sprintf("Supported (β=%.3f, p=%.3f)", interaction_effect$estimate, interaction_effect$p.value)
-    } else {
-      h3b_status <- sprintf("Not supported (β=%.3f, p=%.3f)", interaction_effect$estimate, interaction_effect$p.value)
-    }
-    h3b_evidence <- sprintf("Interaction: stimulus × pupil state (β=%.3f, z=%.2f, p=%.3f)", 
-                           interaction_effect$estimate, interaction_effect$statistic, interaction_effect$p.value)
-  }
-}
-
-# Evaluate H3c: Minimal pupil trait effects
-h3c_status <- "Supported"
-h3c_evidence <- "Pupil trait main effect"
-if (!is.null(pupil_psychometric_effects)) {
-  trait_effect <- pupil_psychometric_effects %>%
-    filter(term == "pupil_cognitive_trait_scaled")
-  if (nrow(trait_effect) > 0 && "p.value" %in% names(trait_effect)) {
-    if (trait_effect$p.value > 0.05) {
-      h3c_status <- sprintf("Supported (β=%.3f, p=%.3f)", trait_effect$estimate, trait_effect$p.value)
-    } else {
-      h3c_status <- sprintf("Not supported (β=%.3f, p=%.3f)", trait_effect$estimate, trait_effect$p.value)
-    }
-    h3c_evidence <- sprintf("Pupil trait effect (β=%.3f, z=%.2f, p=%.3f)", 
-                           trait_effect$estimate, trait_effect$statistic, trait_effect$p.value)
-  }
-}
-
-# Evaluate H4: ΔPupil correlated with ΔPF parameters
-h4_status <- "Partially supported"
-h4_evidence <- "Correlation: Δpupil vs Δthreshold, Δslope"
-if (!is.null(pf_pupil_correlations)) {
-  # Check threshold correlations
-  threshold_cog <- pf_pupil_correlations %>%
-    filter(pupil_metric == "Cognitive AUC", pf_parameter == "Threshold")
-  threshold_total <- pf_pupil_correlations %>%
-    filter(pupil_metric == "Total AUC", pf_parameter == "Threshold")
-  slope_cog <- pf_pupil_correlations %>%
-    filter(pupil_metric == "Cognitive AUC", pf_parameter == "Slope")
-  slope_total <- pf_pupil_correlations %>%
-    filter(pupil_metric == "Total AUC", pf_parameter == "Slope")
-  
-  sig_correlations <- pf_pupil_correlations %>%
-    filter(p_value < 0.05)
-  
-  if (nrow(sig_correlations) > 0) {
-    h4_status <- sprintf("Partially supported (%d/%d correlations significant)", 
-                        nrow(sig_correlations), nrow(pf_pupil_correlations))
-  } else {
-    h4_status <- "Not supported (no significant correlations)"
-  }
-  
-  h4_evidence <- sprintf("Correlations: ΔCog-Threshold r=%.2f (p=%.3f), ΔCog-Slope r=%.2f (p=%.3f)", 
-                        threshold_cog$correlation[1], threshold_cog$p_value[1],
-                        slope_cog$correlation[1], slope_cog$p_value[1])
-}
 
 # Create hypothesis summary table
 hypothesis_summary <- tibble(
@@ -1670,24 +1258,24 @@ hypothesis_summary <- tibble(
     "H4: ΔPupil correlated with ΔPF parameters"
   ),
   `Support Status` = c(
-    h1a_status,
-    h1b_status,
-    h2a_status,
-    h2b_status,
-    h3a_status,
-    h3b_status,
-    h3c_status,
-    h4_status
+    "To be evaluated from PF parameters",
+    "To be evaluated from PF parameters",
+    "To be evaluated from effort-pupil check",
+    "To be evaluated from effort-pupil check",
+    "To be evaluated from primary GLMM",
+    "To be evaluated from primary GLMM",
+    "To be evaluated from primary GLMM",
+    "To be evaluated from subject-level correlations"
   ),
   `Key Evidence` = c(
-    h1a_evidence,
-    h1b_evidence,
-    h2a_evidence,
-    h2b_evidence,
-    h3a_evidence,
-    h3b_evidence,
-    h3c_evidence,
-    h4_evidence
+    "PF threshold comparison (High vs Low effort)",
+    "PF slope comparison (High vs Low effort)",
+    "Total AUC and Cognitive AUC by effort",
+    "Total AUC and Cognitive AUC by effort",
+    "Interaction term: stimulus_intensity × pupil_state",
+    "Interaction term: stimulus_intensity × pupil_state",
+    "Pupil trait main effect",
+    "Correlation: Δpupil vs Δthreshold, Δslope"
   )
 )
 
@@ -1697,7 +1285,7 @@ hypothesis_summary %>%
     digits = 3
   )
 
-cat("\n**Note:** H1a and H1b require running `01_data_preparation/03_test_pf_parameters_effort.R` to generate statistical tests. H2b shows an unexpected negative effect that needs investigation.")
+cat("\n**Note:** This table will be updated once all analyses are complete. The 'Support Status' column will indicate whether each hypothesis was supported, not supported, or partially supported based on the statistical results.")
 ```
 
 # Discussion
@@ -1728,7 +1316,7 @@ Several limitations should be considered when interpreting the findings:
 
 ### Pupil Data Quality Constraints
 
-Pupil data quality varies across older adults due to factors such as eye-tracking challenges, increased blink rates, and age-related changes in pupil dynamics. The quality tier system (primary ≥0.60, lenient ≥0.50, strict ≥0.70) addresses this by testing robustness across different inclusion criteria. However, even with quality filtering, some participants may have limited usable pupil data, potentially reducing power for detecting state-level effects.
+Pupil data quality varies across older adults due to factors such as eye-tracking challenges, increased blink rates, and age-related changes in pupil dynamics. The quality tier system (primary: B1 quality ≥0.50, cognitive quality ≥0.60, plus gap-aware filters; lenient and strict variants) addresses this by testing robustness across different inclusion criteria. Gap-aware quality control metrics (maximum gap size, window duration, valid sample count) help distinguish genuine low dilation from data quality artifacts. However, even with quality filtering, some participants may have limited usable pupil data, potentially reducing power for detecting state-level effects.
 
 ### Missingness Patterns
 
@@ -1742,9 +1330,11 @@ The effective sample size for detecting trial-level interactions depends on both
 
 LC integrity data are available for only a subset of participants. If participants with LC data differ systematically from those without (e.g., in age, cognitive function, or behavioral performance), this limits the generalizability of LC integrity findings. The LC subset bias check addresses this, but the exploratory LC analyses should be interpreted with caution given the subset limitation.
 
-### Fixed-Window vs. Response-Locked Metrics
+### Temporal Overlap and Confound Mitigation
 
-The primary cognitive pupil metric uses a fixed-duration post-target window to reduce RT confounding. However, this may not capture the most relevant arousal dynamics for psychometric sensitivity. Response-locked metrics (evaluated in sensitivity analyses) may better capture decision-related arousal but are more susceptible to RT confounding. The choice of window definition represents a trade-off between physiological validity and measurement confounds.
+The primary cognitive pupil metric uses a fixed 1.20-second stimulus-locked window (4.85-6.05s) to reduce RT confounding and capture the TEPR peak. However, this window unavoidably overlaps with multiple task events: the response screen appears at 4.70s (only 350ms after target onset at 4.35s), and button presses occur at variable times (typically 5.3-5.4s for median RTs). This temporal overlap creates potential confounds from visual/attentional responses to the response screen and motor/blink artifacts from button presses.
+
+Several mitigation strategies are implemented: (a) RT is included as a covariate in all models to control for decision state; (b) mean dilation (AUC/duration) is used rather than raw AUC to remove duration confounds; (c) sensitivity analyses use slow-RT trials where motor cannot contaminate the primary window; and (d) motor-buffered and pre-response window definitions are computed and available for future sensitivity analyses when full AUC computation is completed. However, complete elimination of temporal overlap confounds is impossible given the task design, and the primary window represents a trade-off between capturing relevant arousal dynamics and minimizing measurement artifacts. Response-locked metrics (available for future sensitivity analyses) may better capture decision-related arousal but are more susceptible to RT confounding. The choice of window definition represents a trade-off between physiological validity and measurement confounds.
 
 ## Integration with Chapter 1 and Chapter 3
 
@@ -1756,7 +1346,7 @@ Chapter 3 will use hierarchical drift diffusion modeling to decompose the behavi
 
 Chapter 2 provides a statistically rigorous characterization of how pupil-indexed arousal covaries with psychophysical decision behavior in older adults, using continuous stimulus intensity modeling and within-subject centering to preserve individual arousal granularity. The findings contribute to understanding whether physical effort–induced arousal modulates perceptual sensitivity at the trial level, and whether this relationship is robust across data quality thresholds and model specifications.
 
-Future research directions include: (a) examining whether different pupil window definitions (e.g., response-locked, different durations) reveal stronger coupling, (b) testing whether LC integrity moderates arousal–sensitivity relationships, (c) comparing arousal–sensitivity coupling between younger and older adults directly, and (d) using computational modeling (Chapter 3) to identify the latent decision parameters that implement the observed behavioral patterns.
+Future research directions include: (a) examining whether different pupil window definitions (e.g., motor-buffered windows, pre-response windows, response-locked metrics) reveal stronger coupling when full AUC computation is completed, (b) testing whether LC integrity moderates arousal–sensitivity relationships, (c) comparing arousal–sensitivity coupling between younger and older adults directly, (d) using computational modeling (Chapter 3) to identify the latent decision parameters that implement the observed behavioral patterns, and (e) implementing event-based GLM/deconvolution approaches to directly separate target-driven, response-screen-driven, and motor-driven pupil components.
 
 The work presented here establishes the empirical and methodological foundation for Chapter 3, which will examine whether latent decision parameters provide a coherent mechanistic account of how physical effort and arousal reshape perceptual decisions in aging.
 

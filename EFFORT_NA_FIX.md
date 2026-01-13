@@ -122,3 +122,5 @@ The script will:
 - The script reports how many rows were fixed/removed for transparency
 - All downstream analyses will now have only valid effort values ("Low" or "High")
 
+
+

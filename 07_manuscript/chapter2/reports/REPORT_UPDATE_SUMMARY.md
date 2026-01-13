@@ -129,3 +129,5 @@ quarto::quarto_render("07_manuscript/chapter2/reports/chapter2_dissertation.qmd"
 - If any files are missing, the report will display placeholder messages
 - All analysis results are now integrated into the report
 
+
+

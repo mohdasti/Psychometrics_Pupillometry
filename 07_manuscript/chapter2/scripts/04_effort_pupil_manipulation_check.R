@@ -208,3 +208,5 @@ if ("total_auc" %in% names(dat_analysis) && "cog_auc" %in% names(dat_analysis)) 
 
 cat("\n=== Effort-pupil manipulation check complete ===\n")
 
+
+

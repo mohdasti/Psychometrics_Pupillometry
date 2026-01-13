@@ -120,3 +120,5 @@ $$P^{(\text{trait})}_{j} = \overline{P}_{j}, \qquad P^{(\text{state})}_{ij} = P_
 $$\text{probit}(P(Y_{ij}=1)) = \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}$$ {#eq-primary-glmm}
 ```
 
+
+

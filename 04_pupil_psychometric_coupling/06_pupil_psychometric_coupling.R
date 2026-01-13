@@ -13,12 +13,21 @@ library(lme4)
 library(broom.mixed)
 library(here)
 
-# Load path configuration
-source(file.path(here(), "config", "paths_config.R"))
+# Set paths
+data_dir <- here("07_manuscript", "chapter2", "data")
+processed_dir <- file.path(data_dir, "processed")
+output_dir <- here("07_manuscript", "chapter2", "output")
+figures_dir <- file.path(output_dir, "figures")
+tables_dir <- file.path(output_dir, "tables")
+models_dir <- file.path(output_dir, "models")
+
+dir.create(figures_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(tables_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(models_dir, showWarnings = FALSE, recursive = TRUE)
 
 # Load data
 cat("Loading trial-level data...\n")
-dat_file <- merged_trial_file
+dat_file <- file.path(processed_dir, "ch2_triallevel_merged.csv")
 dat <- read_csv(dat_file, show_col_types = FALSE)
 
 # ============================================================================
@@ -73,15 +82,13 @@ cat("Model: choice ~ stimulus_intensity + effort + task + pupil_state +
 
 # Fit GLMM with probit link
 # Key interaction: stimulus_intensity × pupil_cognitive_state
-# Use control parameters to improve convergence
 mod_primary <- glmer(
   choice_num ~ stimulus_intensity_scaled * pupil_cognitive_state_scaled +
     effort_factor + task_factor +
     pupil_cognitive_trait_scaled +
     (1 + stimulus_intensity_scaled | sub),
   data = dat_primary,
-  family = binomial(link = "probit"),
-  control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 100000))
+  family = binomial(link = "probit")
 )
 
 cat("\nModel summary:\n")
@@ -136,8 +143,7 @@ mod_no_interaction <- glmer(
     pupil_cognitive_trait_scaled +
     (1 + stimulus_intensity_scaled | sub),
   data = dat_primary,
-  family = binomial(link = "probit"),
-  control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 100000))
+  family = binomial(link = "probit")
 )
 
 # Compare models (AIC)
@@ -181,8 +187,7 @@ mod_lenient <- glmer(
     pupil_cognitive_trait_scaled +
     (1 + stimulus_intensity_scaled | sub),
   data = dat_lenient,
-  family = binomial(link = "probit"),
-  control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 100000))
+  family = binomial(link = "probit")
 )
 
 fe_lenient <- broom.mixed::tidy(mod_lenient, effects = "fixed")
@@ -217,8 +222,7 @@ mod_strict <- glmer(
     pupil_cognitive_trait_scaled +
     (1 + stimulus_intensity_scaled | sub),
   data = dat_strict,
-  family = binomial(link = "probit"),
-  control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 100000))
+  family = binomial(link = "probit")
 )
 
 fe_strict <- broom.mixed::tidy(mod_strict, effects = "fixed")
@@ -256,27 +260,18 @@ dat_primary <- dat_primary %>%
 # Plot psychometric functions by pupil tertile
 p1 <- dat_primary %>%
   filter(!is.na(pupil_state_tertile)) %>%
-  ggplot(aes(x = stimulus_intensity, y = choice_num, 
-             color = pupil_state_tertile, fill = pupil_state_tertile)) +
+  ggplot(aes(x = stimulus_intensity, y = choice_num, color = pupil_state_tertile)) +
   stat_summary_bin(fun = "mean", bins = 10, geom = "point", size = 2, alpha = 0.7) +
-  stat_smooth(method = "glm", method.args = list(family = "binomial"), 
-              se = TRUE, alpha = 0.2, linewidth = 1.2) +
+  stat_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
   facet_grid(task_factor ~ effort_factor) +
-  scale_color_manual(
-    values = c("Low" = "#2E86AB", "Medium" = "#F18F01", "High" = "#A23B72"),
-    name = "Pupil State\nTertile"
-  ) +
-  scale_fill_manual(
-    values = c("Low" = "#2E86AB", "Medium" = "#F18F01", "High" = "#A23B72"),
-    name = "Pupil State\nTertile"
-  ) +
+  scale_color_manual(values = c("Low" = "blue", "Medium" = "gray", "High" = "red")) +
   labs(
     x = "Stimulus Intensity",
     y = "Proportion 'Different'",
+    color = "Pupil State\nTertile",
     title = "Psychometric Functions by Pupil State"
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_minimal()
 
 ggsave(file.path(figures_dir, "psychometric_by_pupil_state.png"),
        p1, width = 10, height = 8, dpi = 300)
@@ -301,19 +296,16 @@ p2 <- pred_data %>%
                               labels = c("Low Pupil", "Medium Pupil", "High Pupil"))
   ) %>%
   ggplot(aes(x = stimulus_intensity_scaled, y = pred, color = pupil_state_label)) +
-  geom_line(linewidth = 1.2) +
+  geom_line(size = 1.2) +
   facet_grid(task_factor ~ effort_factor) +
-  scale_color_manual(
-    values = c("Low Pupil" = "#2E86AB", "Medium Pupil" = "#F18F01", "High Pupil" = "#A23B72"),
-    name = "Pupil State"
-  ) +
+  scale_color_manual(values = c("Low Pupil" = "blue", "Medium Pupil" = "gray", "High Pupil" = "red")) +
   labs(
     x = "Stimulus Intensity (scaled)",
     y = "Predicted Probability 'Different'",
+    color = "Pupil State",
     title = "Model Predictions: Stimulus × Pupil State Interaction"
   ) +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  theme_minimal()
 
 ggsave(file.path(figures_dir, "pupil_psychometric_interaction.png"),
        p2, width = 10, height = 8, dpi = 300)
