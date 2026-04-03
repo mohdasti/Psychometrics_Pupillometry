@@ -11,14 +11,11 @@
 library(tidyverse)
 library(here)
 
-# Set paths
-data_dir <- here("07_manuscript", "chapter2", "data")
-processed_dir <- file.path(data_dir, "processed")
-qc_dir <- file.path(data_dir, "qc")
+source(file.path(here(), "config", "paths_config.R"))
 
 # Load data
 cat("Loading trial-level data...\n")
-dat_file <- file.path(processed_dir, "ch2_triallevel_merged.csv")
+dat_file <- merged_trial_file
 dat <- read_csv(dat_file, show_col_types = FALSE)
 
 # ============================================================================
@@ -65,6 +62,13 @@ if ("gate_pupil_primary" %in% names(dat)) {
 # ============================================================================
 
 cat("\n=== Computing Within-Subject Centered Pupil Metrics ===\n")
+
+# Drop prior trait/state columns so left_join(subject_means) does not create .x/.y duplicates
+dat <- dat %>%
+  select(-any_of(c(
+    "pupil_cognitive_trait", "pupil_total_auc_trait",
+    "pupil_cognitive_state", "pupil_total_auc_state", "n_trials_with_pupil"
+  )))
 
 # Identify primary cognitive pupil metric
 # Check for cog_auc (fixed-window cognitive AUC) or alternative metric

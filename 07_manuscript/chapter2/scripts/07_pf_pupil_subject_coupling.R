@@ -108,51 +108,63 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
   
   cat("\n=== Computing correlations ===\n")
   
-  # Correlation: Δpupil (cognitive) vs ΔPF threshold
-  cor_threshold_cog <- cor.test(coupling_data$delta_cog_auc, coupling_data$delta_threshold)
-  cat("\nΔCognitive Pupil vs ΔPF Threshold:\n")
-  cat(sprintf("  r = %.3f\n", cor_threshold_cog$estimate))
-  cat(sprintf("  95%% CI: [%.3f, %.3f]\n", 
-              cor_threshold_cog$conf.int[1], cor_threshold_cog$conf.int[2]))
-  cat(sprintf("  p = %.4f\n", cor_threshold_cog$p.value))
-  
-  # Correlation: Δpupil (cognitive) vs ΔPF slope
-  cor_slope_cog <- cor.test(coupling_data$delta_cog_auc, coupling_data$delta_slope)
-  cat("\nΔCognitive Pupil vs ΔPF Slope:\n")
-  cat(sprintf("  r = %.3f\n", cor_slope_cog$estimate))
-  cat(sprintf("  95%% CI: [%.3f, %.3f]\n", 
-              cor_slope_cog$conf.int[1], cor_slope_cog$conf.int[2]))
-  cat(sprintf("  p = %.4f\n", cor_slope_cog$p.value))
-  
-  # Correlation: Δpupil (total) vs ΔPF threshold
-  cor_threshold_total <- cor.test(coupling_data$delta_total_auc, coupling_data$delta_threshold)
-  cat("\nΔTotal Pupil vs ΔPF Threshold:\n")
-  cat(sprintf("  r = %.3f\n", cor_threshold_total$estimate))
-  cat(sprintf("  p = %.4f\n", cor_threshold_total$p.value))
-  
-  # Correlation: Δpupil (total) vs ΔPF slope
-  cor_slope_total <- cor.test(coupling_data$delta_total_auc, coupling_data$delta_slope)
-  cat("\nΔTotal Pupil vs ΔPF Slope:\n")
-  cat(sprintf("  r = %.3f\n", cor_slope_total$estimate))
-  cat(sprintf("  p = %.4f\n", cor_slope_total$p.value))
-  
-  # ============================================================================
-  # CREATE CORRELATION SUMMARY TABLE
-  # ============================================================================
-  
-  cor_summary <- tibble(
-    pupil_metric = c("Cognitive AUC", "Cognitive AUC", "Total AUC", "Total AUC"),
-    pf_parameter = c("Threshold", "Slope", "Threshold", "Slope"),
-    correlation = c(cor_threshold_cog$estimate, cor_slope_cog$estimate,
-                   cor_threshold_total$estimate, cor_slope_total$estimate),
-    ci_lower = c(cor_threshold_cog$conf.int[1], cor_slope_cog$conf.int[1],
-                cor_threshold_total$conf.int[1], cor_slope_total$conf.int[1]),
-    ci_upper = c(cor_threshold_cog$conf.int[2], cor_slope_cog$conf.int[2],
-                cor_threshold_total$conf.int[2], cor_slope_total$conf.int[2]),
-    p_value = c(cor_threshold_cog$p.value, cor_slope_cog$p.value,
-               cor_threshold_total$p.value, cor_slope_total$p.value),
-    n = rep(nrow(coupling_data), 4)
+  corr_specs <- tribble(
+    ~pupil_metric,    ~pf_parameter, ~x_col,            ~y_col,
+    "Cognitive AUC",  "Threshold",   "delta_cog_auc",   "delta_threshold",
+    "Cognitive AUC",  "Slope",       "delta_cog_auc",   "delta_slope",
+    "Total AUC",      "Threshold",   "delta_total_auc", "delta_threshold",
+    "Total AUC",      "Slope",       "delta_total_auc", "delta_slope"
   )
+
+  compute_task_correlation <- function(df, task_label, pupil_metric, pf_parameter, x_col, y_col) {
+    d <- df %>%
+      filter(task == task_label) %>%
+      filter(is.finite(.data[[x_col]]), is.finite(.data[[y_col]]))
+
+    if (nrow(d) < 3 || sd(d[[x_col]]) == 0 || sd(d[[y_col]]) == 0) {
+      return(tibble(
+        task = task_label,
+        pupil_metric = pupil_metric,
+        pf_parameter = pf_parameter,
+        correlation = NA_real_,
+        ci_lower = NA_real_,
+        ci_upper = NA_real_,
+        p_value = NA_real_,
+        n = nrow(d)
+      ))
+    }
+
+    ct <- cor.test(d[[x_col]], d[[y_col]])
+
+    tibble(
+      task = task_label,
+      pupil_metric = pupil_metric,
+      pf_parameter = pf_parameter,
+      correlation = unname(ct$estimate),
+      ci_lower = ct$conf.int[1],
+      ci_upper = ct$conf.int[2],
+      p_value = ct$p.value,
+      n = nrow(d)
+    )
+  }
+
+  cor_summary <- tidyr::expand_grid(
+    task = sort(unique(coupling_data$task)),
+    corr_specs
+  ) %>%
+    purrr::pmap_dfr(function(task, pupil_metric, pf_parameter, x_col, y_col) {
+      compute_task_correlation(
+        coupling_data,
+        task_label = task,
+        pupil_metric = pupil_metric,
+        pf_parameter = pf_parameter,
+        x_col = x_col,
+        y_col = y_col
+      )
+    })
+
+  cat("\nTask-specific correlation summary:\n")
+  print(cor_summary)
   
   cor_output <- file.path(tables_dir, "pf_pupil_coupling_correlations.csv")
   write_csv(cor_summary, cor_output)
@@ -169,11 +181,12 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
     ggplot(aes(x = delta_cog_auc, y = delta_threshold)) +
     geom_point(alpha = 0.6, size = 2) +
     geom_smooth(method = "lm", se = TRUE, color = "red") +
-    facet_wrap(~ task) +
+    facet_wrap(~ task, scales = "free_y") +
     labs(
       x = "ΔCognitive Pupil (High - Low Effort)",
       y = "ΔPF Threshold (High - Low Effort)",
-      title = "Subject-Level Coupling: Pupil vs PF Threshold"
+      title = "Subject-Level Coupling: Pupil vs PF Threshold",
+      subtitle = "Task panels use separate y-axis scales because threshold units differ by modality"
     ) +
     theme_minimal()
   
@@ -186,11 +199,12 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
     ggplot(aes(x = delta_cog_auc, y = delta_slope)) +
     geom_point(alpha = 0.6, size = 2) +
     geom_smooth(method = "lm", se = TRUE, color = "red") +
-    facet_wrap(~ task) +
+    facet_wrap(~ task, scales = "free_y") +
     labs(
       x = "ΔCognitive Pupil (High - Low Effort)",
       y = "ΔPF Slope (High - Low Effort)",
-      title = "Subject-Level Coupling: Pupil vs PF Slope"
+      title = "Subject-Level Coupling: Pupil vs PF Slope",
+      subtitle = "Task panels use separate y-axis scales because slope estimates differ sharply across modalities"
     ) +
     theme_minimal()
   

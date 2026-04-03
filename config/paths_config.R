@@ -62,7 +62,7 @@ tables_dir <- file.path(visualization_dir, "output", "tables")
 models_dir <- file.path(visualization_dir, "output", "models")
 
 # Reports directory
-reports_dir <- file.path(manuscript_dir)
+reports_dir <- file.path(manuscript_dir, "reports")
 report_file <- file.path(reports_dir, "chapter2_dissertation.qmd")
 pupil_data_report_file <- file.path(reports_dir, "pupil_data_report_advisor.qmd")
 

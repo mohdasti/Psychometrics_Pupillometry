@@ -13,13 +13,7 @@ library(lme4)
 library(broom.mixed)
 library(here)
 
-# Set paths
-data_dir <- here("07_manuscript", "chapter2", "data")
-processed_dir <- file.path(data_dir, "processed")
-output_dir <- here("07_manuscript", "chapter2", "output")
-figures_dir <- file.path(output_dir, "figures")
-tables_dir <- file.path(output_dir, "tables")
-models_dir <- file.path(output_dir, "models")
+source(file.path(here(), "config", "paths_config.R"))
 
 dir.create(figures_dir, showWarnings = FALSE, recursive = TRUE)
 dir.create(tables_dir, showWarnings = FALSE, recursive = TRUE)
@@ -27,7 +21,7 @@ dir.create(models_dir, showWarnings = FALSE, recursive = TRUE)
 
 # Load data
 cat("Loading trial-level data...\n")
-dat_file <- file.path(processed_dir, "ch2_triallevel_merged.csv")
+dat_file <- merged_trial_file
 dat <- read_csv(dat_file, show_col_types = FALSE)
 
 # ============================================================================
@@ -240,6 +234,47 @@ saveRDS(mod_strict, file.path(models_dir, "mod_pupil_psychometric_strict.rds"))
 write_csv(fe_strict, file.path(tables_dir, "pupil_psychometric_strict_effects.csv"))
 
 # ============================================================================
+# SLOW-RT SENSITIVITY: Motor contamination subset (RT > 1.5 s)
+# ============================================================================
+# Pre-specified: trials where button press occurs late enough that motor execution
+# cannot overlap the primary cognitive pupil window (see manuscript Methods).
+# Merged file may omit cog_win_uncontaminated_by_motor; use RT > 1.5 s filter.
+
+cat("\n=== Slow-RT sensitivity GLMM (RT > 1.5 s) ===\n")
+
+dat_slow_rt <- dat %>%
+  filter(quality_primary == TRUE) %>%
+  filter(!is.na(pupil_cognitive_state), !is.na(stimulus_intensity), !is.na(choice_num)) %>%
+  filter(!is.na(rt), rt > 1.5) %>%
+  mutate(
+    effort_factor = factor(effort, levels = c("Low", "High")),
+    task_factor = factor(task)
+  )
+
+cat(sprintf("  Trials: %d; Subjects: %d\n", nrow(dat_slow_rt), length(unique(dat_slow_rt$sub))))
+
+dat_slow_rt <- dat_slow_rt %>%
+  group_by(task_factor) %>%
+  mutate(stimulus_intensity_scaled = scale(stimulus_intensity)[, 1]) %>%
+  ungroup()
+dat_slow_rt$pupil_cognitive_state_scaled <- scale(dat_slow_rt$pupil_cognitive_state)[, 1]
+dat_slow_rt$pupil_cognitive_trait_scaled <- scale(dat_slow_rt$pupil_cognitive_trait)[, 1]
+
+mod_slow_rt <- glmer(
+  choice_num ~ stimulus_intensity_scaled * pupil_cognitive_state_scaled +
+    effort_factor + task_factor +
+    pupil_cognitive_trait_scaled +
+    (1 + stimulus_intensity_scaled | sub),
+  data = dat_slow_rt,
+  family = binomial(link = "probit"),
+  control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5))
+)
+
+fe_slow_rt <- broom.mixed::tidy(mod_slow_rt, effects = "fixed")
+saveRDS(mod_slow_rt, file.path(models_dir, "mod_pupil_psychometric_slow_rt.rds"))
+write_csv(fe_slow_rt, file.path(tables_dir, "pupil_psychometric_slow_rt_effects.csv"))
+
+# ============================================================================
 # CREATE FIGURES
 # ============================================================================
 
@@ -310,6 +345,10 @@ p2 <- pred_data %>%
 ggsave(file.path(figures_dir, "pupil_psychometric_interaction.png"),
        p2, width = 10, height = 8, dpi = 300)
 cat("✓ Saved: pupil_psychometric_interaction.png\n")
+# Alias for manuscript / Quarto (Appendix B, Figure B1)
+ggsave(file.path(figures_dir, "fig_predicted_psychometric_pupil_state.png"),
+       p2, width = 10, height = 8, dpi = 300)
+cat("✓ Saved: fig_predicted_psychometric_pupil_state.png\n")
 
 cat("\n=== Pupil-psychometric coupling analysis complete ===\n")
 

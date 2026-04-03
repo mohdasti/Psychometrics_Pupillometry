@@ -1,108 +1,171 @@
 # Script 2: Compute Psychometric Function (PF) Parameters
 # ========================================================
-# Purpose: Fit psychometric functions or load existing PF fits
-#          Extract thresholds and slopes per subject × task × effort
-# Input: ch2_triallevel_merged.csv
-# Output: ch2_pf_parameters.csv (subject-level PF parameters)
+# Purpose: Build subject-level PF parameters for Chapter 2
+# Priority:
+#   1. If master behavioral spreadsheet exists — import Psignifit/MATLAB parameters
+#      (wide aud_/vis_ × _low/_high) → long format (sub × ADT/VDT × Low/High).
+#   2. Else if ch2_pf_parameters.csv exists — load (legacy).
+#   3. Else — fit simple probit GLMs to trial-level merged data.
+#
+# Input:  data/raw/behavioral/LC Aging Subject Data master spreadsheet - behavioral.csv
+#         (preferred), or ch2_triallevel_merged.csv (fallback fits)
+# Output: data/processed/ch2_pf_parameters.csv
 #
 # Author: Mohammad Dastgheib
-# Date: Created for Chapter 2 analysis
 
 library(tidyverse)
 library(lme4)
 library(here)
 
-# Load path configuration
 source(file.path(here(), "config", "paths_config.R"))
 
-# Load data
-cat("Loading trial-level data...\n")
-dat_file <- merged_trial_file
-dat <- read_csv(dat_file, show_col_types = FALSE)
-
-# ============================================================================
-# OPTION 1: Load existing PF parameters if available
-# ============================================================================
-# Check if PF parameters already exist in processed directory
 pf_file <- pf_params_file
-if (file.exists(pf_file)) {
-  cat("Loading existing PF parameters from processed directory...\n")
+merged_file <- merged_trial_file
+
+# ----------------------------------------------------------------------------
+# Import PF parameters from master behavioral spreadsheet (canonical source)
+# ----------------------------------------------------------------------------
+
+import_pf_from_master_beh <- function(path) {
+  master <- read_csv(path, skip = 1, show_col_types = FALSE, na = c("", "NA", "N/A", " "))
+  subj_col <- c("SUBJECT NUMBER_1", "SUBJECT_NUMBER_1")[c("SUBJECT NUMBER_1", "SUBJECT_NUMBER_1") %in% names(master)][1]
+  if (is.na(subj_col)) {
+    stop("Could not find SUBJECT NUMBER_1 column in master behavioral file.")
+  }
+  req <- c(
+    "aud_thresh_low", "aud_thresh_high", "vis_thresh_low", "vis_thresh_high",
+    "aud_slope_low", "aud_slope_high", "vis_slope_low", "vis_slope_high"
+  )
+  missing_cols <- setdiff(req, names(master))
+  if (length(missing_cols) > 0) {
+    stop("Master behavioral file missing columns: ", paste(missing_cols, collapse = ", "))
+  }
+
+  th <- master %>%
+    mutate(sub = str_trim(as.character(.data[[subj_col]]))) %>%
+    filter(!is.na(sub), sub != "") %>%
+    select(sub, aud_thresh_low, aud_thresh_high, vis_thresh_low, vis_thresh_high) %>%
+    pivot_longer(-sub, names_to = "key", values_to = "threshold") %>%
+    mutate(
+      task = case_when(
+        str_starts(key, "aud_") ~ "ADT",
+        str_starts(key, "vis_") ~ "VDT",
+        TRUE ~ NA_character_
+      ),
+      effort = case_when(
+        str_ends(key, "_low") ~ factor("Low", levels = c("Low", "High")),
+        str_ends(key, "_high") ~ factor("High", levels = c("Low", "High")),
+        TRUE ~ NA
+      )
+    ) %>%
+    filter(!is.na(task)) %>%
+    select(sub, task, effort, threshold)
+
+  sl <- master %>%
+    mutate(sub = str_trim(as.character(.data[[subj_col]]))) %>%
+    filter(!is.na(sub), sub != "") %>%
+    select(sub, aud_slope_low, aud_slope_high, vis_slope_low, vis_slope_high) %>%
+    pivot_longer(-sub, names_to = "key", values_to = "slope") %>%
+    mutate(
+      task = case_when(
+        str_starts(key, "aud_") ~ "ADT",
+        str_starts(key, "vis_") ~ "VDT",
+        TRUE ~ NA_character_
+      ),
+      effort = case_when(
+        str_ends(key, "_low") ~ factor("Low", levels = c("Low", "High")),
+        str_ends(key, "_high") ~ factor("High", levels = c("Low", "High")),
+        TRUE ~ NA
+      )
+    ) %>%
+    filter(!is.na(task)) %>%
+    select(sub, task, effort, slope)
+
+  pf_results <- inner_join(th, sl, by = c("sub", "task", "effort")) %>%
+    mutate(
+      intercept = NA_real_,
+      r_squared = NA_real_,
+      n_trials = NA_integer_,
+      converged = is.finite(threshold) & is.finite(slope),
+      log_likelihood = NA_real_
+    ) %>%
+    arrange(sub, task, effort)
+
+  pf_results
+}
+
+# ----------------------------------------------------------------------------
+# Main logic
+# ----------------------------------------------------------------------------
+
+if (file.exists(master_beh_file)) {
+  cat("Importing PF parameters from master behavioral spreadsheet:\n  ", master_beh_file, "\n", sep = "")
+  pf_results <- import_pf_from_master_beh(master_beh_file)
+  write_csv(pf_results, pf_file)
+  cat("✓ Saved PF parameters to:", pf_file, "\n")
+  cat("  Rows:", nrow(pf_results), "\n")
+  cat("  Subjects:", length(unique(pf_results$sub)), "\n")
+  cat("  Converged / valid rows:", sum(pf_results$converged, na.rm = TRUE), "\n")
+
+  pf_summary <- pf_results %>%
+    filter(converged) %>%
+    group_by(task, effort) %>%
+    summarise(
+      n = n(),
+      threshold_mean = mean(threshold, na.rm = TRUE),
+      threshold_sd = sd(threshold, na.rm = TRUE),
+      slope_mean = mean(slope, na.rm = TRUE),
+      slope_sd = sd(slope, na.rm = TRUE),
+      .groups = "drop"
+    )
+  print(pf_summary)
+  cat("\n=== PF import from master complete ===\n")
+
+} else if (file.exists(pf_file)) {
+  cat("Keeping existing PF parameters (no master spreadsheet at expected path).\n")
   pf_params <- read_csv(pf_file, show_col_types = FALSE)
-  cat("✓ Loaded existing PF parameters\n")
+  cat("✓ Loaded:", pf_file, "\n")
   cat("  Rows:", nrow(pf_params), "\n")
   cat("  Subjects:", length(unique(pf_params$sub)), "\n")
-  quit()
-}
 
-# Alternative: Load from master behavioral spreadsheet
-# The master spreadsheet contains PF parameters by subject × task × effort
-# File: "LC Aging Subject Data master spreadsheet - behavioral.csv"
-# Columns include: aud_thresh, vis_thresh, aud_slope, vis_slope (with Low/High variants)
-# If these represent the "existing behavioral manuscript" PF fits, they could be
-# extracted and reformatted here instead of re-computing
-# Master behavioral file path is defined in paths_config.R
-if (file.exists(master_beh_file)) {
-  cat("\nNote: Master behavioral spreadsheet found at:", master_beh_file, "\n")
-  cat("  This file contains PF parameters (thresholds, slopes) by subject × task × effort\n")
-  cat("  Consider extracting these if they represent the existing behavioral manuscript fits\n")
-  cat("  Columns: aud_thresh_low, aud_thresh_high, vis_thresh_low, vis_thresh_high, etc.\n")
-}
+} else {
+# ----------------------------------------------------------------------------
+# Fallback: fit probit GLMs to trial-level data
+# ----------------------------------------------------------------------------
 
-# ============================================================================
-# OPTION 2: Fit psychometric functions
-# ============================================================================
-
-cat("\n=== Fitting Psychometric Functions ===\n")
-cat("Using probit link function (natural for psychometric modeling)\n\n")
-
-# Prepare data for PF fitting
-# Ensure we have binary choice outcome (0/1 or FALSE/TRUE)
-# 'different' = 1, 'same' = 0
+cat("No master spreadsheet and no existing PF file — fitting probit GLMs to trial data...\n")
+cat("Loading trial-level data...\n")
+dat <- read_csv(merged_file, show_col_types = FALSE)
 
 if (!"choice_num" %in% names(dat)) {
-  # Create binary choice if not already present
   if ("choice" %in% names(dat)) {
     dat$choice_num <- ifelse(dat$choice == "DIFFERENT" | dat$choice == 1 | dat$choice == TRUE, 1, 0)
   } else if ("correct_final" %in% names(dat)) {
-    # Use correct_final if choice not available
     dat$choice_num <- ifelse(dat$correct_final == 1, 1, 0)
   } else {
     stop("Cannot find choice variable. Need 'choice' or 'choice_num' or 'correct_final'")
   }
 }
 
-# Standardize effort levels
 dat$effort_factor <- factor(dat$effort, levels = c("Low", "High"))
 dat$task_factor <- factor(dat$task)
 
-# Fit PF for each subject × task × effort combination
 pf_results <- dat %>%
   group_by(sub, task_factor, effort_factor) %>%
   filter(!is.na(stimulus_intensity), !is.na(choice_num)) %>%
-  filter(n() >= 20) %>%  # Need minimum trials for stable fit
+  filter(n() >= 20) %>%
   do({
     df <- .
-    
-    # Fit probit GLM (simple version, can extend to mixed-effects if needed)
     tryCatch({
-      # Simple probit model: choice ~ stimulus_intensity
-      mod <- glm(choice_num ~ stimulus_intensity, 
-                 family = binomial(link = "probit"), 
-                 data = df)
-      
-      # Extract parameters
-      # Slope is the coefficient on stimulus_intensity
+      mod <- glm(
+        choice_num ~ stimulus_intensity,
+        family = binomial(link = "probit"),
+        data = df
+      )
       slope <- coef(mod)["stimulus_intensity"]
-      
-      # Threshold (PSE/JND) is -intercept/slope (point of 50% performance)
       intercept <- coef(mod)["(Intercept)"]
       threshold <- -intercept / slope
-      
-      # Compute fit quality metrics
-      pred <- predict(mod, type = "response")
-      deviance_resid <- residuals(mod, type = "deviance")
       r_squared <- 1 - (mod$deviance / mod$null.deviance)
-      
       tibble(
         threshold = as.numeric(threshold),
         slope = as.numeric(slope),
@@ -127,44 +190,7 @@ pf_results <- dat %>%
   ungroup() %>%
   rename(task = task_factor, effort = effort_factor)
 
-# ============================================================================
-# ALTERNATIVE: Hierarchical mixed-effects PF fitting
-# ============================================================================
-# For more robust estimation, can use glmer with subject-level random effects:
-#
-# pf_mod <- glmer(choice_num ~ stimulus_intensity * effort * task_factor + 
-#                 (1 + stimulus_intensity | sub),
-#                 family = binomial(link = "probit"), data = dat)
-#
-# Then extract subject-specific coefficients using coef() or ranef()
-
-# ============================================================================
-# SAVE PF PARAMETERS
-# ============================================================================
-
-cat("\n=== Saving PF Parameters ===\n")
-pf_output <- pf_params_file
-write_csv(pf_results, pf_output)
-cat("✓ Saved PF parameters to:", pf_output, "\n")
-cat("  Subjects:", length(unique(pf_results$sub)), "\n")
-cat("  Total fits:", nrow(pf_results), "\n")
-cat("  Successful fits:", sum(pf_results$converged, na.rm = TRUE), "\n")
-cat("  Failed fits:", sum(!pf_results$converged, na.rm = TRUE), "\n")
-
-# Summary statistics
-cat("\n=== PF Parameter Summary ===\n")
-pf_summary <- pf_results %>%
-  filter(converged) %>%
-  group_by(task, effort) %>%
-  summarise(
-    n = n(),
-    threshold_mean = mean(threshold, na.rm = TRUE),
-    threshold_sd = sd(threshold, na.rm = TRUE),
-    slope_mean = mean(slope, na.rm = TRUE),
-    slope_sd = sd(slope, na.rm = TRUE),
-    .groups = "drop"
-  )
-print(pf_summary)
-
+write_csv(pf_results, pf_file)
+cat("✓ Saved PF parameters to:", pf_file, "\n")
 cat("\n=== PF computation complete ===\n")
-
+}
