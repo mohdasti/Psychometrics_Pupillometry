@@ -1,5 +1,5 @@
 ---
-title: "Pupil-Indexed Arousal and Psychometric Sensitivity in Older Adults"
+title: "Dissociated Arousal: Physical Effort Attenuates Task-Evoked Pupil Responses but Preserves Psychometric Sensitivity in Aging"
 author: "Mohammad Dastgheib"
 bibliography: references.bib
 csl: apa-7th-edition.csl
@@ -399,38 +399,47 @@ Finally, we test whether individuals with larger effort-evoked arousal changes (
 
 Sixty-one healthy older adults (*M* = 69.1 years, *SD* = 6.0, range 60--83; 33 women, 28 men) were recruited through the LC Aging study behavioral cohort (community-dwelling volunteers enrolled for combined behavioral and neuroimaging protocols). Reported years of formal education averaged 15.9 (*SD* = 2.6; *n* = 57 with non-missing values in the study database). All 61 participants with trial-level data in the present analysis were right-handed per eligibility records. Participants were included if they were aged 60 years or older, had normal or corrected-to-normal vision, reported no significant hearing loss that would preclude tone discrimination, and were free of neurological, psychiatric, or cardiovascular conditions that could affect arousal regulation or pupil dynamics. Participants taking medications known to affect pupil diameter (e.g., anticholinergics, opioids, alpha-adrenergic agents) were excluded, as were individuals who could not safely sustain the required isometric grip forces (5% and 40% maximum voluntary contraction [MVC]) or had other contraindications to the effort manipulation. Cognitive screening used the Montreal Cognitive Assessment (MoCA) administered by phone (scored out of 22); among participants with scores in the research database (*n* = 57), MoCA ranged from 17 to 22 (*M* = 19.8, *SD* = 1.6), consistent with study criteria for excluding significant cognitive impairment. All participants provided written informed consent. The research protocol was reviewed and approved by an institutional review board before enrollment, and participants received compensation for their participation according to study policy.
 
-Pupil quality summaries (@tbl-data-quality) reflect 54 distinct participants with at least one auditory (ADT) trial in the QC pipeline and 56 with at least one visual (VDT) trial; 49 participants contributed both modalities, with five ADT-only and seven VDT-only in the task-level QC file (61 unique participants with pupil QC rows across tasks). Trial-level analyses in this chapter use the merged behavioral--pupil file, which includes up to 61 participants; ADT- and VDT-specific *n* values follow pupil quality screening (Section 2.3.3) and modality availability as summarized in @tbl-data-quality.
+Pupil quality summaries in the task-level files reflect 54 distinct participants with at least one auditory (ADT) trial in the QC pipeline and 56 with at least one visual (VDT) trial; 49 participants contributed both modalities, with five ADT-only and seven VDT-only in the task-level QC file (61 unique participants with pupil QC rows across tasks). Trial-level analyses in this chapter use the merged behavioral--pupil file, which includes up to 61 participants; primary-tier sample sizes for retained trials are reported in Section 3.1.
 
 ## Task Paradigm
 
-Participants performed **same–different discrimination** tasks in two modalities while simultaneously squeezing a dynamometer:
+**Task overview.** Participants completed two **same–different discrimination** tasks—an Auditory Discrimination Task (ADT) and a Visual Discrimination Task (VDT)—while maintaining concurrent isometric hand-grip on a dynamometer. On each trial, a *standard* and *probe* stimulus were presented in sequence; participants judged whether the two were the same or different, then rated their confidence. Both tasks used the same response-signal timeline and effort manipulation (@fig-paradigm).
 
-**Effort Conditions:**
+**Trial timeline and effort.** Each trial began with a **jittered** blank interval (1.5–4.5 s) on a gray background. Participants then saw a **3 s** rectangular grip gauge whose marker indicated the target force—either **5%** or **40%** of maximum voluntary contraction (MVC)—to be held with the left hand on a handheld dynamometer. MVC was assessed in a short calibration before each task. Participants were instructed to maintain force near the marker until the response screens appeared (see schematic). After the grip period came a **0.25 s** blank, a **0.5 s** fixation dot, the two-stimulus sequence (standard → **0.5 s** ISI → probe), a **0.25 s** blank, a **3 s** same/different response window, and a **3 s** four-point confidence rating. From **squeeze onset** through the end of the confidence period, the fixed portion of the timeline lasted **10.7 s**; including the pre-trial jitter and the preprocessed pre-squeeze baseline used for pupil segmentation, the full trial epoch matches the **13.7 s** timeline used in the MATLAB preprocessing pipeline.
 
-- **Low effort:** 5% of maximum voluntary contraction (MVC)
+```{r paradigm-schematic}
+#| label: fig-paradigm
+#| fig-cap: >
+#|   Experimental paradigm (response-signal design). Jittered pre-trial interval followed by a 3 s grip-gauge period (Low vs. High effort), fixation and standard–probe sequence, then 3 s same/different and 3 s confidence. Auditory and visual stimulus classes are summarized in the task sections below; timing follows the schematic.
+#| fig-width: 10
+#| fig-height: 7
+#| out-width: "75%"
+#| fig-align: center
 
-- **High effort:** 40% MVC
+paradigm_path <- file.path(chapter2_dir, "output", "figures", "Paradigm.png")
+if (file.exists(paradigm_path)) {
+  knitr::include_graphics(paradigm_path)
+} else {
+  alt <- file.path(proj_root, "07_manuscript", "chapter2", "output", "figures", "Paradigm.png")
+  if (file.exists(alt)) {
+    knitr::include_graphics(alt)
+  } else {
+    cat("*Figure: Paradigm.png not found. Expected at:* ", paradigm_path, "*")
+  }
+}
+```
 
-**Stimuli:**
+**Auditory task (ADT).** The standard was a **0.1 s** sinusoidal tone at **1000 Hz**. After a **0.5 s** ISI, the probe was a **0.1 s** tone identical to the standard (**Δfrequency** = 0) or frequency-incremented by **8, 16, 32, or 64 Hz**.
 
-- **Auditory Discrimination Task (ADT):** 1000 Hz base tones with frequency offsets of +8, +16, +32, or +64 Hz
+**Visual task (VDT).** The standard was a foveal sinusoidal Gabor patch (**1.5** cycles/°, Michelson contrast **0.20**, diameter **4°**, duration **0.1 s**). The probe matched the standard (**Δcontrast** = 0) or increased in contrast by **0.06, 0.12, 0.24, or 0.48** with other parameters fixed.
 
-- **Visual Discrimination Task (VDT):** Oriented Gabor patches with contrast differences of +0.06, +0.12, +0.24, or +0.48
+**Responses.** After stimulus offset, participants released the grip and used the **right** hand to respond within **3 s** (index finger = “different,” middle finger = “same”). A **3 s** confidence screen followed (four levels, 1 = lowest to 4 = highest confidence).
 
-**Trial Structure:**
+**Scheduling and feedback.** Each task comprised **150** trials per full set (**five** blocks of **30**), crossing the five stimulus levels (standard plus four offsets) with the two effort conditions in pseudorandom order with equal allocation (three trials per stimulus × effort combination per block when the full schedule was collected). Grip performance was reviewed between blocks; participants received corrective feedback if force was repeatedly off-target or not maintained through the probe as required. Task runs were acquired in-scanner (**Session 2** and **Session 3** in the study database; practice and Session 1 were excluded from analysis files). Low- and high-effort trials were **intermixed within runs** rather than blocked by session. Realized trial counts vary when runs were omitted (Section 3.1).
 
-Each trial followed this sequence:
+### Equipment and software
 
-1. Pre-squeeze baseline: 3 s  
-2. Sustained squeeze period: 3 s (Low or High effort)  
-3. Standard stimulus: 100 ms  
-4. Inter-stimulus interval (ISI): 500 ms  
-5. Target stimulus: 100 ms  
-6. Response window: participants indicated whether the target was "same" or "different" from the standard  
-
-The acquisition timeline also included brief fixation intervals (250 ms after the squeeze, 500 ms before the standard, 250 ms after the target), a 3 s response period, and a 3 s confidence-rating period. From the start of the ITI baseline through offset of the confidence period, each trial lasted **13.7 s** (10.7 s from squeeze onset through confidence offset), consistent with the MATLAB preprocessing documentation.
-
-Task runs comprised up to **30** trials each; up to **five** runs per task were collected in each scanner session (**Session 2** and **Session 3** in the study database; Session 1 and practice were excluded from analysis files). **Low** and **High** effort trials were intermixed within runs (not blocked by session), so effort was counterbalanced **within** sessions. Participants completed both ADT and VDT across these sessions. When all five runs were collected for a task in a session, that block contributed up to **150** trials per task per session; realized counts vary when runs were omitted or truncated (see @tbl-data-quality). Total in-scanner session duration included other study procedures beyond this paradigm and is not quantified here.
+Stimuli were presented and responses collected using the LC Aging in-scanner setup: visual stimulation via a PROPixx-class projector (VPixx Technologies; high refresh rate, HD resolution) viewed through a head-coil mirror at approximately **12 cm** effective viewing distance; auditory stimulation through MRI-compatible earphones; fiber-optic response hardware for choices; MRI-compatible dynamometer for grip force; and binocular eye tracking for pupil diameter (**250 Hz** in the processed data used here; see Pupillometry). Stimulus delivery and timing used Psychophysics Toolbox in MATLAB; neuroimaging results are reported elsewhere.
 
 ## Pupillometry
 
@@ -438,11 +447,7 @@ Pupil diameter was recorded continuously throughout each trial at **250 Hz** and
 
 ### Pupil Metrics and Preprocessing
 
-Two primary features were computed on each trial:
-
-1. **Total AUC:** Baseline-corrected area under the pupil curve over a global trial window, indexing overall arousal during concurrent physical effort.
-
-2. **Cognitive pupil metric (primary):** Baseline-corrected task-evoked measure computed in a fixed 1.20-second stimulus-locked window from 4.85s to 6.05s (target onset + 0.50s to target onset + 1.70s, relative to squeeze onset). This window captures the task-evoked pupil response (TEPR) peak, which typically occurs ~1 second after stimulus onset [@mathot2023methods], while avoiding early reflex components and reducing confounding by response time. The primary metric used in analyses is **mean dilation** (area under the curve divided by window duration), which removes duration confounds and is preferred over raw AUC.
+The first derived measure was **Total AUC**: baseline-corrected area under the pupil curve over a global trial window, indexing overall arousal during concurrent physical effort. The second, which served as the primary predictor in trial-level models, was the **cognitive pupil metric**: a baseline-corrected, task-evoked summary from a fixed **1.20 s** stimulus-locked window spanning 4.85--6.05 s (target onset + 0.50 s through +1.70 s relative to squeeze onset). That window targets the task-evoked pupil response (TEPR) peak, which typically occurs about one second after stimulus onset [@mathot2023methods], while limiting early reflex contributions and RT-driven confounds. Analyses used **mean dilation** (AUC divided by window duration) rather than raw AUC, which removes duration confounds and is the preferred summary for this window. The distribution of Cognitive AUC was checked against a physiological-ceiling interpretation; results of that check are reported in Section 3.3 with the effort–pupil manipulation.
 
 Baseline correction was implemented subtractively (*pupil* - baseline mean). For **Total AUC**, the baseline window was the pre-squeeze interval from **−0.5 s to 0.0 s** relative to squeeze onset (B0 baseline). For the **cognitive pupil metric**, the baseline window was the pre-target interval from **3.85 s to 4.35 s** relative to squeeze onset (B1 baseline). This target-proximal baseline was chosen so that the cognitive window reflects event-linked dilation relative to the immediately preceding pre-target pupil level, while the global Total AUC reflects overall dilation across the sustained effort epoch.
 
@@ -450,35 +455,15 @@ Baseline correction was implemented subtractively (*pupil* - baseline mean). For
 
 Gap-aware quality control metrics were developed following @kret2019preprocessing to distinguish genuine low pupil dilation from data quality artifacts arising from fragmented missing-data segments. A trial can have acceptable overall validity (e.g., 60%) yet contain a large contiguous gap that distorts AUC estimates; percentage-validity thresholds are therefore not always sufficient for quality screening. Full metric specifications are given in [Appendix A](#sec-appendix-a), but the saved model objects reported in this chapter were fit using the processed dataset's `quality_primary`, `quality_lenient`, and `quality_strict` flags.
 
-Pupil-based analyses used three pre-defined percentage-validity tiers from the processed dataset:
-
-- **Primary tier:** `baseline_quality >= 0.60` AND `cog_quality >= 0.60`
-- **Lenient tier:** `baseline_quality >= 0.50` AND `cog_quality >= 0.50`
-- **Strict tier:** `baseline_quality >= 0.70` AND `cog_quality >= 0.70`
-
-An expanded B1/gap-aware screening framework was developed in parallel preprocessing documentation, but those thresholds were not the operative inclusion flags for the saved analysis objects summarized here. Accordingly, the reported results should be interpreted as reflecting the simpler percentage-validity tiers above.
+Pupil-based analyses used three pre-defined percentage-validity tiers from the processed dataset. The **primary** tier required `baseline_quality >= 0.60` and `cog_quality >= 0.60`; the **lenient** tier used thresholds of 0.50 for both; the **strict** tier required 0.70 for both. An expanded B1/gap-aware screening framework was developed in parallel preprocessing documentation, but those thresholds were not the operative inclusion flags for the saved analysis objects summarized here. Accordingly, the reported results should be interpreted as reflecting the simpler percentage-validity tiers above.
 
 **Rationale for Quality Tiers: Lapse-Rate Considerations in Aging**
 
 Psychophysical modeling guidance emphasizes that **assuming lapse rate ($\lambda$) = 0 can distort threshold and slope estimates** if lapses are present but unaccounted for [@prins2016psychophysics]. This concern is particularly relevant in older adult populations, where attentional lapses, track loss events, and data quality issues may be more frequent. The quality-tier strategy addresses this by excluding trials with poorer pupil validity, thereby reducing lapse-like contamination in the psychometric function estimates. The tiering approach tests robustness of conclusions across stricter inclusion criteria: if key effects (e.g., the stimulus intensity × pupil state interaction) are consistent across lenient, primary, and strict quality tiers, this provides evidence that findings are not driven solely by the specific validity threshold used. This strategy is consistent with psychophysical best practices for handling stimulus-independent errors without explicitly estimating lapse parameters in the primary model [@prins2016psychophysics].
 
-The cognitive AUC window faces unavoidable temporal overlap with multiple task events that could contaminate pupil measurements:
+The cognitive AUC window unavoidably overlaps task events that can contaminate pupil measurements: the target appears at 4.35 s (relative to squeeze onset), the response screen at 4.70 s (350 ms after target), and the button press at a variable time (typically near 5.3--5.4 s for median RTs around 0.6--0.7 s). The analytic goal is not to eliminate these confounds—which is impossible—but to limit their impact, acknowledge what remains, and support conclusions with sensitivity analyses.
 
-1. **Target stimulus onset**: 4.35s (relative to squeeze onset)
-2. **Response screen appears**: 4.70s (only 350ms after target)
-3. **Button press**: Variable (4.70s + RT, typically 5.3-5.4s for median RTs of 0.6-0.7s)
-
-The goal is not to "eliminate confounds" (which is impossible given the temporal overlap), but to **minimize contamination, model what cannot be avoided, and demonstrate robustness** through multiple sensitivity checks.
-
-**Mitigation strategies implemented in this chapter:**
-
-1. **Stimulus-locked fixed window**: The primary cognitive window (4.85--6.05 s) is stimulus-locked and fixed in duration, which reduces mechanical RT--AUC coupling confounds. By using mean dilation (AUC/duration) rather than raw AUC, we further remove duration-related artifacts.
-
-2. **Fixed-duration summary metric**: The primary pupil predictor is mean dilation (AUC/duration) rather than raw AUC, which removes duration-related artifacts and reduces mechanical coupling between longer windows and larger AUC values.
-
-Motor-buffered and pre-response window definitions were also pre-computed (truncating the primary window 150 ms before button press, and a decision-aligned pre-response window excluding the final 150 ms before response, respectively); full AUC computation for these windows requires re-processing and is reserved for future sensitivity analyses ([Appendix E](#sec-appendix-e)).
-
-3. **Slow-RT sensitivity subset:** A preprocessing flag identifies trials where the button press falls entirely outside the cognitive window (RT > 1.5 s, placing button press after 6.20 s), ensuring motor activity cannot contaminate the pupil epoch. This motor-uncontaminated subset is used for the sensitivity analysis reported in Section 3.5.1 and [Appendix B](#sec-appendix-b).
+Accordingly, the primary cognitive window (4.85--6.05 s) was **stimulus-locked and of fixed duration**, and the pupil summary was **mean dilation** (AUC divided by duration), which together reduce mechanical coupling of RT to AUC and duration-related artifacts relative to raw AUC. Motor-buffered and pre-response window definitions were also pre-computed (truncating the primary window 150 ms before button press, and a decision-aligned window excluding the final 150 ms before response, respectively); full AUC computation for those windows requires re-processing and is reserved for future sensitivity analyses ([Appendix E](#sec-appendix-e)). Finally, a **slow-RT** sensitivity subset flags trials where the button press falls after the cognitive window (RT > 1.5 s, press after 6.20 s), so motor execution cannot overlap the pupil epoch; that subset feeds the analysis in Section 3.5.1 and [Appendix B](#sec-appendix-b).
 
 ## Statistical Analysis
 
@@ -500,50 +485,17 @@ $$
 
 where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (mean dilation, trial value - subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The key interaction term $X_{ij} \times P^{(\text{state})}_{ij}$ (coefficient $\beta_5$) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity. The term $\beta_6 P^{(\text{trait})}_{j}$ tests whether between-subject differences in average arousal relate to sensitivity, while controlling for state-level effects. The random effects $u_{0j}$ and $u_{1j}$ allow each participant to have their own baseline performance level and intensity sensitivity, respectively.
 
-For model fitting, **stimulus intensity was standardized within task**, and the pupil state and trait components were **z-scored across retained trials** before estimation, so fixed-effect coefficients are interpretable on a standardized latent scale. The probit link was chosen for consistency with signal-detection-style latent evidence formulations; for response probabilities in the present range, probit and logit links would be expected to yield qualitatively similar conclusions. The reported model includes random intercepts and by-subject slopes for stimulus intensity. Exploratory refits that additionally allowed by-subject slopes for effort and pupil state were singular and did not materially change the substantive conclusion that the critical stimulus intensity × pupil-state interaction remained close to zero.
+For model fitting, **stimulus intensity was standardized within task**, and the pupil state and trait components were **z-scored across retained trials** before estimation, so fixed-effect coefficients are interpretable on a standardized latent scale. The probit link was chosen for consistency with signal-detection-style latent evidence formulations; for response probabilities in the present range, probit and logit links would be expected to yield qualitatively similar conclusions. The reported model includes random intercepts and by-subject slopes for stimulus intensity. Exploratory refits that additionally allowed by-subject random slopes for effort and pupil state produced singular fits; those extended specifications were not used for primary inference (see Results).
 
 All GLMMs were estimated using the **lme4** package [@bates2015] in R (version 4.5.3; @R). Models were fit with `glmer` using **lme4** defaults for primary and tiered analyses; the slow-RT sensitivity refit used `glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 200000))` to stabilize optimization with the reduced trial count. Convergence was assessed by inspecting gradient norms, optimizer warnings, and singular-fit diagnostics. Parameter estimates and standard errors were extracted using the **broom.mixed** package; *p*-values are based on the normal approximation to the *z*-distribution, which is appropriate for large trial-level sample sizes. 95% confidence intervals for fixed effects were computed using the Wald method.
 
 ### Robustness, Power, and Analysis Classification
 
-Trial-level analyses use all available older-adult participants and trials in the LC Aging behavioral–pupil database after preprocessing (see Section 2.1 and @tbl-data-quality); the sample was not sized *de novo* for the continuous-intensity GLMM reported here. The study was designed as a multimodal protocol in which these tasks were embedded alongside imaging and other measures, so the effective *N* reflects recruitment and retention in that broader study rather than a standalone power calculation for the pupil $\times$ intensity interaction. **Prospective** power for that interaction was therefore limited *a priori*. A post-hoc sensitivity power analysis, reported in Section 4.3.3, estimates the minimum detectable interaction effect and post-hoc power given the realized design parameters; readers should interpret the null primary interaction in light of those estimates.
+Trial-level analyses use all available older-adult participants and trials in the LC Aging behavioral–pupil database after preprocessing (see Section 2.1 and Section 3.1); the sample was not sized *de novo* for the continuous-intensity GLMM reported here. The study was designed as a multimodal protocol in which these tasks were embedded alongside imaging and other measures, so the effective *N* reflects recruitment and retention in that broader study rather than a standalone power calculation for the pupil $\times$ intensity interaction. **Prospective** power for that interaction was therefore limited *a priori*. A post-hoc sensitivity power analysis was conducted to estimate the minimum detectable effect size for the primary interaction and realized power from the final sample and design; **numerical results** of that analysis are reported in Section 4.3.3.
 
-To ensure the robustness of our primary findings, we conducted several sensitivity analyses:
+Several pre-specified checks supported interpretation of the primary GLMM. **Quality-tier robustness** re-fit the model under `quality_lenient` (more permissive validity: `baseline_quality` and `cog_quality` each $\geq$ 0.50) and `quality_strict` (stricter: each $\geq$ 0.70), in addition to the primary `quality_primary` flag (both $\geq$ 0.60), to assess whether inferences about the stimulus intensity × pupil state interaction depended on inclusion stringency. A **slow-RT subset** restricted analysis to trials with button press after the cognitive window (RT > 1.5 s), to limit motor overlap with the pupil epoch. **Model comparison** contrasted the primary model with a nested model omitting the interaction, using Akaike’s information criterion (AIC), where a meaningful improvement (e.g., $\Delta$AIC > 2) would favor retaining the interaction. **Missingness diagnostics** tested whether pupil loss related to effort, intensity, task, or RT (Section 3.4; quality-tier robustness in Section 3.5.1; supplementary tables in **Appendix B**). Finally, **equivalence testing** (two one-sided tests; [@lakens2017]) evaluated the interaction against a pre-specified smallest effect size of interest (SESOI) on the probit scale; the chosen bound, test intervals, and outcome are summarized in Section 4.3.3 alongside the power analysis.
 
-**1. Quality Tier Robustness Checks**
-
-The primary analysis used the processed dataset's `quality_primary` flag (`baseline_quality >= 0.60` and `cog_quality >= 0.60`). To assess whether results were sensitive to data quality thresholds, we re-ran the primary GLMM using the corresponding alternative flags:
-
-- **Lenient tier:** `quality_lenient` (`baseline_quality >= 0.50` and `cog_quality >= 0.50`; includes more trials, potentially with lower data quality)
-- **Strict tier:** `quality_strict` (`baseline_quality >= 0.70` and `cog_quality >= 0.70`; includes fewer trials, but with higher data quality)
-
-If the key interaction effect (stimulus intensity × pupil state) is consistent across all three quality tiers, this provides evidence that the finding is robust to different data inclusion criteria.
-
-**2. Slow-RT Sensitivity Subset**
-
-To assess whether findings are robust to motor contamination concerns, we conducted a sensitivity analysis using only trials where the button press falls after the cognitive window closes (RT > 1.5 s, such that button press occurs after 6.20 s; motor-uncontaminated subset). If the key interaction effect is consistent in this slow-RT subset, this provides evidence that findings are not driven by motor contamination.
-
-**3. Model Comparison**
-
-To evaluate whether the interaction term meaningfully improves model fit, we compared the primary model (with the stimulus intensity × pupil state interaction) to an alternative model that excluded the interaction term. Models were compared using Akaike Information Criterion (AIC), where lower AIC values indicate better model fit. A substantial improvement in fit (ΔAIC > 2) for the model with the interaction would support the inclusion of this term and the interpretation that pupil state modulates psychometric sensitivity.
-
-**4. Missingness Diagnostic**
-
-We tested whether missing pupil data were systematically related to experimental conditions (effort, stimulus intensity, task) or behavioral measures (response time). Interpretation is summarized in Section 3.4; tier-wise robustness of the primary interaction is in **Appendix B** (see also Section 3.5).
-
-**5. Equivalence Testing**
-
-To characterize the null primary interaction more precisely than a standard significance test permits, we conducted a Two One-Sided Tests (TOST) equivalence analysis [@lakens2017] on the stimulus intensity × pupil state interaction. The Smallest Effect Size of Interest (SESOI) was set to ±0.10 on the probit interaction scale, corresponding to approximately 7.6% of the observed main stimulus intensity effect (β = 1.31) — a magnitude at which arousal would plausibly alter perceptual sensitivity in a practically meaningful way. The 90% Wald CI for the interaction was used as the test interval; equivalence is concluded if both bounds fall within ±SESOI.
-
-The primary analyses specified in the prospectus are treated as **confirmatory**:
-- Effort effects on psychometric function parameters (RQ1)
-- Effort–pupil manipulation check (RQ2)
-- Trial-level pupil–psychometric coupling (RQ3, primary analysis)
-- Subject-level PF–pupil coupling (RQ4)
-
-**Sensitivity analyses** (quality tier robustness checks, model comparison) are pre-specified and serve to evaluate the robustness of primary findings.
-
-**Exploratory analyses** include any post-hoc analyses suggested by the data not specified in the preregistered prospectus. No such analyses were conducted in the present chapter beyond those reported; all reported findings correspond to pre-specified analyses.
+The prospectus-defined **confirmatory** targets were effort effects on psychometric parameters (RQ1), the effort–pupil manipulation check (RQ2), trial-level pupil–psychometric coupling (RQ3), and subject-level PF–pupil coupling (RQ4). **Pre-specified sensitivity analyses** (quality tiers, model comparison, slow-RT subset, equivalence) were used to stress-test those inferences, not to add new hypotheses. **Exploratory** analyses would have been any post-hoc tests outside the prospectus; none were run beyond what is reported, and all reported statistics correspond to the pre-registered plan.
 
 # Results
 
@@ -551,62 +503,34 @@ The following sections present results from the complete analysis pipeline, incl
 
 ## Data Quality and Sample Sizes
 
-```{r data-quality}
-#| label: tbl-data-quality
-#| tbl-cap: "Data Quality Summary: Pupil Data Availability by Task and Effort"
+```{r data-quality-summary}
+#| echo: false
+#| results: asis
 
-if (!is.null(quality_summary)) {
-  quality_summary %>%
-    group_by(task) %>%
-    summarise(
-      n_subjects = n_distinct(sub),
-      n_trials_total = sum(n_trials, na.rm = TRUE),
-      n_primary = sum(n_primary, na.rm = TRUE),
-      prop_primary = mean(prop_primary, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    make_table(
-      col.names = c("Task", "N Subjects", "Total Trials", "Primary Tier", "Prop Primary"),
-      digits = 3
-    )
-} else if (!is.null(merged_data)) {
-  # Fallback: compute from merged data
-  if ("quality_primary" %in% names(merged_data)) {
-    quality_summary_alt <- merged_data %>%
-      group_by(task, effort) %>%
-      summarise(
-        n_trials = n(),
-        n_primary = sum(quality_primary == TRUE, na.rm = TRUE),
-        prop_primary = mean(quality_primary == TRUE, na.rm = TRUE),
-        .groups = "drop"
-      )
-    
-    quality_summary_alt %>%
-      make_table(
-        col.names = c("Task", "Effort", "N Trials", "Primary Tier", "Proportion"),
-        digits = 3
-      )
-  } else if ("gate_pupil_primary" %in% names(merged_data)) {
-    # Use gate_pupil_primary if quality_primary doesn't exist
-    quality_summary_alt <- merged_data %>%
-      group_by(task, effort) %>%
-      summarise(
-        n_trials = n(),
-        n_primary = sum(gate_pupil_primary == TRUE, na.rm = TRUE),
-        prop_primary = mean(gate_pupil_primary == TRUE, na.rm = TRUE),
-        .groups = "drop"
-      )
-    
-    quality_summary_alt %>%
-      make_table(
-        col.names = c("Task", "Effort", "N Trials", "Primary Tier", "Proportion"),
-        digits = 3
-      )
-  } else {
-    cat("*Quality columns not found in merged data.*")
-  }
+if (exists("merged_data") && !is.null(merged_data) &&
+    "quality_primary" %in% names(merged_data) &&
+    all(c("task", "sub") %in% names(merged_data))) {
+  s <- merged_data %>%
+    dplyr::filter(quality_primary == TRUE) %>%
+    dplyr::group_by(task) %>%
+    dplyr::summarise(n_trials = dplyr::n(), n_sub = dplyr::n_distinct(sub), .groups = "drop")
+  adt <- s %>% dplyr::filter(task == "ADT")
+  vdt <- s %>% dplyr::filter(task == "VDT")
+  nt_adt <- if (nrow(adt)) adt$n_trials else NA_integer_
+  ns_adt <- if (nrow(adt)) adt$n_sub else NA_integer_
+  nt_vdt <- if (nrow(vdt)) vdt$n_trials else NA_integer_
+  ns_vdt <- if (nrow(vdt)) vdt$n_sub else NA_integer_
+  cat(
+    "After applying the primary pupil-quality tier (`quality_primary`; Section 2.3.3), ",
+    format(nt_adt, big.mark = ","), " ADT trials from ", ns_adt,
+    " participants and ", format(nt_vdt, big.mark = ","), " VDT trials from ", ns_vdt,
+    " participants entered trial-level models in this chapter. ",
+    "The merged file also includes participants with only non-primary pupil rows; ",
+    "task-level QC lists up to 54 participants with any ADT pupil row and 56 with any VDT row (Section 2.1).\n\n",
+    sep = ""
+  )
 } else {
-  cat("*Data quality summary not yet available.*")
+  cat("*Primary-tier trial and participant counts could not be computed (merged data unavailable in this render).*\n\n")
 }
 ```
 
@@ -614,7 +538,7 @@ if (!is.null(quality_summary)) {
 
 ```{r pf-backbone}
 #| label: tbl-pf-params
-#| tbl-cap: "Psychometric Function Parameters by Task and Effort (descriptive means and SDs; thresholds and slopes from Weibull fits estimated in Psignifit 4, Schütt et al., 2016)"
+#| tbl-cap: "Psychometric Function Parameters by Task and Effort (descriptive means and SDs)"
 
 if (!is.null(pf_params)) {
   pf_summary <- pf_params %>%
@@ -640,11 +564,11 @@ if (!is.null(pf_params)) {
 }
 ```
 
-Psychometric function parameters (thresholds and slopes) were estimated separately for each subject × task × effort combination using **Weibull** psychometric functions in **Psignifit 4** [@schutt2016painfree]. **Probit** link functions were used in the trial-level GLMM for choice outcomes described in subsequent sections—not for these descriptive PF fits.
+Psychometric function parameters for each modality and effort condition are summarized in @tbl-pf-params.
 
 ```{r tbl-pf-effort-test}
 #| label: tbl-pf-effort-test
-#| tbl-cap: "Within-Subject Tests of Effort on PF Threshold and Slope (High − Low); linear mixed models with random intercepts for participant"
+#| tbl-cap: "Within-Subject Tests of Effort on PF Threshold and Slope (High − Low)"
 
 library(lme4)
 
@@ -766,7 +690,7 @@ if (!is.null(pf_h1_infer) && nrow(pf_h1_infer) == 4) {
   vdt_sl <- getr("VDT", "Slope")
 
   cat(
-    "@tbl-pf-effort-test summarizes within-subject linear mixed models of effort (High vs. Low) on threshold and slope, with random intercepts for participant. **Auditory (ADT).** Threshold increased under High effort (estimate = ",
+    "@tbl-pf-effort-test summarizes within-subject High vs. Low effort contrasts on threshold and slope. **Auditory (ADT).** Threshold increased under High effort (estimate = ",
     adt_th$`Est. (High − Low)`,
     ", *t*(",
     round(adt_th$df, 1),
@@ -859,49 +783,11 @@ if (!is.null(fig_ts_abs) && file.exists(fig_ts_abs)) {
 }
 ```
 
-```{r effort-pupil-check}
-#| label: tbl-effort-pupil
-#| tbl-cap: "Effort Effect on Pupil Metrics"
-
-if (!is.null(effort_pupil_effects) || !is.null(effort_total_auc_effects)) {
-  # Combine both Total AUC and Cognitive AUC results
-  effort_results_list <- list()
-  
-  if (!is.null(effort_total_auc_effects)) {
-    effort_results_list$total <- effort_total_auc_effects %>%
-      filter(term == "effort_factorHigh") %>%
-      mutate(metric = "Total AUC") %>%
-      select(metric, estimate, std.error, statistic)
-  }
-
-if (!is.null(effort_pupil_effects)) {
-    effort_results_list$cog <- effort_pupil_effects %>%
-      filter(term == "effort_factorHigh") %>%
-      mutate(metric = "Cognitive AUC") %>%
-      select(metric, estimate, std.error, statistic)
-  }
-  
-  if (length(effort_results_list) > 0) {
-    effort_results <- bind_rows(effort_results_list)
-    
-    effort_results %>%
-      make_table(
-        col.names = c("Pupil Metric", "Estimate", "SE", "t"),
-        digits = 3
-      )
-  } else {
-    cat("*Effort–pupil manipulation check results not yet available.*")
-  }
-} else {
-  cat("*Effort–pupil manipulation check results not yet available.*")
-}
-```
-
-High-effort handgrip produced divergent effects on the two pupil metrics, revealing a dissociation between overall trial-period arousal and task-evoked cognitive responses. Total AUC — which indexes overall arousal during the sustained squeeze epoch — was significantly larger under High effort (estimate = 0.857, SE = 0.376, *t* = 2.282, *p* $\approx$ .023), consistent with heightened sympathoexcitatory arousal during maximal grip. By contrast, the Cognitive AUC — the stimulus-locked task-evoked pupil response capturing the discrimination window — was significantly *smaller* under High effort (estimate = −0.012, SE = 0.003, *t* = −3.859, *p* < .001). This dissociation is consistent with attenuated task-evoked phasic responding under concurrent high effort, but it is not uniquely diagnostic of such suppression: because the cognitive metric is baseline-corrected subtractively, a higher pre-target baseline under High effort could also reduce the apparent dynamic range available for subsequent dilation. A physiological ceiling explanation — whereby the iris is already nearly fully retracted under High effort and cannot dilate further — is not supported by the distribution of Cognitive AUC values: approximately 4.4% of High-effort trials reached the upper 5th percentile of the overall Cognitive AUC distribution, compared with 5.7% of Low-effort trials. The slightly lower proportion of near-maximum responses under High effort is inconsistent with a hard pupillary ceiling and instead supports the reduced-dynamic-range account. Mixed-effects models tested whether effort condition predicted pupil metrics (Total AUC and Cognitive AUC) while controlling for task modality.
+As predicted, high-effort handgrip significantly increased overall trial-period arousal (Total AUC: $\beta = 0.857$, $SE = 0.376$, $t = 2.282$, $p = .023$), but significantly attenuated task-evoked responses (Cognitive AUC: $\beta = -0.012$, $SE = 0.003$, $t = -3.859$, $p < .001$). Total AUC indexes overall arousal during the sustained squeeze epoch; Cognitive AUC is the stimulus-locked task-evoked response in the discrimination window. This dissociation is consistent with attenuated task-evoked phasic responding under concurrent high effort, but it is not uniquely diagnostic of such suppression: because the cognitive metric is baseline-corrected subtractively, a higher pre-target baseline under High effort could also reduce the apparent dynamic range available for subsequent dilation. A simple physiological-ceiling account — whereby High-effort trials would cluster at the upper extreme of the observed Cognitive AUC distribution — was not supported: High-effort trials were not disproportionately concentrated in the upper tail relative to Low-effort trials, which is inconsistent with a hard iris ceiling and instead favors interpreting the pattern in terms of reduced dynamic range after baseline elevation. Mixed-effects models tested whether effort condition predicted pupil metrics (Total AUC and Cognitive AUC) while controlling for task modality.
 
 **Note:** Hypothesis 2a (tonic arousal) was operationalized using Total AUC — the baseline-corrected area under the pupil curve over the global trial window — rather than a dedicated pre-stimulus baseline pupil measure. Total AUC during the squeeze epoch captures sustained arousal-related dilation that reflects both tonic state and the ongoing effort response, making it an appropriate but imperfect proxy for tonic arousal. A pre-stimulus baseline measure would more directly index tonic pupil state and could be explored in future analyses.
 
-**Hypothesis Testing:** Hypothesis 2a predicted that tonic arousal would be elevated under High effort; this received **indirect, qualified support** via the significant increase in Total AUC (estimate = 0.857, *t* = 2.282, *p* $\approx$ .023), recognizing that Total AUC is not a pure tonic measure. Hypothesis 2b predicted that task-evoked pupil responses (Cognitive AUC) would also be larger under High effort; this hypothesis was not supported — instead, Cognitive AUC was significantly *reduced* under High effort (estimate = −0.012, *t* = −3.859, *p* < .001). Rather than confirming a uniform arousal increase, these results suggest a tonic-phasic dissociation whose interpretation remains non-exclusive: the pattern is compatible with phasic suppression or reallocation under high effort, but could also partly reflect reduced dynamic range after baseline elevation.
+**Hypothesis Testing:** Hypothesis 2a predicted that tonic arousal would be elevated under High effort; this received **indirect, qualified support** via the significant increase in Total AUC (statistics above), recognizing that Total AUC is not a pure tonic measure. Hypothesis 2b predicted that task-evoked pupil responses (Cognitive AUC) would also be larger under High effort; this hypothesis was not supported — instead, Cognitive AUC was significantly *reduced* under High effort (statistics above). Rather than confirming a uniform arousal increase, these results suggest a tonic-phasic dissociation whose interpretation remains non-exclusive: the pattern is compatible with phasic suppression or reallocation under high effort, but could also partly reflect reduced dynamic range after baseline elevation.
 
 ```{r effort-pupil-fig}
 #| label: fig-effort-pupil
@@ -930,8 +816,6 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 ```
 
 ## Missingness Diagnostic
-
-Missingness analyses tested whether pupil data retention was predicted by effort condition, stimulus intensity, task modality, or response time using logistic mixed-effects models. This diagnostic is critical for assessing whether retained trials are a biased subset of the full sample.
 
 Missingness was significantly predicted by effort condition (OR = 1.203, *z* = 3.672, *p* < .001) and task modality (OR = 1.967, *z* = 12.584, *p* < .001), but not by stimulus intensity (*p* = .565) or response time (*p* = .982). High-effort trials were approximately 20% more likely to yield usable pupil data than Low-effort trials, possibly reflecting reduced blinking during the more demanding squeeze. VDT trials had nearly twice the odds of retaining usable data relative to ADT trials. Crucially, missingness is not predicted by stimulus intensity or response time, suggesting that within-retained trials the psychometric intensity range and decision difficulty are not systematically distorted. Nevertheless, the non-random missingness by effort and task means that analysis samples differ systematically across conditions, which is a genuine selection-bias limitation (see Section 4.3.2). Full model output and the RT-by-availability figure are in [Appendix C](#sec-appendix-c).
 
@@ -989,8 +873,6 @@ if (!is.null(pupil_psychometric_effects)) {
 }
 ```
 
-The primary analysis tested whether trial-wise phasic arousal (pupil state) predicts psychometric sensitivity when stimulus intensity is modeled continuously. The key test is the interaction between stimulus intensity and pupil cognitive state, which directly assesses whether within-person fluctuations in phasic arousal modulate psychometric sensitivity.
-
 **Hypothesis Testing:** Hypothesis 3a predicted a negative interaction between stimulus intensity and pupil state, consistent with supra-optimal arousal degrading sensitivity and producing shallower psychometric slopes on high-arousal trials. The obtained interaction was in the **opposite direction** ($\beta$ = +0.035, SE = 0.030, 95% Wald CI [−0.024, +0.095]; @tbl-pupil-psychometric, z = 1.163, p = .245): higher trial-level arousal was associated with marginally steeper (not shallower) slopes, which, if real, would align with the alternative Hypothesis 3b (moderate arousal enhancing sensitivity). The interval is wide enough to include small negative effects, near-null effects, and modest positive effects, which is informative about the precision of the non-significant result. However, this effect was **not statistically significant** at the primary quality tier. The negative effort main effect ($\beta$ = −0.139, z = −3.023, p = .003) indicates that High effort reduced overall probability of "different" responding, which is more appropriately described as an intercept or response-tendency shift than as a demonstrated signal-detection-theoretic criterion shift. Pupil state as a main effect approached but did not reach significance ($\beta$ = −0.046, z = −1.912, p = .056), suggesting a marginal tendency for higher arousal to be associated with reduced overall responding. The pupil trait main effect was not significant ($\beta$ = −0.052, z = −0.575, p = .565), consistent with Hypothesis 3c.
 
 **Interpretation of Results:** At the primary quality tier, the stimulus intensity × pupil state interaction was **not** significant (p = .245), and the point estimate was **positive**—opposite to Hypothesis 3a. Plausible accounts include limited power, mismatch between the fixed cognitive pupil window and arousal dynamics most relevant to choice, or a weak or null true coupling; pre-specified sensitivity analyses (below and [Appendix B](#sec-appendix-b)) qualify this pattern.
@@ -1019,11 +901,13 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 }
 ```
 
-The stimulus intensity × pupil state interaction was significant only in the lenient quality tier ($\beta$ = +0.064, *SE* = 0.028, *z* = 2.30, *p* = .021), but not in the primary tier ($\beta$ = +0.035, *p* = .245) or the strict tier ($\beta$ = +0.039, *p* = .225). This inconsistency across quality tiers indicates the effect is not robust: the lenient tier includes trials with lower data quality, and the lenient-tier significance likely reflects greater statistical power from the larger trial count rather than a consistent signal. AIC comparison showed the model without the interaction term fit marginally better (Without: 4187.47; With: 4188.13; $\Delta$AIC = 0.66), consistent with the non-significant interaction coefficient. Full tier-by-tier tables are reported in [Appendix B](#sec-appendix-b).
+### Quality-tier robustness {#sec-pupil-quality-tier}
+
+The stimulus intensity $\times$ pupil state interaction was significant only in the lenient quality tier ($\beta = +0.064$, $SE = 0.028$, $z = 2.30$, $p = .021$), but did not persist in the primary tier ($\beta = +0.035$, $SE = 0.030$, $z = 1.163$, $p = .245$) or the strict tier ($\beta = +0.039$, $SE = 0.032$, $z = 1.213$, $p = .225$). This inconsistency across quality tiers indicates the effect is not robust: the lenient tier includes trials with lower data quality, and the lenient-tier significance likely reflects greater statistical power from the larger trial count rather than a consistent signal. AIC comparison showed the model without the interaction term fit marginally better (Without: 4187.47; With: 4188.13; $\Delta$AIC = 0.66), consistent with the non-significant interaction coefficient. Supplementary tier-wise output and AIC tables appear in [Appendix B](#sec-appendix-b).
 
 The slow-RT sensitivity subset (trials with RT > 1.5 s, *N* = 940 trials from 52 participants) yielded $\beta$ = −0.071, *SE* = 0.051, *z* = −1.39, *p* = .164 — opposite in sign to the primary-tier estimate ($\beta$ = +0.035). This sign reversal means motor contamination of the cognitive pupil window cannot be excluded as a partial contributor to the primary-tier pattern, though neither analysis supports a reliable interaction. Taken together, there is no robust evidence for moment-to-moment pupil state modulating psychometric sensitivity at the primary analysis level.
 
-**Equivalence test.** To move beyond the binary significant/non-significant framing, a TOST equivalence analysis was conducted with SESOI = ±0.10 (≈7.6% of the main intensity slope; see Section 2.4). The 90% Wald CI for the primary-tier interaction is [−0.015, +0.085]. Both bounds fall within ±0.10 (lower: *z* = 4.50, *p* < .001; upper: *z* = −2.17, *p* = .015), so **statistical equivalence is established** at this threshold. This means that, while the study cannot reliably detect the small positive point estimate, it *can* rule out coupling effects larger than approximately ±0.10 probit units — effects of that magnitude are inconsistent with the data. The null result should therefore be read as "the coupling, if present, is smaller than a practically meaningful threshold," rather than merely as "insufficient power to detect an effect."
+**Equivalence test.** A TOST equivalence analysis used SESOI = ±0.10 (≈7.6% of the main intensity slope; rationale in Section 4.3.3). The 90% Wald CI for the primary-tier interaction is [−0.015, +0.085]. Both bounds fall within ±0.10 (lower: *z* = 4.50, *p* < .001; upper: *z* = −2.17, *p* = .015), so **statistical equivalence is established** at this threshold. This means that, while the study cannot reliably detect the small positive point estimate, it *can* rule out coupling effects larger than approximately ±0.10 probit units — effects of that magnitude are inconsistent with the data. The null result should therefore be read as "the coupling, if present, is smaller than a practically meaningful threshold," rather than merely as "insufficient power to detect an effect."
 
 ## Subject-Level PF–Pupil Coupling
 
@@ -1043,9 +927,9 @@ if (!is.null(pf_pupil_correlations)) {
 }
 ```
 
-Subject-level changes in pupil metrics (High–Low effort) were correlated with subject-level changes in PF parameters (High–Low effort). This analysis tests whether individuals who show stronger physiological responses to effort also show larger behavioral sensitivity changes.
+Subject-level coupling between effort-evoked pupil changes and behavioral PF parameters was assessed via the correlation matrix shown in @tbl-pf-pupil-correlations.
 
-**Hypothesis Testing:** Hypothesis 4 predicted that subject-level changes in pupil metrics (Δpupil = High effort − Low effort) would be positively correlated with changes in thresholds (Δthreshold) and negatively correlated with changes in slopes (Δslope), indicating that individuals with stronger effort-evoked arousal responses also show larger behavioral sensitivity decrements. This hypothesis was tested using Pearson correlations between Δpupil and ΔPF parameters, **separately for each task modality**, which matches the faceted figures and avoids pooling ADT and VDT parameters that live on very different scales.
+**Hypothesis Testing:** Hypothesis 4 predicted that subject-level changes in pupil metrics (Δpupil = High effort − Low effort) would be positively correlated with changes in thresholds (Δthreshold) and negatively correlated with changes in slopes (Δslope), indicating that individuals with stronger effort-evoked arousal responses also show larger behavioral sensitivity decrements.
 
 ```{r subject-coupling-threshold-fig}
 #| label: fig-subject-coupling-threshold
@@ -1165,11 +1049,40 @@ In summary, the present data suggest that high-effort handgrip shifted overall r
 
 Because trial-wise pupil state did not significantly predict sensitivity beyond effort condition, the present data do not provide evidence for trial-level arousal modulation of sensitivity in this dataset. The effort main effect captures the aggregate High vs. Low contrast and may reflect generic dual-task interference, group-level arousal changes, strategic response adjustments, or some combination of these. Thus the results are compatible with resource-competition-style accounts, but they do not directly privilege that explanation over other untested mechanisms.
 
-Pupil state did not significantly predict sensitivity (interaction p = .245), and pupil trait was also non-significant (p = .565), consistent with Hypothesis 3c. Importantly, the primary coupling test is based on a **phasic**, stimulus-locked pupil metric rather than a tonic baseline measure, so it does not provide a direct test of whether tonic pupil state tracks the tonic LC gain mechanism emphasized by AGT. The present design therefore cannot cleanly distinguish between two possibilities: that the chosen pupil metric was not the most sensitive index of arousal-sensitivity coupling in this older adult sample, or that the coupling itself is genuinely weaker than anticipated.
+Pupil state did not significantly predict sensitivity (interaction p = .245), and pupil trait was also non-significant (p = .565), consistent with Hypothesis 3c. Importantly, the primary coupling test is based on a **phasic**, stimulus-locked pupil metric rather than a tonic baseline measure, so it does not provide a direct test of whether tonic pupil state tracks the tonic LC gain mechanism emphasized by AGT. The present design therefore cannot cleanly distinguish between two possibilities: that the chosen pupil metric was not the most sensitive index of arousal-sensitivity coupling in this older adult sample, or that the coupling itself is genuinely weaker than anticipated. Two physiological accounts—illustrated in @fig-mechanism—help bridge the null interaction to the broader neurobiological picture.
+
+```{r mechanism-fig}
+#| label: fig-mechanism
+#| fig-cap: >
+#|   Theoretical mechanisms of effort-induced pupil dissociation.
+#|   **(A) Observed dissociation.** High-effort handgrip (red) elevates overall arousal (Total AUC) while simultaneously blunting the task-evoked pupil response (Cognitive AUC) in the stimulus-locked cognitive window (4.85--6.05 s), relative to low effort (blue).
+#|   **(B) Phasic suppression.** Under this account, the neural resources sustained to maintain 40% MVC grip actively inhibit the gain of the LC--NE phasic response to task-relevant targets, producing the blunted cognitive-window response despite elevated baseline arousal.
+#|   **(C) Reduced dynamic range.** Alternatively, the elevated baseline under high effort may approach a physiological saturation ceiling, restricting the available dynamic range for further dilation and thereby attenuating the apparent task-evoked response through a mechanical rather than inhibitory process.
+#|   **(D) Age-related shift to supra-optimal zone.** A stylised Yerkes--Dodson representation showing how an age-related leftward shift of the optimal arousal zone makes older adults more vulnerable to performance decrements in high-effort contexts, consistent with the non-significant coupling observed here.
+#| fig-width: 11
+#| fig-height: 6
+#| out-width: "100%"
+
+mech_path <- file.path(chapter2_dir, "output", "figures", "mechanism.png")
+if (file.exists(mech_path)) {
+  knitr::include_graphics(mech_path)
+} else {
+  alt <- file.path(proj_root, "07_manuscript", "chapter2", "output", "figures", "mechanism.png")
+  if (file.exists(alt)) {
+    knitr::include_graphics(alt)
+  } else {
+    cat("*Figure: mechanism.png not found. Expected at:* ", mech_path)
+  }
+}
+```
 
 ## Implications for Aging and Arousal
 
 The present data show weaker pupil–sensitivity coupling than predicted, with a non-significant interaction and small task-specific subject-level correlations between Δpupil and ΔPF parameters (task-specific r range: −.151 to .079). If Chapter 1 (younger adults) shows more robust coupling, this cross-chapter contrast would be **consistent with** age-related attenuation of LC–NE gain modulation, consistent with structural LC degradation and altered phasic responsiveness in aging [@mather2016; @lee2018]. Alternatively, the effort main effect being significant and negative while the pupil-state interaction is non-significant may indicate that older adults respond to high-effort demand as a contextual load — a group-level response — rather than through fine-grained moment-to-moment arousal regulation.
+
+The observed dissociation between elevated Total AUC and attenuated Cognitive AUC under high effort (Section 3.3) suggests that older adults may be operating under specific physiological constraints (see @fig-mechanism). One possibility (@fig-mechanism, panel B) is **phasic suppression**: the neural resources required to maintain a 40% MVC grip actively compete with, or inhibit the gain of, the LC–NE phasic response to the target stimulus, producing a blunted cognitive-window dilation despite elevated overall arousal. A complementary account (@fig-mechanism, panel C) is **reduced dynamic range**: the high baseline arousal elicited by physical effort may bring the pupil near its upper physiological limit, mechanically restricting the amplitude of any further event-locked dilation. Both mechanisms would produce the same surface signature — lower Cognitive AUC under high effort — but differ in whether the source is active inhibition or passive saturation. Empirically distinguishing them would require either a dedicated within-session ceiling check (comparing raw pupil diameter under High effort against each participant's observed maximum) or a deconvolution-based pupil model that separates tonic and phasic components.
+
+Either way, the saturation or suppression interpretation is consistent with the age-related positioning on the Yerkes–Dodson curve shown in @fig-mechanism (panel D). If older adults' optimal arousal zone is shifted leftward relative to younger adults, a high-effort context is more likely to push them into a supra-optimal region where fine-grained, trial-by-trial sensitivity modulation is degraded. This would explain why effort produced a significant group-level shift in response tendency ($\beta$ = −0.139, *p* = .003) without generating the continuous, within-trial arousal–sensitivity coupling captured by the stimulus intensity × pupil state interaction ($\beta$ = +0.035, *p* = .245).
 
 At the same time, subject-level changes in Cognitive AUC and Total AUC were negatively correlated across participants (Section 3.6; r = −0.352, p < .01), indicating that larger effort-evoked total arousal co-occurred with larger *reductions* in task-evoked cognitive pupil response. This exploratory pattern parallels the Section 3.3 dissociation and is consistent with a suppression or reallocation account, but it should be treated as hypothesis-generating rather than confirmatory. Auditory ΔPF slopes clustered near zero in subject-level plots (Section 3.6), so conclusions about effort effects on auditory PF slopes remain tentative pending review of individual Psignifit fits.
 
@@ -1263,11 +1176,10 @@ para <- sprintf(
     "cautiously as evidence of a weak or inconclusive effect rather than as a definitive ",
     "absence of coupling, and that adequately powered replication would require a substantially ",
     "larger sample and/or improved pupil data retention. ",
-    "Importantly, the low post-hoc power and the equivalence result (Section 3.5) address ",
-    "complementary questions: the 21\\%% power characterizes the study's ability to detect the ",
-    "small observed effect, whereas the equivalence test establishes that effects ",
-    "larger than +/- 0.10 probit units (SESOI approximately 7.6\\%% of the main intensity slope) ",
-    "are ruled out by the 90\\%% CI [-0.015, +0.085]. Together, these findings indicate ",
+    "Importantly, post-hoc power and the equivalence result (Section 3.5) address ",
+    "complementary questions: realized power reflects the study's ability to detect an ",
+    "effect of the observed magnitude, whereas the equivalence test establishes that effects ",
+    "outside the SESOI bounds for the interaction are ruled out by the reported 90\\%% CI. Together, these findings indicate ",
     "that any true coupling in this older-adult sample is likely small in absolute terms, ",
     "even if its precise magnitude remains uncertain."
   ),
@@ -1299,7 +1211,7 @@ Chapter 3 will use hierarchical drift diffusion modeling to decompose the behavi
 
 Chapter 2 provides a systematic characterization of how pupil-indexed arousal covaries with psychophysical decision behavior in older adults, using continuous stimulus intensity modeling and within-subject centering to preserve individual arousal granularity. The findings contribute to understanding whether physical effort–induced arousal modulates perceptual sensitivity at the trial level, and whether this relationship is robust across data quality thresholds and model specifications.
 
-Future research directions include: (a) examining whether different pupil window definitions (e.g., motor-buffered windows, pre-response windows, response-locked metrics) reveal stronger coupling when full AUC computation is completed, (b) comparing arousal–sensitivity coupling between younger and older adults directly, (c) using computational modeling (Chapter 3) to identify the latent decision parameters that implement the observed behavioral patterns, and (d) implementing event-based GLM/deconvolution approaches to directly separate target-driven, response-screen-driven, and motor-driven pupil components.
+Future work could test whether alternative pupil windows—motor-buffered, pre-response, or response-locked summaries—show clearer arousal–sensitivity coupling once full AUCs are computed; compare younger and older adults on the same coupling question; use the computational models in Chapter 3 to link behavior to latent decision parameters; and apply event-based GLM or deconvolution to separate target-, response-screen-, and motor-related pupil components.
 
 The work presented here establishes the empirical and methodological foundation for Chapter 3, which will examine whether latent decision parameters provide a coherent mechanistic account of how physical effort and arousal reshape perceptual decisions in aging.
 
@@ -1316,69 +1228,11 @@ The work presented here establishes the empirical and methodological foundation 
 
 ## Appendix A: Gap-Aware QC Metric Specifications {#sec-appendix-a}
 
-In addition to percentage-validity thresholds, gap-aware quality control metrics identify trials with problematic missing-data patterns. Percentage-validity thresholds are necessary but not sufficient: a trial can have acceptable overall validity (e.g., 60%) but contain large contiguous gaps that distort AUC estimates. Following recommendations from @kret2019preprocessing, five gap-aware metrics were computed for each trial:
+In addition to percentage-validity thresholds, gap-aware quality control metrics identify trials with problematic missing-data patterns. Percentage-validity thresholds are necessary but not sufficient: a trial can have acceptable overall validity (e.g., 60%) but contain large contiguous gaps that distort AUC estimates. Following @kret2019preprocessing, each trial carried **`cog_auc_max_gap_ms`** (longest contiguous missing segment in the cognitive window in ms; gaps over 250 ms should not be interpolated and can distort AUC even when percent-valid looks acceptable), **`cog_window_duration`** (realized cognitive-window duration in seconds, which should stay near 1.20 s for the fixed window), **`cog_auc_n_valid`** (count of non-NA samples; ~300 at 250 Hz over 1.20 s), **`cog_auc_n_segments`** (number of contiguous valid segments, where fragmentation flags unreliable AUC), and **`cog_auc_prop_valid`** (valid samples divided by expected count at 250 Hz). Together these metrics help separate **genuine low dilation** (clean data, small gaps) from **artifactual lows** (gaps or fragmentation), so acceptable physiology is retained and problematic trials can be excluded.
 
-1. **`cog_auc_max_gap_ms`:** Maximum contiguous missing segment (milliseconds) within the cognitive window. Large gaps (greater than 250 ms) should not be interpolated and can severely distort AUC estimates even when percent-valid looks acceptable [@kret2019preprocessing].
+## Appendix B: Robustness Checks — Model Comparison and Supplementary Tables {#sec-appendix-b}
 
-2. **`cog_window_duration`:** Actual duration of the cognitive window (seconds) after accounting for data availability. For the fixed 1.20 s window, this should be close to 1.20 s.
-
-3. **`cog_auc_n_valid`:** Number of valid (non-NA) samples in the cognitive window. At 250 Hz sampling rate, the 1.20 s window should contain approximately 300 samples.
-
-4. **`cog_auc_n_segments`:** Number of contiguous valid segments (1 = continuous; more than one segment = fragmented). Highly fragmented trials have unreliable AUC estimates.
-
-5. **`cog_auc_prop_valid`:** Proportion of valid samples (number of valid samples divided by expected sample count at 250 Hz sampling rate).
-
-These metrics help distinguish **genuine low pupil dilation** (high quality, small gaps, low mean dilation) from **data quality artifacts** (low quality or large gaps, low mean dilation), ensuring that valid physiological data are retained while problematic trials are excluded.
-
-## Appendix B: Robustness Checks — Quality Tier and Model Comparison Tables {#sec-appendix-b}
-
-Tier-by-tier estimates test whether the stimulus intensity $\times$ pupil-state interaction depends on pupil screening stringency. The interaction was **significant only in the lenient tier** and **not** in the primary or strict tiers; together with AIC comparisons and the slow-RT subset (below), this pattern indicates that a reliable intensity $\times$ pupil-state coupling was **not** established at the primary analysis level.
-
-```{r appendix-b-table7}
-#| label: tbl-appendix-tier-interaction
-#| tbl-cap: "Robustness Checks: Interaction Effect Across Quality Tiers"
-
-int_row <- function(df, tier_label) {
-  if (is.null(df) || nrow(df) == 0) {
-    return(NULL)
-  }
-  hit <- df %>% dplyr::filter(term == "stimulus_intensity_scaled:pupil_cognitive_state_scaled")
-  if (nrow(hit) != 1L) {
-    return(NULL)
-  }
-  tibble::tibble(
-    `Quality tier` = tier_label,
-    beta = hit$estimate[1],
-    SE = hit$std.error[1],
-    z = hit$statistic[1],
-    p = hit$p.value[1]
-  )
-}
-
-t7 <- dplyr::bind_rows(
-  int_row(pupil_psychometric_lenient, "Lenient"),
-  int_row(pupil_psychometric_effects, "Primary"),
-  int_row(pupil_psychometric_strict, "Strict")
-)
-
-if (!is.null(t7) && nrow(t7) > 0) {
-  t7 %>%
-    dplyr::mutate(
-      beta = round(beta, 4),
-      SE = round(SE, 4),
-      z = round(z, 3),
-      p = round(p, 4)
-    ) %>%
-    make_table(
-      col.names = c("Quality Tier", "beta", "SE", "z", "p"),
-      digits = 4
-    )
-} else {
-  cat("*Tier-wise interaction table not available (load pupil_psychometric_* effects CSVs).*")
-}
-```
-
-The lenient tier alone reached conventional significance for the interaction, whereas the primary and strict tiers did not—indicating that the effect is not robust to stricter pupil-data inclusion criteria and likely reflects greater statistical power (more trials) in the lenient tier rather than a consistent physiological signal.
+Quality-tier interaction estimates and the interpretation that the effect is not robust at the primary tier are summarized in Section 3.5.1 ([Quality-tier robustness](#sec-pupil-quality-tier)). The appendix below provides AIC comparison, the slow-RT subset refit, and the model-predicted psychometric figure.
 
 ```{r appendix-b-table8}
 #| label: tbl-appendix-aic-comparison
@@ -1538,9 +1392,5 @@ if (!is.null(fig_mat) && file.exists(fig_mat)) {
 
 ## Appendix E: Pre-Specified Future Sensitivity Windows {#sec-appendix-e}
 
-3. **Motor buffer truncation** (available for future sensitivity analyses): Window definitions are computed to truncate the primary window 150 ms before button press (motor-buffered window end; stored as `cog_win_primary_end_motorbuffered`), avoiding motor execution/movement/blink contamination. Full AUC computation for motor-buffered windows requires re-processing flat files with RT information and is reserved for future sensitivity analyses.
-
-4. **Pre-response window** (available for future sensitivity analyses): Decision-aligned window definitions are computed that exclude motor execution entirely (500 ms before response, excluding last 150 ms). This captures decision-related arousal without motor contamination. Full AUC computation for pre-response windows requires re-processing and is reserved for future sensitivity analyses.
-
-**Note:** These windows are pre-specified and documented here for reproducibility. They were not analysed in the present chapter.
+For **motor-buffered** analyses, window definitions truncate the primary cognitive window 150 ms before the button press (endpoint stored as `cog_win_primary_end_motorbuffered`), reducing motor-, movement-, and blink-related contamination; full AUC extraction requires re-processing trial-level files with RT and is left for future work. A **pre-response** definition instead aligns a decision window to the last 500 ms before the response (excluding the final 150 ms), targeting decision-related arousal with minimal motor overlap; that pipeline likewise awaits full re-processing. These definitions are documented for reproducibility and were **not** analyzed in the present chapter.
 
