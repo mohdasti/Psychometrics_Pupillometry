@@ -749,37 +749,25 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 
 ## Effort–Pupil Manipulation Check
 
-**Note on Figure 4:** Sample-level pupil time-series data reside in the MATLAB preprocessing pipeline and were not exported to the analysis repository. Figure 4 therefore displays a **parametric trial-structure schematic, not empirical data**, with waveform shapes calibrated to the observed group-level AUC values (Total AUC: High = −0.05 a.u., Low = −0.86 a.u.; Cognitive AUC: High = 0.023 a.u., Low = 0.032 a.u.). The schematic correctly represents the direction and approximate magnitude of the effort dissociation but is not a plot of raw or smoothed pupil data. Empirical time-series figures should be generated from the MATLAB pipeline outputs and added prior to manuscript submission.
-
-<!-- FIGURE PLACEHOLDER: Empirical Pupil Time-Series
-     Generate this figure from MATLAB pipeline outputs before advisor submission.
-     Required: Group-average baseline-corrected pupil diameter (±1 SE bands),
-     both effort conditions (High/Low), both tasks (ADT/VDT), full epoch from
-     squeeze onset (0 s) through end of response window (~8–10 s).
-     Y-axis: Pupil diameter change (mm or a.u., clearly labeled).
-     X-axis: Time relative to squeeze onset (s).
-     Mark: squeeze onset, standard onset, target onset, cognitive AUC window.
-     This figure should replace or supplement Figure 4.
--->
+@fig-pupil-timeseries shows **empirical** group-mean pupil waveforms from the preprocessing pipeline: baseline-corrected isolated pupil (arbitrary units) with ±1 SE bands, time-locked to squeeze onset, separately for ADT and VDT. Lines correspond to the factorial combination of stimulus difficulty (Easy vs. Hard) and handgrip effort (High vs. Low). Vertical markers indicate squeeze onset, standard and target onsets, and median response time (task-specific subtitles). Horizontal bars mark the pre-trial baseline (B0), the Total AUC window (0--4.70 s), the pre-stimulus baseline (B1), and the cognitive AUC window (4.85--6.05 s). These plots are observed data rather than the parametric schematic used in earlier drafts.
 
 ```{r pupil-timeseries-fig}
 #| label: fig-pupil-timeseries
 #| fig-cap: >
-#|   SCHEMATIC — NOT EMPIRICAL DATA. Trial-structure schematic showing baseline-corrected pupil diameter over time,
-#|   aligned to squeeze onset, separately for High (red) and Low (blue) effort conditions.
-#|   The blue shaded region marks the cognitive AUC window (4.85--6.05 s). Error bands
-#|   represent ±1 SE. Vertical dashed lines mark squeeze onset (0 s), standard stimulus
-#|   onset (3.35 s), and target stimulus onset (4.35 s). Waveform is a parametric schematic; see body text.
+#|   Full-trial pupil waveforms (empirical group means). Baseline-corrected isolated pupil diameter
+#|   (arbitrary units; ±1 SE) as a function of time relative to squeeze onset, for ADT (top) and VDT (bottom).
+#|   Colored lines cross Easy vs. Hard stimulus difficulty with High vs. Low grip effort.
+#|   Vertical dashed lines mark squeeze onset, standard (S1) and target (S2/probe) onsets, and median response onset.
+#|   Grey and colored bars show B0, Total AUC (0--4.70 s), B1, and cognitive AUC (4.85--6.05 s).
 #| fig-width: 10
-#| fig-height: 5
+#| fig-height: 10
 #| out-width: "100%"
 
-fig_ts_abs <- fig_path("fig0_pupil_timeseries.png", return_absolute = TRUE)
-if (!is.null(fig_ts_abs) && file.exists(fig_ts_abs)) {
-  knitr::include_graphics(fig_path("fig0_pupil_timeseries.png"))
+waveform_path <- file.path(chapter2_dir, "output", "figures", "waveform.png")
+if (file.exists(waveform_path)) {
+  knitr::include_graphics(waveform_path)
 } else {
-  cat("*Figure: fig0_pupil_timeseries.png not yet generated.*",
-      " Run 06_visualization/08_generate_figures.R to create it.")
+  cat("*Figure: waveform.png not found. Expected at:* ", waveform_path, "*")
 }
 ```
 
