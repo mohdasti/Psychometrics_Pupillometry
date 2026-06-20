@@ -12,6 +12,9 @@ library(tidyverse)
 library(GGally)
 library(here)
 
+source(file.path(here(), "R", "colors_manuscript.R"))
+source(file.path(here(), "R", "pf_analysis_helpers.R"))
+
 # Set paths
 data_dir <- here("07_manuscript", "chapter2", "data")
 processed_dir <- file.path(data_dir, "processed")
@@ -76,8 +79,7 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
   cat("\n=== Computing subject-level PF parameter changes (High - Low effort) ===\n")
   
   # Compute change scores for PF parameters
-  pf_changes <- pf_params %>%
-    filter(converged) %>%
+  pf_changes <- filter_pf_analysis(pf_params) %>%
     pivot_wider(
       names_from = effort,
       values_from = c(threshold, slope),
@@ -180,7 +182,7 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
   p1 <- coupling_data %>%
     ggplot(aes(x = delta_cog_auc, y = delta_threshold)) +
     geom_point(alpha = 0.6, size = 2) +
-    geom_smooth(method = "lm", se = TRUE, color = "red") +
+    geom_smooth(method = "lm", se = TRUE, color = coupling_line_color) +
     facet_wrap(~ task, scales = "free_y") +
     labs(
       x = "ΔCognitive Pupil (High - Low Effort)",
@@ -198,7 +200,7 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
   p2 <- coupling_data %>%
     ggplot(aes(x = delta_cog_auc, y = delta_slope)) +
     geom_point(alpha = 0.6, size = 2) +
-    geom_smooth(method = "lm", se = TRUE, color = "red") +
+    geom_smooth(method = "lm", se = TRUE, color = coupling_line_color) +
     facet_wrap(~ task, scales = "free_y") +
     labs(
       x = "ΔCognitive Pupil (High - Low Effort)",

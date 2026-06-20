@@ -14,6 +14,7 @@ library(broom.mixed)
 library(here)
 
 source(file.path(here(), "config", "paths_config.R"))
+source(file.path(here(), "R", "colors_manuscript.R"))
 
 dir.create(figures_dir, showWarnings = FALSE, recursive = TRUE)
 dir.create(tables_dir, showWarnings = FALSE, recursive = TRUE)
@@ -299,7 +300,7 @@ p1 <- dat_primary %>%
   stat_summary_bin(fun = "mean", bins = 10, geom = "point", size = 2, alpha = 0.7) +
   stat_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
   facet_grid(task_factor ~ effort_factor) +
-  scale_color_manual(values = c("Low" = "blue", "Medium" = "gray", "High" = "red")) +
+  scale_color_manual(values = pupil_tertile_colors) +
   labs(
     x = "Stimulus Intensity",
     y = "Proportion 'Different'",
@@ -333,7 +334,7 @@ p2 <- pred_data %>%
   ggplot(aes(x = stimulus_intensity_scaled, y = pred, color = pupil_state_label)) +
   geom_line(size = 1.2) +
   facet_grid(task_factor ~ effort_factor) +
-  scale_color_manual(values = c("Low Pupil" = "blue", "Medium Pupil" = "gray", "High Pupil" = "red")) +
+  scale_color_manual(values = pupil_state_label_colors) +
   labs(
     x = "Stimulus Intensity (scaled)",
     y = "Predicted Probability 'Different'",

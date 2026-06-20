@@ -15,6 +15,7 @@ library(here)
 
 # Load path configuration
 source(file.path(here(), "config", "paths_config.R"))
+source(file.path(here(), "R", "colors_manuscript.R"))
 
 # Load data
 cat("Loading trial-level data...\n")
@@ -134,7 +135,7 @@ if ("total_auc" %in% names(dat_analysis)) {
     geom_boxplot(alpha = 0.7, outlier.shape = NA) +
     geom_jitter(width = 0.2, alpha = 0.3, size = 0.5) +
     facet_wrap(~ task_factor) +
-    scale_fill_manual(values = c("Low" = "#2E86AB", "High" = "#A23B72")) +
+    scale_fill_manual(values = effort_colors) +
     labs(
       x = "Effort Condition",
       y = "Total AUC (baseline-corrected)",
@@ -165,7 +166,7 @@ if ("cog_auc" %in% names(dat_analysis)) {
     geom_boxplot(alpha = 0.7, outlier.shape = NA) +
     geom_jitter(width = 0.2, alpha = 0.3, size = 0.5) +
     facet_wrap(~ task_factor) +
-    scale_fill_manual(values = c("Low" = "#2E86AB", "High" = "#A23B72")) +
+    scale_fill_manual(values = effort_colors) +
     labs(
       x = "Effort Condition",
       y = "Cognitive AUC (fixed post-target window)",
@@ -210,7 +211,7 @@ if ("total_auc" %in% names(dat_analysis) && "cog_auc" %in% names(dat_analysis)) 
     p3 <- subject_means_plot %>%
       ggplot(aes(x = mean_cog_auc_Low, y = mean_cog_auc_High)) +
       geom_point(alpha = 0.6) +
-      geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
+      geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = reference_line_color) +
       facet_wrap(~ task_factor) +
       labs(
         x = "Mean Cognitive AUC (Low Effort)",

@@ -12,6 +12,7 @@ library(here)
 library(ggtext)
 
 source(file.path(here(), "config", "paths_config.R"))
+source(file.path(here(), "R", "colors_manuscript.R"))
 
 # Load data
 cat("Loading data for figure generation...\n")
@@ -72,7 +73,7 @@ p0 <- ggplot(ts_df, aes(x = time_s, y = pupil, colour = effort, fill = effort)) 
   # Cognitive AUC window shading
   annotate("rect",
            xmin = 4.85, xmax = 6.05, ymin = -Inf, ymax = Inf,
-           alpha = 0.12, fill = "steelblue") +
+           alpha = 0.12, fill = pupil_colors["total_auc"]) +
   # SE ribbon
   geom_ribbon(aes(ymin = pupil - se, ymax = pupil + se),
               alpha = 0.20, colour = NA) +
@@ -85,11 +86,9 @@ p0 <- ggplot(ts_df, aes(x = time_s, y = pupil, colour = effort, fill = effort)) 
             colour = "grey30", lineheight = 0.9) +
   # Cognitive window label
   annotate("text", x = 5.45, y = y_ann, label = "Cognitive\nAUC window\n(4.85–6.05 s)",
-           size = 2.6, colour = "steelblue4", vjust = 0, lineheight = 0.9) +
-  scale_colour_manual(values = c(Low = "#2166AC", High = "#D6604D"),
-                      name = "Effort condition") +
-  scale_fill_manual(values = c(Low = "#2166AC", High = "#D6604D"),
-                    name = "Effort condition") +
+           size = 2.6, colour = pupil_colors["total_auc"], vjust = 0, lineheight = 0.9) +
+  scale_colour_manual(values = effort_colors, name = "Effort condition") +
+  scale_fill_manual(values = effort_colors, name = "Effort condition") +
   coord_cartesian(ylim = c(NA, y_ann * 1.35)) +
   labs(
     x = "Time relative to squeeze onset (s)",
@@ -152,7 +151,7 @@ p1 <- dat_fig1 %>%
   stat_summary_bin(fun = "mean", bins = 8, geom = "point", size = 2, alpha = 0.7) +
   stat_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
   facet_wrap(~ task_factor, scales = "free_x") +
-  scale_color_manual(values = c("Low" = "blue", "High" = "red")) +
+  scale_color_manual(values = effort_colors) +
   labs(
     x = "Stimulus Intensity",
     y = "Proportion 'Different'",
@@ -212,7 +211,7 @@ p2a <- dat_fig2_subj %>%
   stat_summary(fun.data = mean_se, geom = "errorbar",
                width = 0.15, linewidth = 0.9, colour = "black") +
   facet_grid(metric_label ~ task_factor, scales = "free_y") +
-  scale_colour_manual(values = c(Low = "#2166AC", High = "#D6604D")) +
+  scale_colour_manual(values = effort_colors) +
   labs(
     x = "Effort condition",
     y = "Pupil AUC (a.u., baseline-corrected)",
@@ -265,8 +264,7 @@ p3 <- dat_fig3 %>%
   stat_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
   facet_grid(task_factor ~ effort_factor,
              labeller = labeller(task_factor = task_labels)) +
-  scale_color_manual(values = c("Low" = "#2166AC", "Medium" = "grey50",
-                                "High" = "#D6604D")) +
+  scale_color_manual(values = pupil_tertile_colors) +
   labs(
     x = "Stimulus intensity (normalised scale; ADT: 0, 8, 16, 32, 64 Hz offset; VDT: 0, 0.06, 0.12, 0.24, 0.48 contrast diff.)",
     y = "Proportion 'Different' responses",
@@ -305,7 +303,7 @@ p4 <- dat_fig4 %>%
   ggplot(aes(x = effort_factor, y = mean_rt, fill = usable_label)) +
   geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
   facet_wrap(~ task_factor) +
-  scale_fill_manual(values = c("Usable" = "green", "Missing" = "red")) +
+  scale_fill_manual(values = missingness_colors) +
   labs(
     x = "Effort Condition",
     y = "Mean RT (seconds)",
