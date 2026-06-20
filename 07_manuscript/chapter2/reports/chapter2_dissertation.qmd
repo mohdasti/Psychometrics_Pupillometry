@@ -250,8 +250,25 @@ pupil_psychometric_slow_rt <- sread(file.path(tables_dir, "pupil_psychometric_sl
 
 source(file.path(proj_root, "R", "build_hypothesis_summary.R"))
 source(file.path(proj_root, "R", "pf_analysis_helpers.R"))
+source(file.path(proj_root, "R", "ch2_sample_helpers.R"))
 
 h4_coupling_summary <- summarize_h4_coupling_correlations(pf_pupil_correlations)
+
+quality_primary_trials <- if (!is.null(merged_data)) {
+  summarize_quality_primary_trials(merged_data)
+} else {
+  NULL
+}
+glmm_primary_sample <- if (!is.null(merged_data)) {
+  summarize_glmm_primary_sample(merged_data)
+} else {
+  NULL
+}
+response_timing <- if (!is.null(merged_data)) {
+  summarize_response_timing(merged_data, use_glmm_primary = TRUE)
+} else {
+  NULL
+}
 ```
 
 \newpage 
@@ -402,7 +419,7 @@ Finally, we test whether individuals with larger effort-evoked arousal changes (
 
 Older adults (*M* = 69.1 years, *SD* = 6.0, range 60--83; 33 women, 28 men) were enrolled through the LC Aging study behavioral cohort (community-dwelling volunteers enrolled for combined behavioral and neuroimaging protocols). Task-specific recruitment and final analytic sample sizes are summarized in @tbl-sample-flow (Section 3.1): **64** participants were recruited for the **auditory** task (ADT) and **65** for the **visual** task (VDT), with **54** and **56** participants, respectively, retained for the pupil-QC final sample after psychometric and pupil-quality exclusions ([@sec-sample-retention](#sec-sample-retention)). **Sixty-one** unique participants contributed overlapping trial-level data to the merged behavioral--pupil file. Consistent with the final per-task analytic *N* in @tbl-sample-flow (**54** ADT; **56** VDT), **49** participants met inclusion criteria for **both** modalities, **5** for **ADT** only, and **7** for **VDT** only. Reported years of formal education averaged 15.9 (*SD* = 2.6; *n* = 57 with non-missing values in the study database). Participants with trial-level data in the present analysis were right-handed per eligibility records. Participants were included if they were aged 60 years or older, had normal or corrected-to-normal vision, reported no significant hearing loss that would preclude tone discrimination, and were free of neurological, psychiatric, or cardiovascular conditions that could affect arousal regulation or pupil dynamics. Participants taking medications known to affect pupil diameter (e.g., anticholinergics, opioids, alpha-adrenergic agents) were excluded, as were individuals who could not safely sustain the required isometric grip forces (5% and 40% maximum voluntary contraction [MVC]) or had other contraindications to the effort manipulation. Cognitive screening used the Montreal Cognitive Assessment (MoCA) administered by phone (scored out of 22); among participants with scores in the research database (*n* = 57), MoCA ranged from 17 to 22 (*M* = 19.8, *SD* = 1.6), consistent with study criteria for excluding significant cognitive impairment. All participants provided written informed consent. The research protocol was reviewed and approved by an institutional review board before enrollment, and participants received compensation for their participation according to study policy.
 
-Trial-level analyses use the merged behavioral--pupil file; **primary-tier** sample sizes for retained trials and the participant-flow accounting are reported in Section 3.1 (@tbl-sample-flow).
+Trial-level analyses use the merged behavioral--pupil file. **Quality-primary** trial counts and participant-flow accounting are reported in Section 3.1 (@tbl-sample-flow); the primary GLMM uses the complete-case subset with non-missing cognitive pupil state, stimulus intensity, and choice (@sec-power-analysis).
 
 ## Task Paradigm
 
@@ -458,7 +475,7 @@ Psychophysical modeling guidance emphasizes that **assuming lapse rate ($\lambda
 
 ### Cognitive window and response-screen timing {#sec-response-timing}
 
-The cognitive AUC window unavoidably overlaps task events that can contaminate pupil measurements: the target appears at 4.35 s (relative to squeeze onset), the response screen at 4.70 s (350 ms after target), and the button press at a variable time (typically near 5.3--5.4 s for median RTs around 0.6--0.7 s). The analytic goal is not to eliminate these confounds—which is impossible—but to limit their impact, acknowledge what remains, and support conclusions with sensitivity analyses.
+The cognitive AUC window unavoidably overlaps task events that can contaminate pupil measurements: the target appears at 4.35 s (relative to squeeze onset), the response screen at 4.70 s (350 ms after target), and the button press at a variable time. In the primary GLMM sample, **RT** was measured from response-screen onset (4.70 s); median RT was `r if (!is.null(response_timing)) format_rt_s(response_timing$median_rt) else "—"` s overall (`r format_task_timing(response_timing, "median_rt")`), corresponding to median press times of `r if (!is.null(response_timing)) format_rt_s(response_timing$median_press) else "—"` s relative to squeeze onset (`r format_task_timing(response_timing, "median_press")`). These values align with the median response markers in @fig-pupil-timeseries. The analytic goal is not to eliminate these confounds—which is impossible—but to limit their impact, acknowledge what remains, and support conclusions with sensitivity analyses.
 
 Accordingly, the primary cognitive window (4.85--6.05 s) was **stimulus-locked and of fixed duration**, and the pupil summary was **mean dilation** (AUC divided by duration), which together reduce mechanical coupling of RT to AUC and duration-related artifacts relative to raw AUC. Motor-buffered and pre-response window definitions were also pre-computed (truncating the primary window 150 ms before button press, and a decision-aligned window excluding the final 150 ms before response, respectively); full AUC computation for those windows requires re-processing and is reserved for future sensitivity analyses ([Appendix E](#sec-appendix-e)). Finally, a **slow-RT** sensitivity subset flags trials where the button press falls after the cognitive window (RT > 1.5 s, press after 6.20 s), so motor execution cannot overlap the pupil epoch; that subset feeds the analysis in Section 3.5.1 and [Appendix B](#sec-appendix-b).
 
@@ -470,7 +487,7 @@ Participant flow was evaluated **separately by modality** because psychometric v
 
 ### Analytic sample streams {#sec-analytic-samples}
 
-**Pupil-quality exclusions** gate trial-level GLMM analyses, effort–pupil manipulation checks, and missingness diagnostics. **PF-validity exclusions** gate descriptive and inferential psychometric-function analyses: converged fits only, and for ADT, threshold estimates at or below the maximum tested offset (64 Hz). Pupil-QC failure has no bearing on behavioral PF inference; conversely, PF-invalid fits are excluded from PF summaries regardless of pupil data quality. The two streams therefore differ in *N* by design (@tbl-sample-flow). Subject-level PF–pupil coupling uses the intersection of both streams (valid PF change scores and primary-tier pupil data in both effort conditions), which is why coupling *N* is smaller than either stream alone.
+**Pupil-quality exclusions** gate trial-level GLMM analyses, effort–pupil manipulation checks, and missingness diagnostics. **PF-validity exclusions** gate descriptive and inferential psychometric-function analyses: converged fits only, and for ADT, threshold estimates at or below the maximum tested offset (64 Hz). Pupil-QC failure has no bearing on behavioral PF inference; conversely, PF-invalid fits are excluded from PF summaries regardless of pupil data quality. The two streams therefore differ in *N* by design (@tbl-sample-flow). Within the pupil-QC stream, the primary GLMM further requires complete cognitive pupil metrics and choice data, so its trial count is smaller than the quality-primary gate alone (Section 3.1). Subject-level PF–pupil coupling uses the intersection of both streams (valid PF change scores and primary-tier pupil data in both effort conditions), which is why coupling *N* is smaller than either stream alone.
 
 **Psychometric function fitting.** Behavioral data were fit in **Psignifit 4** (MATLAB; @schutt2016painfree) using a **beta-binomial** observation model for the counts of "different" responses at each stimulus level. This choice was motivated by **overdispersion**: at a given intensity, empirical variability in binary outcomes can exceed the variance implied by a standard binomial model, which assumes independent Bernoulli trials with a single underlying probability. The beta-binomial formulation relaxes that assumption by introducing a **dispersion metric** $\eta$ (eta), estimated jointly with the psychometric function parameters. Together with threshold and slope (and asymptotic parameters), $\eta$ indexes extra-binomial variability and supports more robust parameter recovery when performance fluctuates beyond simple binomial sampling error.
 
@@ -547,27 +564,29 @@ sample_flow %>%
 #| echo: false
 #| results: asis
 
-if (exists("merged_data") && !is.null(merged_data) &&
-    "quality_primary" %in% names(merged_data) &&
-    all(c("task", "sub") %in% names(merged_data))) {
-  s <- merged_data %>%
-    dplyr::filter(quality_primary == TRUE) %>%
-    dplyr::group_by(task) %>%
-    dplyr::summarise(n_trials = dplyr::n(), n_sub = dplyr::n_distinct(sub), .groups = "drop")
-  adt <- s %>% dplyr::filter(task == "ADT")
-  vdt <- s %>% dplyr::filter(task == "VDT")
-  nt_adt <- if (nrow(adt)) adt$n_trials else NA_integer_
-  nt_vdt <- if (nrow(vdt)) vdt$n_trials else NA_integer_
+if (!is.null(quality_primary_trials) && !is.null(glmm_primary_sample)) {
+  adt_q <- quality_primary_trials %>% dplyr::filter(task == "ADT")
+  vdt_q <- quality_primary_trials %>% dplyr::filter(task == "VDT")
+  nt_adt_q <- if (nrow(adt_q)) adt_q$n_trials else NA_integer_
+  nt_vdt_q <- if (nrow(vdt_q)) vdt_q$n_trials else NA_integer_
+  nt_total_q <- nt_adt_q + nt_vdt_q
   cat(
     "Final per-task participant counts follow @sec-sample-retention and @tbl-sample-flow. ",
     "PF-valid N and pupil-QC final N differ by design (@sec-analytic-samples). ",
     "After applying the primary pupil-quality tier (`quality_primary`; Section 2.3.2), ",
-    format(nt_adt, big.mark = ","), " ADT trials and ",
-    format(nt_vdt, big.mark = ","), " VDT trials in the merged file met `quality_primary` and entered trial-level models (participant overlap across tasks is described in Section 2.1).\n\n",
+    format(nt_adt_q, big.mark = ","), " ADT trials and ",
+    format(nt_vdt_q, big.mark = ","), " VDT trials (",
+    format(nt_total_q, big.mark = ","), " total) met the quality gate. ",
+    "The primary GLMM further required non-missing cognitive pupil state, stimulus intensity, and choice, ",
+    "yielding ", format(glmm_primary_sample$n_trials, big.mark = ","),
+    " complete-case trials from ", glmm_primary_sample$n_sub,
+    " participants (mean ", sprintf("%.1f", glmm_primary_sample$mean_trials_per_sub),
+    " trials per participant). Post-hoc power (@sec-power-analysis) uses this GLMM sample, ",
+    "not the full quality-primary trial count.\n\n",
     sep = ""
   )
 } else {
-  cat("*Primary-tier trial counts could not be computed (merged data unavailable in this render). Final N is fixed in @tbl-sample-flow.*\n\n")
+  cat("*Primary-tier and GLMM sample counts could not be computed (merged data unavailable in this render). Final N is fixed in @tbl-sample-flow.*\n\n")
 }
 ```
 
@@ -1133,16 +1152,22 @@ est_int <- NA_real_
 n_trials <- NA_integer_
 n_sub <- NA_integer_
 
+if (!is.null(glmm_primary_sample)) {
+  n_trials <- glmm_primary_sample$n_trials
+  n_sub <- glmm_primary_sample$n_sub
+}
+
 if (file.exists(mod_primary_path)) {
   mod_primary <- readRDS(mod_primary_path)
-  fr <- stats::model.frame(mod_primary)
-  n_trials <- nrow(fr)
-  n_sub <- length(unique(fr$sub))
   fe <- broom.mixed::tidy(mod_primary, effects = "fixed")
   ir <- fe %>% dplyr::filter(term == "stimulus_intensity_scaled:pupil_cognitive_state_scaled")
   if (nrow(ir) == 1L) {
     se_int <- ir$std.error[1]
     est_int <- ir$estimate[1]
+  }
+  fr_n <- nrow(stats::model.frame(mod_primary))
+  if (!is.na(fr_n) && (is.na(n_trials) || n_trials != fr_n)) {
+    warning("GLMM model.frame N (", fr_n, ") differs from glmm_primary_sample (", n_trials, ")")
   }
 }
 if (is.na(se_int) && !is.null(pupil_psychometric_effects)) {
@@ -1153,16 +1178,15 @@ if (is.na(se_int) && !is.null(pupil_psychometric_effects)) {
     est_int <- ir$estimate[1]
   }
 }
-if (is.na(n_trials) && exists("merged_data") && !is.null(merged_data) &&
-    all(c("quality_primary", "sub") %in% names(merged_data))) {
-  md <- merged_data %>%
-    dplyr::filter(quality_primary == TRUE,
-                  !is.na(pupil_cognitive_state), !is.na(stimulus_intensity), !is.na(choice_num))
-  n_trials <- nrow(md)
-  n_sub <- dplyr::n_distinct(md$sub)
+if (is.na(n_trials) && !is.null(merged_data)) {
+  gs <- summarize_glmm_primary_sample(merged_data)
+  n_trials <- gs$n_trials
+  n_sub <- gs$n_sub
 }
 
-mean_tr <- if (!is.na(n_trials) && !is.na(n_sub) && n_sub > 0L) {
+mean_tr <- if (!is.null(glmm_primary_sample)) {
+  round(glmm_primary_sample$mean_trials_per_sub, 1)
+} else if (!is.na(n_trials) && !is.na(n_sub) && n_sub > 0L) {
   round(n_trials / n_sub, 1)
 } else {
   NA_real_
@@ -1177,42 +1201,53 @@ se_tgt <- abs(est_int) / (z_a + z_b)
 n_mult <- if (!is.na(se_int) && se_tgt > 0) (se_int / se_tgt)^2 else NA_real_
 n_participants_equiv <- if (!is.na(n_mult) && !is.na(n_sub)) round(n_sub * n_mult) else NA_integer_
 
-para <- sprintf(
-  paste0(
-    "To evaluate whether the non-significant primary interaction reflects a true absence of ",
-    "effect or insufficient statistical power, we conducted a sensitivity power analysis ",
-    "estimating the minimum detectable effect size for the primary interaction given the ",
-    "present design. Using the observed design parameters---approximately %s participants ",
-    "contributing a mean of %s primary-tier trials each (total ~%s observations), ",
-    "with a nominal Type I error rate (alpha) of .05 and power = 0.80---the minimum detectable effect for the ",
-    "stimulus intensity x pupil state interaction (expressed as a standardized ",
-    "probit coefficient) was approximately beta_min = %s. ",
-    "The obtained coefficient (beta = %s) is smaller than this threshold, consistent ",
-    "with limited precision: post-hoc power to detect an effect of the observed magnitude ",
-    "(two-sided Wald test) was approximately %s\\%%. ",
-    "Roughly, achieving 80\\%% power to detect an interaction of similar magnitude to the ",
-    "point estimate would require on the order of %s times the effective sample size of ",
-    "the present analysis (order-of-magnitude approximately %s participants if precision scaled ",
-    "with the square root of sample size in the usual way). ",
-    "These estimates suggest that the null primary interaction should be interpreted ",
-    "cautiously as evidence of a weak or inconclusive effect rather than as a definitive ",
-    "absence of coupling, and that adequately powered replication would require a substantially ",
-    "larger sample and/or improved pupil data retention. ",
-    "Importantly, post-hoc power and the equivalence result (@sec-pupil-quality-tier) address ",
-    "complementary questions: realized power reflects the study's ability to detect an ",
-    "effect of the observed magnitude, whereas the equivalence test establishes that effects ",
-    "outside the SESOI bounds for the interaction are ruled out by the reported 90\\%% CI. Together, these findings indicate ",
-    "that any true coupling in this older-adult sample is likely small in absolute terms, ",
-    "even if its precise magnitude remains uncertain."
-  ),
-  if (is.na(n_sub)) "[N]" else as.character(n_sub),
+n_quality_trials <- if (!is.null(quality_primary_trials)) {
+  sum(quality_primary_trials$n_trials)
+} else {
+  NA_integer_
+}
+
+para <- paste0(
+  "To evaluate whether the non-significant primary interaction reflects a true absence of ",
+  "effect or insufficient statistical power, we conducted a sensitivity power analysis ",
+  "estimating the minimum detectable effect size for the primary interaction given the ",
+  "present design. Using the observed design parameters---",
+  if (is.na(n_sub)) "[N]" else format(n_sub, big.mark = ","), " participants ",
+  "contributing a mean of ",
   if (is.na(mean_tr)) "[X]" else sprintf("%.1f", mean_tr),
+  " complete-case primary-tier trials each (total ",
   if (is.na(n_trials)) "[N_trials]" else format(n_trials, big.mark = ","),
-  if (is.na(beta_min)) "[X.XXX]" else sprintf("%.3f", beta_min),
+  " GLMM observations; ",
+  if (is.na(n_quality_trials)) "[N_quality]" else format(n_quality_trials, big.mark = ","),
+  " trials passed the quality gate before complete-case filtering), ",
+  "with a nominal Type I error rate (alpha) of .05 and power = 0.80---the minimum detectable effect for the ",
+  "stimulus intensity x pupil state interaction (expressed as a standardized ",
+  "probit coefficient) was approximately beta_min = ",
+  if (is.na(beta_min)) "[X.XXX]" else sprintf("%.3f", beta_min), ". ",
+  "The obtained coefficient (beta = ",
   if (is.na(est_int)) "+0.035" else sprintf("%+.3f", est_int),
-  if (is.na(post_pow_two)) "[XX]" else sprintf("%.0f", 100 * post_pow_two),
+  ") is smaller than this threshold, consistent ",
+  "with limited precision: post-hoc power to detect an effect of the observed magnitude ",
+  "(two-sided Wald test) was approximately ",
+  if (is.na(post_pow_two)) "[XX]" else sprintf("%.0f", 100 * post_pow_two), "%. ",
+  "Roughly, achieving 80% power to detect an interaction of similar magnitude to the ",
+  "point estimate would require on the order of ",
   if (is.na(n_mult)) "[X.X]" else sprintf("%.1f", n_mult),
-  if (is.na(n_participants_equiv)) "XX" else format(n_participants_equiv, big.mark = ",")
+  " times the effective sample size of ",
+  "the present analysis (order-of-magnitude approximately ",
+  if (is.na(n_participants_equiv)) "XX" else format(n_participants_equiv, big.mark = ","),
+  " participants if precision scaled ",
+  "with the square root of sample size in the usual way). ",
+  "These estimates suggest that the null primary interaction should be interpreted ",
+  "cautiously as evidence of a weak or inconclusive effect rather than as a definitive ",
+  "absence of coupling, and that adequately powered replication would require a substantially ",
+  "larger sample and/or improved pupil data retention. ",
+  "Importantly, post-hoc power and the equivalence result (@sec-pupil-quality-tier) address ",
+  "complementary questions: realized power reflects the study's ability to detect an ",
+  "effect of the observed magnitude, whereas the equivalence test establishes that effects ",
+  "outside the SESOI bounds for the interaction are ruled out by the reported 90% CI. Together, these findings indicate ",
+  "that any true coupling in this older-adult sample is likely small in absolute terms, ",
+  "even if its precise magnitude remains uncertain."
 )
 cat(para)
 ```
@@ -1221,7 +1256,7 @@ cat(para)
 
 The pre-specified smallest effect size of interest (SESOI) for the stimulus intensity × pupil-state interaction was set to $\pm 0.10$ probit units on the standardized latent scale used in the primary GLMM. This bound corresponds to roughly 7.6% of the main intensity slope ($\beta_1 \approx 1.31$), a magnitude that would imply a practically meaningful shift in psychometric steepness across the observed pupil-state range. Equivalence testing therefore asks whether the data are compatible with coupling effects **smaller** than this bound, not merely whether the frequentist null can be rejected.
 
-The primary cognitive pupil metric uses a fixed 1.20-second stimulus-locked window (4.85-6.05s) to reduce RT confounding and capture the TEPR peak. However, this window unavoidably overlaps with multiple task events: the response screen appears at 4.70s (only 350ms after target onset at 4.35s), and button presses occur at variable times (typically 5.3-5.4s for median RTs). This temporal overlap creates potential confounds from visual/attentional responses to the response screen and motor/blink artifacts from button presses.
+The primary cognitive pupil metric uses a fixed 1.20-second stimulus-locked window (4.85-6.05s) to reduce RT confounding and capture the TEPR peak. However, this window unavoidably overlaps with multiple task events: the response screen appears at 4.70s (only 350ms after target onset at 4.35s), and button presses occur at variable times (median `r if (!is.null(response_timing)) format_rt_s(response_timing$median_rt) else "—"` s after response-screen onset, or `r if (!is.null(response_timing)) format_rt_s(response_timing$median_press) else "—"` s after squeeze onset in the primary GLMM sample). This temporal overlap creates potential confounds from visual/attentional responses to the response screen and motor/blink artifacts from button presses.
 
 Several mitigation strategies are implemented. Mean dilation (AUC/duration) is used rather than raw AUC to remove duration confounds; sensitivity analyses use slow-RT trials where motor cannot contaminate the primary window; and motor-buffered and pre-response window definitions are computed and available for future sensitivity analyses when full AUC computation is completed. However, complete elimination of temporal overlap confounds is impossible given the task design, and the primary window represents a trade-off between capturing relevant arousal dynamics and minimizing measurement artifacts. Response-locked metrics (available for future sensitivity analyses) can capture decision-related arousal more directly but are more susceptible to RT confounding. The choice of window definition represents a trade-off between physiological validity and measurement confounds.
 
