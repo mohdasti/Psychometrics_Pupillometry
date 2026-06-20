@@ -269,6 +269,12 @@ response_timing <- if (!is.null(merged_data)) {
 } else {
   NULL
 }
+
+participant_flow_summary <- if (!is.null(merged_data) && !is.null(pf_params)) {
+  summarize_participant_flow(merged_data, pf_params)
+} else {
+  NULL
+}
 ```
 
 \newpage 
@@ -481,7 +487,7 @@ Accordingly, the primary cognitive window (4.85--6.05 s) was **stimulus-locked a
 
 ### Sample retention and exclusions by task {#sec-sample-retention}
 
-Participant flow was evaluated **separately by modality** because psychometric validity and pupil-data quality were gated independently for ADT and VDT (@sec-analytic-samples). Of **64** participants recruited for the **auditory** task, **54** entered the **pupil-QC final sample** (**10** excluded from that stream). Of those **10**, **3** had **Psignifit** **thresholds** above **64 Hz** (prespecified PF invalidity) and **7** had **excessive eye-track loss** (greater than **50%** invalid samples) or other **pupil QC failures**. For PF inference, only the three ADT threshold-invalid participants are excluded from the PF-valid sample (**61** ADT with converged, in-range fits); pupil-QC failure does not exclude participants from PF analyses. Of **65** participants recruited for the **visual** task, **56** entered the **pupil-QC final sample** (**9** excluded). **None** of the **visual** exclusions were attributed to PF **threshold** estimates; **all nine** reflected **track loss** or **QC failures**. These counts align with @tbl-sample-flow (Section 3.1).
+Participant flow was evaluated **separately by modality** because psychometric validity and pupil-data quality were gated independently for ADT and VDT (@sec-analytic-samples; @fig-participant-flow). Of **64** participants recruited for the **auditory** task, **54** entered the **pupil-QC final sample** (**10** excluded from that stream). Of those **10**, **3** had **Psignifit** **thresholds** above **64 Hz** (prespecified PF invalidity) and **7** had **excessive eye-track loss** (greater than **50%** invalid samples) or other **pupil QC failures**. For PF inference, only the three ADT threshold-invalid participants are excluded from the PF-valid sample (**61** ADT with converged, in-range fits); pupil-QC failure does not exclude participants from PF analyses. Of **65** participants recruited for the **visual** task, **56** entered the **pupil-QC final sample** (**9** excluded). **None** of the **visual** exclusions were attributed to PF **threshold** estimates; **all nine** reflected **track loss** or **QC failures**. These counts align with @tbl-sample-flow (Section 3.1).
 
 ## Statistical Analysis
 
@@ -538,7 +544,7 @@ Results below follow the pre-registered pipeline: psychometric parameters, effor
 #| tbl-cap: "Recruitment, exclusions, and analytic sample by task. PF-valid N = converged fits with ADT thresholds ≤ 64 Hz (both effort conditions present). Pupil-QC final N = participants retained after pupil quality-control exclusions (Section 2.3). PF = psychometric threshold greater than 64 Hz (Psignifit validity criteria for the auditory stimulus range); QC = excessive eye-track loss (greater than 50% invalid samples) or other pupil quality-control failure."
 
 pf_valid_n <- if (!is.null(pf_params)) {
-  pf_valid_n_by_task(pf_params)
+  pf_valid_both_effort_n_by_task(pf_params)
 } else {
   tibble(task = c("ADT", "VDT"), n_sub = c(NA_integer_, NA_integer_))
 }
@@ -560,6 +566,23 @@ sample_flow %>%
   )
 ```
 
+```{r fig-participant-flow}
+#| label: fig-participant-flow
+#| fig-cap: >
+#|   Participant and analytic sample flow by modality. Parallel psychometric-function (PF) and pupil-quality-control streams diverge after recruitment; trial-level GLMM and subject-level coupling samples are shown at the bottom. PF-valid N requires converged fits with ADT thresholds at or below 64 Hz and both effort conditions present. Pupil-QC final N follows Section 2.3 exclusions. Primary-tier trial counts use `quality_primary`; the pooled GLMM uses complete cases on cognitive pupil state, stimulus intensity, and choice (@sec-analytic-samples).
+#| fig-width: 8.5
+#| fig-height: 10.5
+#| out-width: "85%"
+#| fig-align: center
+
+flow_png <- fig_path("participant_flow.png", return_absolute = TRUE)
+if (!is.null(flow_png) && file.exists(flow_png)) {
+  knitr::include_graphics(fig_path("participant_flow.png"))
+} else {
+  cat("*Figure: participant_flow.png not found. Run `Rscript 07_manuscript/chapter2/scripts/plot_participant_flow.R`.*")
+}
+```
+
 ```{r data-quality-summary}
 #| echo: false
 #| results: asis
@@ -571,7 +594,7 @@ if (!is.null(quality_primary_trials) && !is.null(glmm_primary_sample)) {
   nt_vdt_q <- if (nrow(vdt_q)) vdt_q$n_trials else NA_integer_
   nt_total_q <- nt_adt_q + nt_vdt_q
   cat(
-    "Final per-task participant counts follow @sec-sample-retention and @tbl-sample-flow. ",
+    "Final per-task participant counts follow @sec-sample-retention, @tbl-sample-flow, and @fig-participant-flow. ",
     "PF-valid N and pupil-QC final N differ by design (@sec-analytic-samples). ",
     "After applying the primary pupil-quality tier (`quality_primary`; Section 2.3.2), ",
     format(nt_adt_q, big.mark = ","), " ADT trials and ",

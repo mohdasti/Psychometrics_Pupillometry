@@ -106,3 +106,102 @@ format_task_timing <- function(timing, col, digits = 2L) {
     format_rt_s(vdt, digits)
   )
 }
+
+CH2_RECRUITED_N <- c(ADT = 64L, VDT = 65L)
+
+#' Subject-level PF–pupil coupling N (both-effort pupil + PF-valid deltas).
+summarize_coupling_sample <- function(dat, pf) {
+  if (is.null(dat) || is.null(pf) || !nrow(pf)) {
+    return(tibble::tibble(task = character(), n_sub = integer()))
+  }
+
+  pupil_changes <- dat %>%
+    dplyr::filter(.data$quality_primary == TRUE) %>%
+    dplyr::group_by(.data$sub, .data$task, .data$effort) %>%
+    dplyr::summarise(
+      mean_cog_auc = mean(.data$cog_auc, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    tidyr::pivot_wider(
+      names_from = .data$effort,
+      values_from = .data$mean_cog_auc,
+      names_prefix = "cog_"
+    ) %>%
+    dplyr::mutate(
+      delta_cog_auc = .data$cog_High - .data$cog_Low
+    )
+
+  pf_changes <- filter_pf_analysis(pf) %>%
+    dplyr::select(.data$sub, .data$task, .data$effort, .data$threshold, .data$slope) %>%
+    tidyr::pivot_wider(
+      names_from = .data$effort,
+      values_from = c(.data$threshold, .data$slope),
+      names_sep = "_"
+    ) %>%
+    dplyr::mutate(
+      delta_threshold = .data$threshold_High - .data$threshold_Low,
+      delta_slope = .data$slope_High - .data$slope_Low
+    )
+
+  pupil_changes %>%
+    dplyr::filter(
+      is.finite(.data$delta_cog_auc),
+      is.finite(.data$cog_High),
+      is.finite(.data$cog_Low)
+    ) %>%
+    dplyr::inner_join(
+      pf_changes %>%
+        dplyr::filter(
+          is.finite(.data$delta_threshold),
+          is.finite(.data$delta_slope)
+        ),
+      by = c("sub", "task")
+    ) %>%
+    dplyr::group_by(.data$task) %>%
+    dplyr::summarise(n_sub = dplyr::n_distinct(.data$sub), .groups = "drop")
+}
+
+#' All participant-flow counts for the CONSORT-style diagram and Table 1.
+summarize_participant_flow <- function(
+    dat,
+    pf,
+    recruited = CH2_RECRUITED_N,
+    pupil_qc_final = c(ADT = 54L, VDT = 56L),
+    adt_pf_threshold_excluded = 3L,
+    adt_pupil_qc_only_excluded = 7L) {
+  pf_valid <- if (!is.null(pf)) pf_valid_both_effort_n_by_task(pf) else NULL
+  quality <- if (!is.null(dat)) summarize_quality_primary_trials(dat) else NULL
+  glmm <- if (!is.null(dat)) summarize_glmm_primary_sample(dat) else NULL
+  coupling <- if (!is.null(dat) && !is.null(pf)) {
+    summarize_coupling_sample(dat, pf)
+  } else {
+    NULL
+  }
+
+  pf_n <- stats::setNames(
+    pf_valid$n_sub[match(c("ADT", "VDT"), pf_valid$task)],
+    c("ADT", "VDT")
+  )
+  if (any(is.na(pf_n))) {
+    pf_n <- c(ADT = recruited["ADT"] - adt_pf_threshold_excluded, VDT = recruited["VDT"])
+  }
+
+  list(
+    recruited = recruited,
+    pf_valid_both_effort = pf_n,
+    pf_threshold_excluded = c(ADT = adt_pf_threshold_excluded, VDT = 0L),
+    pupil_qc_final = pupil_qc_final,
+    pupil_qc_excluded = recruited - pupil_qc_final,
+    pupil_qc_only_excluded = c(
+      ADT = adt_pupil_qc_only_excluded,
+      VDT = as.integer(recruited["VDT"] - pupil_qc_final["VDT"])
+    ),
+    primary_trials = quality,
+    glmm = glmm,
+    coupling = coupling
+  )
+}
+
+format_flow_n <- function(x) {
+  format(as.integer(x), big.mark = ",", scientific = FALSE, trim = TRUE)
+}

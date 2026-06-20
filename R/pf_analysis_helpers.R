@@ -105,3 +105,16 @@ pf_valid_n_by_task <- function(pf) {
       .groups = "drop"
     )
 }
+
+#' PF-valid N with Low and High effort rows (PF effort LMM / Table 2–3 sample).
+pf_valid_both_effort_n_by_task <- function(pf) {
+  tasks <- sort(unique(pf$task))
+  res <- lapply(tasks, function(task_name) {
+    d <- pf_effort_lmer_data(pf, task_name, "threshold")
+    tibble::tibble(
+      task = task_name,
+      n_sub = dplyr::n_distinct(d$sub)
+    )
+  })
+  dplyr::bind_rows(res)
+}
