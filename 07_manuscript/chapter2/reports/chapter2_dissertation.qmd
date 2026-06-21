@@ -245,6 +245,7 @@ pupil_psychometric_effects <- sread(file.path(tables_dir, "pupil_psychometric_pr
 pupil_psychometric_lenient <- sread(file.path(tables_dir, "pupil_psychometric_lenient_effects.csv"))
 pupil_psychometric_strict <- sread(file.path(tables_dir, "pupil_psychometric_strict_effects.csv"))
 pf_pupil_correlations <- sread(file.path(tables_dir, "pf_pupil_coupling_correlations.csv"))
+pf_pupil_coupling_sensitivity <- sread(file.path(tables_dir, "pf_pupil_coupling_sensitivity.csv"))
 missingness_effects <- sread(file.path(tables_dir, "missingness_diagnostic_effects.csv"))
 pupil_psychometric_slow_rt <- sread(file.path(tables_dir, "pupil_psychometric_slow_rt_effects.csv"))
 pupil_psychometric_tost <- sread(file.path(tables_dir, "pupil_psychometric_tost_equivalence.csv"))
@@ -253,6 +254,7 @@ source(file.path(proj_root, "R", "build_hypothesis_summary.R"))
 source(file.path(proj_root, "R", "pf_analysis_helpers.R"))
 source(file.path(proj_root, "R", "ch2_sample_helpers.R"))
 source(file.path(proj_root, "R", "tost_equivalence_helpers.R"))
+source(file.path(proj_root, "R", "subject_coupling_helpers.R"))
 
 h4_coupling_summary <- summarize_h4_coupling_correlations(pf_pupil_correlations)
 
@@ -1020,6 +1022,7 @@ if (!is.null(pupil_psychometric_tost) && nrow(pupil_psychometric_tost)) {
 if (!is.null(pf_pupil_correlations)) {
   pf_pupil_correlations %>%
     dplyr::arrange(task, pupil_metric, pf_parameter) %>%
+    dplyr::select(task, pupil_metric, pf_parameter, correlation, ci_lower, ci_upper, p_value, n) %>%
     make_table(
       col.names = c("Task", "Pupil Metric", "PF Parameter", "r", "CI Lower", "CI Upper", "p", "N"),
       digits = 3
@@ -1033,45 +1036,56 @@ Subject-level coupling between effort-evoked pupil changes and behavioral PF par
 
 Hypothesis 4 predicted that subject-level changes in pupil metrics (Δpupil = High effort − Low effort) would be positively correlated with changes in thresholds (Δthreshold) and negatively correlated with changes in slopes (Δslope), indicating that individuals with stronger effort-evoked arousal responses also show larger behavioral sensitivity decrements.
 
-```{r subject-coupling-threshold-fig}
-#| label: fig-subject-coupling-threshold
+@fig-subject-coupling-forest summarizes all eight task-specific coupling tests on a single unitless axis (Pearson *r*, 95% CI). Separate scatter panels with modality-specific *y*-scales were avoided because they invite spurious visual trends: the mildly negative VDT correlations sit left of zero while ADT correlations cluster on zero, but every confidence interval crosses zero, so this ADT/VDT asymmetry is within noise. Wide, near-identical CIs indicate insufficient precision to detect coupling of this magnitude at *n* = 35 (ADT) and *n* = 45 (VDT).
+
+```{r subject-coupling-forest-fig}
+#| label: fig-subject-coupling-forest
 #| fig-cap: >
-#|   Subject-level PF–Pupil Coupling: Threshold. Each panel shows the correlation
-#|   between effort-evoked change in pupil AUC (Δpupil = High − Low) and
-#|   effort-evoked change in threshold (Δthreshold = High − Low) for ADT (left)
-#|   and VDT (right). Panels use task-specific y-axis scales because threshold units differ by modality.
-#| fig-width: 12
-#| fig-height: 6
+#|   Subject-level PF–Pupil coupling forest. Pearson *r* (95% CI) for effort-evoked
+#|   Δpupil vs ΔPF parameter for all eight task × pupil-metric × PF-parameter
+#|   combinations (ADT *n* = 35; VDT *n* = 45). Dashed line = no coupling (*r* = 0).
+#|   All confidence intervals cross zero.
+#| fig-width: 9
+#| fig-height: 5.5
 #| out-width: "100%"
 
-fig_path_abs1 <- fig_path("pf_pupil_coupling_threshold.png", return_absolute = TRUE)
-if (!is.null(fig_path_abs1) && file.exists(fig_path_abs1)) {
-  knitr::include_graphics(fig_path_abs1)
+fig_path_abs <- fig_path("fig_subject_coupling_forest.png", return_absolute = TRUE)
+if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
+  knitr::include_graphics(fig_path("fig_subject_coupling_forest.png"))
 } else {
-  cat("*Threshold coupling figure not yet generated.*")
+  cat("*Subject-level coupling forest not yet generated.*")
 }
 ```
 
-```{r subject-coupling-slope-fig}
-#| label: fig-subject-coupling-slope
-#| fig-cap: >
-#|   Subject-level PF–Pupil Coupling: Slope. Each panel shows the correlation
-#|   between effort-evoked change in pupil AUC (Δpupil = High − Low) and
-#|   effort-evoked change in PF slope (Δslope = High − Low) for ADT (left)
-#|   and VDT (right). Panels use task-specific y-axis scales.
-#| fig-width: 12
-#| fig-height: 6
-#| out-width: "100%"
+Influence diagnostics (Cook's distance > 4/*n*, hat-value > 2× mean, |DFBETAS| > 2/√*n*) flagged participants whose Δ scores were driven by extreme per-condition PF fits (e.g., Δthreshold ≈ +19 Hz, Δslope ≈ −11). @tbl-coupling-sensitivity reports Pearson *r* with and without flagged points plus Spearman *ρ* as a robust check. The exploratory VDT Cognitive AUC × threshold correlation (*r* = −0.169, *p* = .267) shrank to *r* = −0.028 (*p* = .866) after excluding influential cases, confirming it is leverage-driven rather than a reliable modality effect.
 
-fig_path_abs2 <- fig_path("pf_pupil_coupling_slope.png", return_absolute = TRUE)
-if (!is.null(fig_path_abs2) && file.exists(fig_path_abs2)) {
-  knitr::include_graphics(fig_path_abs2)
+```{r subject-coupling-sensitivity}
+#| label: tbl-coupling-sensitivity
+#| tbl-cap: "Subject-Level Coupling Sensitivity: Pearson *r*, Excluding Influential Points, and Spearman *ρ*"
+
+if (!is.null(pf_pupil_coupling_sensitivity)) {
+  pf_pupil_coupling_sensitivity %>%
+    dplyr::mutate(
+      Task = as.character(.data$task),
+      Pair = .data$row_label,
+      `r (Pearson)` = sprintf("%+.3f", .data$r_pearson),
+      `95% CI` = sprintf("[%+.3f, %+.3f]", .data$ci_lower, .data$ci_upper),
+      `p` = vapply(.data$p_pearson, format_coupling_p, character(1L)),
+      `r (excl.)` = sprintf("%+.3f", .data$r_pearson_excl),
+      `ρ (Spearman)` = sprintf("%+.3f", .data$r_spearman),
+      `N flagged` = .data$n_influential
+    ) %>%
+    dplyr::select(Task, Pair, `r (Pearson)`, `95% CI`, `p`, `r (excl.)`, `ρ (Spearman)`, `N flagged`) %>%
+    make_table(
+      col.names = c("Task", "Pair", "r (Pearson)", "95% CI", "p", "r (excl.)", "ρ (Spearman)", "N flagged"),
+      align = c("l", "l", "r", "c", "r", "r", "r", "c")
+    )
 } else {
-  cat("*Slope coupling figure not yet generated.*")
+  cat("*Coupling sensitivity table not yet available.*")
 }
 ```
 
-The full pairwise correlation matrix across ΔCognitive AUC, ΔTotal AUC, ΔThreshold, and ΔSlope is shown in [Appendix D](#sec-appendix-d).
+The full pairwise correlation matrix across ΔCognitive AUC, ΔTotal AUC, ΔThreshold, and ΔSlope is shown in [Appendix D](#sec-appendix-d), together with z-scored scatter overlays for raw Δ clouds on shared axes.
 
 One exploratory pattern deserves note: a significant negative association emerged between effort-evoked changes in Cognitive AUC and Total AUC (r = −0.352, p < .01), so participants with larger total-arousal increases under High effort showed larger *reductions* in task-evoked cognitive pupil response. Because this pattern comes from the broader subject-level correlation matrix rather than a focal confirmatory hypothesis test, it should be treated as hypothesis-generating rather than definitive evidence for suppression or reallocation.
 
@@ -1533,6 +1547,24 @@ if (!is.null(fig_miss) && file.exists(fig_miss)) {
 ```
 
 ## Appendix D: Subject-Level Correlation Matrix {#sec-appendix-d}
+
+```{r appendix-d-zscatter}
+#| label: fig-appendix-coupling-zscatter
+#| fig-cap: >
+#|   Z-scored subject-level coupling (Appendix). Δpupil and ΔPF parameters
+#|   standardized within modality; ADT and VDT overlaid on shared axes. OLS
+#|   slope equals Pearson *r* on z-scored data.
+#| fig-width: 10
+#| fig-height: 8
+#| out-width: "100%"
+
+fig_z <- fig_path("fig_subject_coupling_zscatter.png", return_absolute = TRUE)
+if (!is.null(fig_z) && file.exists(fig_z)) {
+  knitr::include_graphics(fig_path("fig_subject_coupling_zscatter.png"))
+} else {
+  cat("*Figure: fig_subject_coupling_zscatter.png not found. Run subject-level coupling script.*")
+}
+```
 
 ```{r appendix-d-fig11}
 #| label: fig-appendix-correlation-matrix
