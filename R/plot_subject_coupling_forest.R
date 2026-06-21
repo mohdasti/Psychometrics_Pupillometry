@@ -74,12 +74,10 @@ plot_subject_coupling_forest <- function(
       x = "correlation r (\u0394pupil vs \u0394PF parameter, 95% CI)",
       y = NULL
     ) +
-    ggplot2::theme_minimal(base_size = 11) +
+    theme_ch2(11) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(face = "bold", size = 12, hjust = 0),
       plot.subtitle = ggplot2::element_text(size = 9.5, colour = "#4B5563", hjust = 0),
-      panel.grid.major.y = ggplot2::element_blank(),
-      panel.grid.minor = ggplot2::element_blank(),
       axis.text.y = ggplot2::element_text(size = 10, colour = "#1F2937"),
       legend.position = "bottom",
       legend.box = "horizontal",
@@ -129,7 +127,7 @@ plot_subject_coupling_zscatter <- function(
       x = "z(\u0394pupil, High \u2212 Low)",
       y = "z(\u0394PF parameter, High \u2212 Low)"
     ) +
-    ggplot2::theme_minimal(base_size = 11) +
+    theme_ch2(11) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(face = "bold", size = 12),
       legend.position = "bottom"

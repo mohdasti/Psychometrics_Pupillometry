@@ -239,15 +239,13 @@ plot_task <- function(task_name) {
       color = "Condition",
       fill = "Condition"
     ) +
-    theme_minimal(base_size = 12) +
+    theme_ch2(12) +
     theme(
       plot.title = element_text(size = 13, face = "bold"),
       plot.subtitle = element_text(size = 10, color = "grey30"),
       axis.title = element_text(size = 14, face = "bold"),
       legend.position = "bottom",
       legend.box = "horizontal",
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_line(color = "grey90", linewidth = 0.3),
       plot.margin = margin(12, 20, 32, 16)
     )
 }

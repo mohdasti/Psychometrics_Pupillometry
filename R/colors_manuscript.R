@@ -37,3 +37,14 @@ missingness_colors <- c(
 )
 coupling_line_color <- unname(stat_colors["predicted"])
 reference_line_color <- unname(stat_colors["zero_line"])
+
+#' Shared ggplot2 theme: `theme_minimal()` with all panel grid lines removed.
+theme_ch2 <- function(base_size = 11) {
+  ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme(panel.grid = ggplot2::element_blank())
+}
+
+#' Psychometric-function plots: `theme_minimal()` with default light panel grids.
+theme_ch2_pf <- function(base_size = 11) {
+  ggplot2::theme_minimal(base_size = base_size)
+}

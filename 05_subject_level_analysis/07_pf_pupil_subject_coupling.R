@@ -83,7 +83,7 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
       y = "ΔPF Threshold (High - Low Effort)",
       title = "Subject-Level Coupling: Pupil vs PF Threshold (legacy panels)"
     ) +
-    theme_minimal()
+    theme_ch2()
   ggsave(file.path(figures_dir, "pf_pupil_coupling_threshold.png"), p1, width = 8, height = 6, dpi = 300)
 
   p2 <- coupling_data_complete %>%
@@ -96,13 +96,13 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
       y = "ΔPF Slope (High - Low Effort)",
       title = "Subject-Level Coupling: Pupil vs PF Slope (legacy panels)"
     ) +
-    theme_minimal()
+    theme_ch2()
   ggsave(file.path(figures_dir, "pf_pupil_coupling_slope.png"), p2, width = 8, height = 6, dpi = 300)
 
   p3 <- coupling_data_complete %>%
     select(delta_cog_auc, delta_total_auc, delta_threshold, delta_slope) %>%
     GGally::ggpairs() +
-    theme_minimal()
+    theme_ch2()
   ggsave(file.path(figures_dir, "pf_pupil_coupling_matrix.png"), p3, width = 10, height = 10, dpi = 300)
   cat("✓ Saved legacy panel figures\n")
 } else {

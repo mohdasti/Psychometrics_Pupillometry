@@ -144,7 +144,7 @@ if ("total_auc" %in% names(dat_analysis)) {
       title = "Effort-Pupil Manipulation Check: Total AUC",
       fill = "Effort"
     ) +
-    theme_minimal() +
+    theme_ch2() +
     theme(legend.position = "none")
   
   ggsave(file.path(figures_dir, "effort_manipulation_total_auc.png"),
@@ -166,7 +166,7 @@ if ("cog_auc" %in% names(dat_analysis)) {
       title = "Effort-Pupil Manipulation Check: Cognitive Pupil",
       fill = "Effort"
     ) +
-    theme_minimal() +
+    theme_ch2() +
     theme(legend.position = "none")
   
   ggsave(file.path(figures_dir, "effort_manipulation_cog_auc.png"),
@@ -200,7 +200,7 @@ if ("total_auc" %in% names(dat_analysis) && "cog_auc" %in% names(dat_analysis)) 
         y = "Mean Cognitive AUC (High Effort)",
         title = "Subject-Level Effort Effect: Cognitive Pupil"
       ) +
-      theme_minimal()
+      theme_ch2()
     
     ggsave(file.path(figures_dir, "effort_manipulation_subject_scatter.png"),
            p3, width = 8, height = 6, dpi = 300)

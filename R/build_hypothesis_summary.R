@@ -60,6 +60,17 @@ extract_lmer_term <- function(effects, term_pattern) {
   row
 }
 
+#' Two-sided p from a tidy GLMM row; fallback from |z| only when p.value is missing.
+glmm_p_value <- function(row) {
+  if (is.null(row) || nrow(row) == 0L) {
+    return(NA_real_)
+  }
+  if ("p.value" %in% names(row) && !is.na(row$p.value)) {
+    return(as.numeric(row$p.value))
+  }
+  stats::pnorm(-abs(row$statistic)) * 2
+}
+
 #' H4 coupling summary from @tbl-pf-pupil-correlations (Table 5 source).
 #' Returns identical primary-statistic text for Table 6 and Discussion prose.
 summarize_h4_coupling_correlations <- function(pf_pupil_correlations) {
@@ -165,7 +176,7 @@ build_hypothesis_summary_table <- function(
   } else {
     lb <- int_primary$estimate - 1.96 * int_primary$std.error
     ub <- int_primary$estimate + 1.96 * int_primary$std.error
-    p_val <- int_primary$p.value %||% stats::pnorm(-abs(int_primary$statistic)) * 2
+    p_val <- glmm_p_value(int_primary)
     sprintf(
       "beta = %+.3f, 95%% CI [%.3f, %+.3f], *p* = %s",
       int_primary$estimate,
@@ -182,20 +193,20 @@ build_hypothesis_summary_table <- function(
   lenient_p <- if (is.null(int_lenient)) {
     NA_real_
   } else {
-    int_lenient$p.value %||% stats::pnorm(-abs(int_lenient$statistic)) * 2
+    glmm_p_value(int_lenient)
   }
 
   trait <- extract_lmer_term(pupil_psychometric_effects, "pupil_cognitive_trait_scaled")
   h3c_stat <- if (is.null(trait)) {
     "—"
   } else {
-    p_val <- trait$p.value %||% stats::pnorm(-abs(trait$statistic)) * 2
+    p_val <- glmm_p_value(trait)
     sprintf("beta = %+.3f, *p* = %s", trait$estimate, fmt_p_apa(p_val))
   }
   h3c_support <- if (is.null(trait)) {
     "Supported (pupil trait not significant)"
   } else {
-    p_val <- trait$p.value %||% stats::pnorm(-abs(trait$statistic)) * 2
+    p_val <- glmm_p_value(trait)
     sprintf("Supported (pupil trait *p* = %s, not significant)", fmt_p_apa(p_val))
   }
 
@@ -220,18 +231,18 @@ build_hypothesis_summary_table <- function(
       "H4: ΔPupil correlated with ΔPF parameters"
     ),
     `Support Status` = c(
-      "Partial support (ADT threshold p < .05; VDT threshold ns; Section 3.2)",
-      "Not supported (slopes ns in both modalities; Section 3.2)",
+      "Partial support (ADT threshold p < .05; VDT threshold ns; @sec-pf-backbone)",
+      "Not supported (slopes ns in both modalities; @sec-pf-backbone)",
       paste0(
         "Indirect support with qualification: operationalized as Total AUC (squeeze-epoch arousal) ",
         "rather than dedicated pre-stimulus baseline pupil; Total AUC increased under High effort. ",
-        "See Section 3.3 note."
+        "See @sec-manipulation-check note."
       ),
       "Not supported (Cognitive AUC decreased under High effort)",
       sprintf(
         paste0(
           "Not supported at primary tier (positive point estimate; non-significant); ",
-          "lenient tier only reached *p* = %s — not robust (Section 3.5.1, Appendix B)"
+          "lenient tier only reached *p* = %s (not robust; @sec-pupil-quality-tier, Appendix B)"
         ),
         lenient_p_txt
       ),

@@ -97,12 +97,10 @@ plot_equivalence_forest <- function(
       x = "intensity \u00d7 pupil-state coefficient (probit)",
       y = NULL
     ) +
-    ggplot2::theme_minimal(base_size = 11) +
+    theme_ch2(11) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(face = "bold", size = 12, hjust = 0),
       plot.subtitle = ggplot2::element_text(size = 9.5, colour = "#4B5563", hjust = 0),
-      panel.grid.major.y = ggplot2::element_blank(),
-      panel.grid.minor = ggplot2::element_blank(),
       axis.text.y = ggplot2::element_text(size = 10, colour = "#1F2937"),
       plot.margin = ggplot2::margin(10, 18, 10, 10)
     )

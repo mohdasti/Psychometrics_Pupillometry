@@ -99,7 +99,7 @@ p0 <- ggplot(ts_df, aes(x = time_s, y = pupil, colour = effort, fill = effort)) 
       "Blue shading = cognitive AUC window. Error bands = ±1 SE."
     )
   ) +
-  theme_minimal(base_size = 11) +
+  theme_ch2(11) +
   theme(
     legend.position = "bottom",
     plot.subtitle = element_text(size = 8, colour = "grey40"),
@@ -158,7 +158,7 @@ p1 <- dat_fig1 %>%
     color = "Effort",
     title = "Psychometric Functions by Effort Condition"
   ) +
-  theme_minimal() +
+  theme_ch2_pf() +
   theme(legend.position = "bottom")
 
 ggsave(file.path(figures_dir, "fig1_psychometric_by_effort.png"),
@@ -219,7 +219,7 @@ p2a <- dat_fig2_subj %>%
     title = "Effort–Pupil Manipulation Check",
     subtitle = "Points = participant means; diamonds = group mean ± 1 SE; lines connect the same participant"
   ) +
-  theme_minimal(base_size = 11) +
+  theme_ch2(11) +
   theme(legend.position = "none",
         strip.text.y = element_text(size = 9))
 
@@ -271,7 +271,7 @@ p3 <- dat_fig3 %>%
     color = "Pupil State\nTertile",
     title = "Psychometric Functions by Pupil State (Primary Analysis)"
   ) +
-  theme_minimal(base_size = 11) +
+  theme_ch2_pf(11) +
   theme(legend.position = "bottom")
 
 ggsave(file.path(figures_dir, "fig3_psychometric_by_pupil_state.png"),
@@ -310,7 +310,7 @@ p4 <- dat_fig4 %>%
     fill = "Pupil Data",
     title = "Missingness Diagnostic: RT by Pupil Data Availability"
   ) +
-  theme_minimal()
+  theme_ch2()
 
 ggsave(file.path(figures_dir, "fig4_missingness_diagnostic.png"),
        p4, width = 8, height = 6, dpi = 300)
