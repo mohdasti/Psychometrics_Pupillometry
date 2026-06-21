@@ -247,10 +247,12 @@ pupil_psychometric_strict <- sread(file.path(tables_dir, "pupil_psychometric_str
 pf_pupil_correlations <- sread(file.path(tables_dir, "pf_pupil_coupling_correlations.csv"))
 missingness_effects <- sread(file.path(tables_dir, "missingness_diagnostic_effects.csv"))
 pupil_psychometric_slow_rt <- sread(file.path(tables_dir, "pupil_psychometric_slow_rt_effects.csv"))
+pupil_psychometric_tost <- sread(file.path(tables_dir, "pupil_psychometric_tost_equivalence.csv"))
 
 source(file.path(proj_root, "R", "build_hypothesis_summary.R"))
 source(file.path(proj_root, "R", "pf_analysis_helpers.R"))
 source(file.path(proj_root, "R", "ch2_sample_helpers.R"))
+source(file.path(proj_root, "R", "tost_equivalence_helpers.R"))
 
 h4_coupling_summary <- summarize_h4_coupling_correlations(pf_pupil_correlations)
 
@@ -946,29 +948,7 @@ if (!is.null(pupil_psychometric_effects)) {
 
 **Interpretation of Results:** At the primary quality tier, the stimulus intensity $\times$ pupil state interaction was **non-significant** ($p = .245$), and the point estimate was **positive**—opposite to Hypothesis 3a. Plausible accounts include limited power, mismatch between the fixed cognitive pupil window and arousal dynamics most relevant to choice, or a weak or null true coupling; pre-specified sensitivity analyses (below and [Appendix B](#sec-appendix-b)) qualify this pattern.
 
-Model-predicted psychometric functions at low (−1 SD) and high (+1 SD) pupil state are shown in [Appendix B](#sec-appendix-b) (@fig-appendix-b1-predicted); the apparent visual separation of curves reflects extrapolation across the full scaled intensity range and should not be interpreted as evidence of a reliable effect given that the interaction was **not significant** ($\beta = 0.035$, 95% CI $[-0.024,\, +0.095]$, $p = .245$).
-
-```{r pupil-psychometric-fig}
-#| label: fig-pupil-psychometric
-#| fig-cap: >
-#|   Psychometric Functions by Pupil State (Primary Analysis). Physical stimulus values per facet row:
-#|   ADT frequency offsets of 8, 16, 32, 64 Hz above 1000 Hz base; VDT Gabor contrast differences of 0.06, 0.12, 0.24, 0.48.
-#| fig-width: 12
-#| fig-height: 8
-#| out-width: "100%"
-
-fig_path_abs <- fig_path("fig3_psychometric_by_pupil_state.png", return_absolute = TRUE)
-if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
-  knitr::include_graphics(fig_path("fig3_psychometric_by_pupil_state.png"))
-} else {
-  fig_path_abs2 <- fig_path("psychometric_by_pupil_state.png", return_absolute = TRUE)
-  if (!is.null(fig_path_abs2) && file.exists(fig_path_abs2)) {
-  knitr::include_graphics(fig_path("psychometric_by_pupil_state.png"))
-} else {
-    cat("*Figure: fig3_psychometric_by_pupil_state.png not yet generated.*")
-  }
-}
-```
+Model-predicted psychometric functions at low (−1 SD) and high (+1 SD) pupil state are shown in [Appendix B](#sec-appendix-b) (@fig-appendix-b1-predicted); the apparent visual separation of curves reflects extrapolation across the full scaled intensity range and should not be interpreted as evidence of a reliable effect given that the interaction was **not significant** ($\beta = 0.035$, 95% CI $[-0.024,\, +0.095]$, $p = .245$). Exploratory binned psychometric functions by pupil tertile are relegated to [Appendix B](#sec-appendix-b) (@fig-appendix-b2-tertiles) because they are descriptive and can overstate coupling when the primary interaction is null.
 
 ### Robustness checks: quality tiers and equivalence (TOST) {#sec-pupil-quality-tier}
 
@@ -976,7 +956,60 @@ The stimulus intensity $\times$ pupil state interaction was significant only in 
 
 The slow-RT sensitivity subset (trials with RT > 1.5 s, *N* = 940 trials from 52 participants) yielded $\beta$ = −0.071, *SE* = 0.051, *z* = −1.39, *p* = .164 — opposite in sign to the primary-tier estimate ($\beta$ = +0.035). This sign reversal means motor contamination of the cognitive pupil window cannot be excluded as a partial contributor to the primary-tier pattern, though neither analysis supports a reliable interaction. Taken together, there is no robust evidence for moment-to-moment pupil state modulating psychometric sensitivity at the primary analysis level.
 
-Equivalence was tested with two one-sided tests (TOST) using a pre-specified smallest effect size of interest (SESOI) of $\pm 0.10$ probit units (≈7.6% of the main intensity slope; rationale in [@sec-sesoi-rationale](#sec-sesoi-rationale)). The 90% confidence interval for the interaction term ($\mathrm{LB} = -0.015$, $\mathrm{UB} = +0.085$) fell entirely within the pre-specified equivalence bounds of $\pm 0.10$ probit units. Both one-sided tests were significant (lower bound: $z = 4.50$, $p < .001$; upper bound: $z = -2.17$, $p = .015$), so the data are **consistent with equivalence** to zero at this SESOI: coupling effects larger in magnitude than $\pm 0.10$ probit units are statistically incompatible with the estimate. The frequentist null hypothesis ($\beta = 0$) was not rejected at $\alpha = .05$, but the equivalence framing implies that any non-null coupling, if present, is **negligible** relative to the SESOI rather than that the study was simply underpowered to detect the point estimate.
+Equivalence was tested with two one-sided tests (TOST) using a pre-specified smallest effect size of interest (SESOI) of $\pm 0.10$ probit units (≈7.6% of the main intensity slope; rationale in [@sec-sesoi-rationale](#sec-sesoi-rationale)). @fig-equivalence-forest and @tbl-tost-equivalence summarize the interaction across quality tiers and the slow-RT subset. At the **primary** tier, the 90% confidence interval for the interaction ($\mathrm{LB} = -0.015$, $\mathrm{UB} = +0.085$) fell entirely within the equivalence bounds. Both one-sided TOST tests were significant at the primary tier (lower: $z = 4.50$, $p < .001$; upper: $z = -2.17$, $p = .015$), so the data are **consistent with equivalence** to zero at this SESOI for the primary analysis: coupling effects larger in magnitude than $\pm 0.10$ probit units are statistically incompatible with the primary-tier estimate. By contrast, the lenient tier 90% CI extended to +0.110 (upper bound exceeds the SESOI), and the slow-RT subset interval crossed zero with opposite sign ($\beta = -0.071$), so equivalence was **not** supported in those sensitivity analyses. The frequentist null hypothesis ($\beta = 0$) was not rejected at $\alpha = .05$ in the primary tier, but the equivalence framing implies that any non-null coupling, if present, is **negligible** relative to the SESOI rather than that the study was simply underpowered to detect the point estimate.
+
+```{r fig-equivalence-forest}
+#| label: fig-equivalence-forest
+#| fig-cap: >
+#|   TOST equivalence for the stimulus intensity x pupil-state interaction across analysis subsets.
+#|   Points show probit-scale interaction estimates with 90% confidence intervals; the shaded band marks the pre-specified SESOI (+/-0.10 probit units). Wald *p* values appear at right. Primary-tier estimates fall within the equivalence region; lenient-tier and slow-RT subsets do not.
+#| fig-width: 8
+#| fig-height: 5.5
+#| out-width: "90%"
+#| fig-align: center
+
+eq_png <- fig_path("fig_equivalence_forest.png", return_absolute = TRUE)
+if (!is.null(eq_png) && file.exists(eq_png)) {
+  knitr::include_graphics(fig_path("fig_equivalence_forest.png"))
+} else {
+  cat("*Figure: fig_equivalence_forest.png not found. Run `Rscript 07_manuscript/chapter2/scripts/plot_equivalence_forest.R`.*")
+}
+```
+
+```{r tbl-tost-equivalence}
+#| label: tbl-tost-equivalence
+#| tbl-cap: "TOST equivalence summary for the intensity x pupil-state interaction (SESOI = +/-0.10 probit units). Inside SESOI indicates whether the 90% CI lies entirely within +/-0.10."
+
+if (!is.null(pupil_psychometric_tost) && nrow(pupil_psychometric_tost)) {
+  pupil_psychometric_tost %>%
+    dplyr::transmute(
+      Analysis = analysis_label,
+      `beta (probit)` = sprintf("%+.3f", estimate),
+      `90% CI` = sprintf("[%+.3f, %+.3f]", ci90_lower, ci90_upper),
+      `p (Wald)` = vapply(p_wald, format_equiv_p, character(1L)),
+      `Inside +/-0.10?` = vapply(inside_sesoi, format_inside_sesoi, character(1L))
+    ) %>%
+    make_table(
+      col.names = c("Analysis", "beta (probit)", "90% CI", "p (Wald)", "Inside +/-0.10?"),
+      align = c("l", "r", "c", "r", "c")
+    )
+} else if (file.exists(file.path(models_dir, "mod_pupil_psychometric_primary.rds"))) {
+  build_interaction_tost_summary(models_dir) %>%
+    dplyr::transmute(
+      Analysis = analysis_label,
+      `beta (probit)` = sprintf("%+.3f", estimate),
+      `90% CI` = sprintf("[%+.3f, %+.3f]", ci90_lower, ci90_upper),
+      `p (Wald)` = vapply(p_wald, format_equiv_p, character(1L)),
+      `Inside +/-0.10?` = vapply(inside_sesoi, format_inside_sesoi, character(1L))
+    ) %>%
+    make_table(
+      col.names = c("Analysis", "beta (probit)", "90% CI", "p (Wald)", "Inside +/-0.10?"),
+      align = c("l", "r", "c", "r", "c")
+    )
+} else {
+  cat("*TOST equivalence table not yet available.*")
+}
+```
 
 ## Subject-Level PF–Pupil Coupling
 
@@ -1363,6 +1396,31 @@ if (file.exists(mod_w) && file.exists(mod_wo)) {
 ```
 
 Akaike Information Criterion (AIC) comparison addresses whether the stimulus intensity $\times$ pupil-state interaction improves fit beyond the main-effects structure. A lower AIC for the model **without** the interaction indicates that the interaction does not improve fit enough to offset its complexity; in the present analysis, the no-interaction model fit marginally better ($\Delta$AIC = +0.66 for adding the interaction).
+
+**Exploratory tertile psychometric functions.** @fig-appendix-b2-tertiles shows binned proportion-"different" curves split by within-trial pupil tertile (Low / Medium / High cognitive pupil state). This figure is descriptive only: binning can suggest separation even when the primary GLMM interaction is small and non-significant, and it should not be used as confirmatory evidence for coupling.
+
+```{r appendix-b-fig-b2-tertiles}
+#| label: fig-appendix-b2-tertiles
+#| fig-cap: >
+#|   Exploratory psychometric functions by pupil-state tertile (Appendix B). Binned mean
+#|   proportion "different" as a function of stimulus intensity, faceted by task and effort.
+#|   Descriptive only; the primary GLMM interaction was non-significant ($\beta = +0.035$, $p = .245$).
+#| fig-width: 12
+#| fig-height: 8
+#| out-width: "100%"
+
+fig_path_abs <- fig_path("fig3_psychometric_by_pupil_state.png", return_absolute = TRUE)
+if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
+  knitr::include_graphics(fig_path("fig3_psychometric_by_pupil_state.png"))
+} else {
+  fig_path_abs2 <- fig_path("psychometric_by_pupil_state.png", return_absolute = TRUE)
+  if (!is.null(fig_path_abs2) && file.exists(fig_path_abs2)) {
+    knitr::include_graphics(fig_path("psychometric_by_pupil_state.png"))
+  } else {
+    cat("*Figure B2 is missing: run `04_pupil_psychometric_coupling/06_pupil_psychometric_coupling.R`.*")
+  }
+}
+```
 
 Model-predicted psychometric functions at low (−1 SD) and high (+1 SD) within-subject pupil cognitive state (@fig-appendix-b1-predicted) can appear visually separated even when the interaction coefficient is small and non-significant; such plots rely on extrapolation across the full scaled intensity range and should not be interpreted as evidence of a reliable effect without corroborating statistical evidence.
 

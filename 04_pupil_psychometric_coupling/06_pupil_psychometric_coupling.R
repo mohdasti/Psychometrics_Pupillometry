@@ -351,5 +351,27 @@ ggsave(file.path(figures_dir, "fig_predicted_psychometric_pupil_state.png"),
        p2, width = 10, height = 8, dpi = 300)
 cat("✓ Saved: fig_predicted_psychometric_pupil_state.png\n")
 
+# TOST equivalence summary and forest figure (Chapter 2 B2)
+source(file.path(here(), "R", "tost_equivalence_helpers.R"))
+source(file.path(here(), "R", "plot_equivalence_forest.R"))
+tost_summary <- build_interaction_tost_summary(models_dir)
+write_csv(
+  tost_summary,
+  file.path(tables_dir, "pupil_psychometric_tost_equivalence.csv")
+)
+p_eq <- plot_equivalence_forest(
+  tost_summary,
+  line_color = unname(effort_colors["Low"])
+)
+ggplot2::ggsave(
+  file.path(figures_dir, "fig_equivalence_forest.png"),
+  p_eq, width = 8, height = 5.5, dpi = 300, bg = "white"
+)
+ggplot2::ggsave(
+  file.path(figures_dir, "fig_equivalence_forest.pdf"),
+  p_eq, width = 8, height = 5.5, bg = "white"
+)
+cat("✓ Saved: fig_equivalence_forest.png / .pdf\n")
+
 cat("\n=== Pupil-psychometric coupling analysis complete ===\n")
 
