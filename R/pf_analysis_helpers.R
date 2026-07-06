@@ -106,6 +106,15 @@ pf_valid_n_by_task <- function(pf) {
     )
 }
 
+#' Holm-adjusted p-values within the four RQ1 PF effort contrasts.
+add_holm_rq1_p <- function(pf_h1_infer) {
+  if (is.null(pf_h1_infer) || nrow(pf_h1_infer) == 0L || !"p" %in% names(pf_h1_infer)) {
+    return(pf_h1_infer)
+  }
+  pf_h1_infer %>%
+    dplyr::mutate(p_holm = stats::p.adjust(.data$p, method = "holm"))
+}
+
 #' PF-valid N with Low and High effort rows (PF effort LMM / Table 2–3 sample).
 pf_valid_both_effort_n_by_task <- function(pf) {
   tasks <- sort(unique(pf$task))

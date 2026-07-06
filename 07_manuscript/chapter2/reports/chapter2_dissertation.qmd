@@ -656,6 +656,7 @@ if (!is.null(pf_params)) {
     })
   )
   if (nrow(pf_h1_infer) > 0) {
+    pf_h1_infer <- add_holm_rq1_p(pf_h1_infer)
     pf_h1_infer %>%
       mutate(
         `Est. (High − Low)` = round(`Est. (High − Low)`, 3),
@@ -663,12 +664,13 @@ if (!is.null(pf_params)) {
         t = round(t, 3),
         df = round(df, 2),
         p = round(p, 4),
+        `p (Holm)` = round(p_holm, 4),
         N = n_sub
       ) %>%
-      select(-n_sub) %>%
+      select(-n_sub, -p_holm) %>%
       make_table(
         col.names = c(
-          "Task", "PF Parameter", "Est. (High − Low)", "SE", "t", "df", "p", "N"
+          "Task", "PF Parameter", "Est. (High − Low)", "SE", "t", "df", "p", "p (Holm)", "N"
         ),
         digits = 3
       )
@@ -704,20 +706,22 @@ if (exists("pf_h1_infer") && !is.null(pf_h1_infer) && nrow(pf_h1_infer) == 4) {
     dplyr::pull(slope) %>%
     stats::sd(na.rm = TRUE)
 
+  adt_th_holm <- if ("p_holm" %in% names(adt_th)) adt_th$p_holm else NA_real_
+
   cat(
-    "@tbl-pf-effort-test reports the within-subject High \u2212 Low effort contrasts. ",
-    "The auditory threshold rose under high effort (est = ", sprintf("%.2f", adt_th[[eff_col]]),
-    " Hz, *t*(", round(adt_th$df, 0), ") = ", sprintf("%.2f", adt_th$t), ", *p* = ", format_p_inline(adt_th$p),
-    "), the only contrast to reach significance and the basis for **partial support** of H1a; the visual threshold did not move (*p* = ",
-    format_p_inline(vdt_th$p),
-    "). Because several confirmatory tests were evaluated across H1 and H2, this isolated effect is best read as suggestive rather than decisive. ",
+    "@tbl-pf-effort-test reports the within-subject High \u2212 Low effort contrasts, with Holm-adjusted *p*-values for the four RQ1 comparisons (@sec-sensitivity-analyses). ",
+    "The auditory threshold rose numerically under high effort (est = ", sprintf("%.2f", adt_th[[eff_col]]),
+    " Hz, *t*(", round(adt_th$df, 0), ") = ", sprintf("%.2f", adt_th$t), ", raw *p* = ", format_p_inline(adt_th$p),
+    "; Holm *p* = ", format_p_inline(adt_th_holm),
+    "), but this contrast did not survive Holm correction within the RQ1 family, so H1a was **not supported** by the per-participant PF analysis. ",
+    "The visual threshold did not move (raw *p* = ", format_p_inline(vdt_th$p), "). ",
     "H1b predicted shallower slopes under high effort. Slopes were numerically shallower in both modalities but reliable in neither ",
     "(ADT *p* = ", format_p_inline(adt_sl$p), "; VDT *p* = ", format_p_inline(vdt_sl$p), "), so H1b was **not supported** by the per-participant PF analysis. ",
     "The slope null held across both tasks, and auditory slopes varied widely across participants (SD = ", sprintf("%.3f", adt_slope_sd),
     "), so it does not stem from compressed or floor-limited estimates. ",
     "The trial-level effort × intensity interaction ($\\beta_7$) from the expanded GLMM provides a complementary and more statistically powerful test of the same question (below). ",
-    "On balance, the grip manipulation behaved as a physiological stressor that nudged the auditory threshold without reliably flattening either psychometric function. ",
-    "That shift is more consistent with a change in response criterion or task difficulty than with a genuine loss of sensitivity, for which the slope is the cleaner index.\n\n",
+    "On balance, the grip manipulation shifted auditory response tendency in the expected direction at the raw *p* level but did not reliably flatten either psychometric function after multiple-comparison control. ",
+    "A threshold-only pattern, if real, is more consistent with a change in response criterion or task difficulty than with a genuine loss of sensitivity, for which the slope is the cleaner index.\n\n",
     sep = ""
   )
 } else {

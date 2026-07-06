@@ -11,7 +11,7 @@ fmt_p_apa <- function(p) {
   sub("^0\\.", ".", sprintf("%.3f", p))
 }
 
-fmt_pf_contrast <- function(pf_h1_infer, task, parameter) {
+fmt_pf_contrast <- function(pf_h1_infer, task, parameter, include_holm = TRUE) {
   if (is.null(pf_h1_infer) || nrow(pf_h1_infer) == 0L) {
     return("—")
   }
@@ -21,11 +21,53 @@ fmt_pf_contrast <- function(pf_h1_infer, task, parameter) {
   if (nrow(row) == 0L) {
     return("—")
   }
+  holm_txt <- if (
+    include_holm &&
+      "p_holm" %in% names(row) &&
+      !is.na(row$p_holm[[1]])
+  ) {
+    sprintf(", Holm *p* = %s", fmt_p_apa(row$p_holm))
+  } else {
+    ""
+  }
   sprintf(
-    "*t*(%.0f) = %+.3f, *p* = %s",
+    "*t*(%.0f) = %+.3f, *p* = %s%s",
     row$df,
     row$t,
-    fmt_p_apa(row$p)
+    fmt_p_apa(row$p),
+    holm_txt
+  )
+}
+
+h1a_support_status <- function(pf_h1_infer) {
+  if (is.null(pf_h1_infer) || nrow(pf_h1_infer) == 0L) {
+    return("Not supported (PF effort contrasts unavailable; @sec-pf-backbone)")
+  }
+  pf <- pf_h1_infer
+  if (!"p_holm" %in% names(pf) || any(is.na(pf$p_holm))) {
+    pf <- pf %>%
+      dplyr::mutate(p_holm = stats::p.adjust(.data$p, method = "holm"))
+  }
+  adt <- pf %>%
+    dplyr::filter(.data$Task == "ADT", .data$`PF Parameter` == "Threshold") %>%
+    dplyr::slice(1)
+  if (nrow(adt) == 0L) {
+    return("Not supported (@sec-pf-backbone)")
+  }
+  holm_p <- adt$p_holm[[1]]
+  if (holm_p < 0.05) {
+    return(sprintf(
+      "Partial support (ADT threshold Holm *p* = %s; @sec-pf-backbone)",
+      fmt_p_apa(holm_p)
+    ))
+  }
+  sprintf(
+    paste0(
+      "Not supported (ADT threshold raw *p* = %s; Holm-adjusted *p* = %s ",
+      "across four RQ1 contrasts; @sec-pf-backbone)"
+    ),
+    fmt_p_apa(adt$p),
+    fmt_p_apa(holm_p)
   )
 }
 
@@ -231,7 +273,7 @@ build_hypothesis_summary_table <- function(
       "H4: ΔPupil correlated with ΔPF parameters"
     ),
     `Support Status` = c(
-      "Partial support (ADT threshold p < .05; VDT threshold ns; @sec-pf-backbone)",
+      h1a_support_status(pf_h1_infer),
       "Not supported (slopes ns in both modalities; @sec-pf-backbone)",
       paste0(
         "Indirect support with qualification: operationalized as Total AUC (squeeze-epoch arousal) ",
