@@ -353,3 +353,57 @@ summarize_zero_offset_fa_rates <- function(dat) {
       .groups = "drop"
     )
 }
+
+#' Primary-tier GLMM-eligible participants by task and pooled overlap.
+summarize_glmm_primary_n_by_task <- function(dat) {
+  if (is.null(dat) || !nrow(dat)) {
+    return(NULL)
+  }
+  req <- c("quality_primary", "cog_auc", "stimulus_intensity", "choice", "task", "sub")
+  if (!all(req %in% names(dat))) {
+    return(NULL)
+  }
+
+  md <- filter_quality_primary(dat) %>%
+    dplyr::filter(
+      is.finite(.data$cog_auc),
+      is.finite(.data$stimulus_intensity),
+      !is.na(.data$choice)
+    )
+
+  by_task <- md %>%
+    dplyr::group_by(.data$task) %>%
+    dplyr::summarise(n_sub = dplyr::n_distinct(.data$sub), .groups = "drop")
+
+  tibble::tibble(
+    adt_n = by_task$n_sub[by_task$task == "ADT"],
+    vdt_n = by_task$n_sub[by_task$task == "VDT"],
+    pooled_n = dplyr::n_distinct(md$sub),
+    both_tasks_n = md %>%
+      dplyr::group_by(.data$sub) %>%
+      dplyr::filter(dplyr::n_distinct(.data$task) == 2L) %>%
+      dplyr::ungroup() %>%
+      dplyr::distinct(.data$sub) %>%
+      nrow()
+  )
+}
+
+#' Pearson r for effort-evoked ΔTotal AUC vs ΔCognitive AUC (subject × task rows).
+summarize_delta_pupil_effort_correlation <- function(dat, pf) {
+  if (is.null(dat) || is.null(pf)) {
+    return(NULL)
+  }
+  if (!exists("build_subject_coupling_data", mode = "function")) {
+    return(NULL)
+  }
+  cd <- build_subject_coupling_data(dat, pf)
+  if (is.null(cd) || nrow(cd) < 3L) {
+    return(NULL)
+  }
+  ct <- stats::cor.test(cd$delta_total_auc, cd$delta_cog_auc)
+  tibble::tibble(
+    r = unname(ct$estimate),
+    p.value = ct$p.value,
+    n = nrow(cd)
+  )
+}

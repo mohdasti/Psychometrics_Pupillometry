@@ -315,6 +315,16 @@ vdt_zero_fa_n <- if (!is.null(zero_offset_fa_rates)) {
 } else {
   NA_integer_
 }
+glmm_primary_n_by_task <- if (!is.null(merged_data)) {
+  summarize_glmm_primary_n_by_task(merged_data)
+} else {
+  NULL
+}
+delta_pupil_effort_cor <- if (!is.null(merged_data) && !is.null(pf_params)) {
+  summarize_delta_pupil_effort_correlation(merged_data, pf_params)
+} else {
+  NULL
+}
 ```
 
 \newpage 
@@ -636,8 +646,22 @@ if (!is.null(quality_primary_trials) && !is.null(glmm_primary_sample)) {
   nt_total_q <- nt_adt_q + nt_vdt_q
   n_merged_sub <- if (!is.null(merged_data)) dplyr::n_distinct(merged_data$sub) else NA_integer_
   n_dropped_sub <- if (!is.na(n_merged_sub)) n_merged_sub - glmm_primary_sample$n_sub else NA_integer_
+  overlap_txt <- if (!is.null(glmm_primary_n_by_task)) {
+    g <- glmm_primary_n_by_task
+    paste0(
+      "Per-task primary-tier counts in @fig-participant-flow (ADT *n* = ", g$adt_n,
+      "; VDT *n* = ", g$vdt_n,
+      ") sum to more than the ", g$pooled_n,
+      " participants in the pooled GLMM because ", g$both_tasks_n,
+      " contributed usable trials in both modalities (", g$adt_n, " + ", g$vdt_n,
+      " \u2212 ", g$both_tasks_n, " = ", g$pooled_n, "). "
+    )
+  } else {
+    ""
+  }
   cat(
     "Final per-task participant counts follow @sec-sample-retention and @fig-participant-flow. ",
+    overlap_txt,
     "PF-valid N and pupil-QC final N differ by design (@sec-analytic-samples). ",
     "After applying the primary pupil-quality tier (@sec-pupil-quality-tiers), ",
     format(nt_adt_q, big.mark = ","), " ADT trials and ",
@@ -800,7 +824,13 @@ if (!is.null(pupil_psychometric_effort_intensity)) {
       if (ei_row$p.value < .05) {
         paste0("This is significant, indicating that effort changed the steepness of the psychometric function at the trial level\u2014a direct sensitivity shift, not merely an intercept change. ")
       } else {
-        paste0("This was not significant. The null trial-level slope change converges with the per-participant PF analysis above (H1b not supported) and is consistent with the overall picture: the effort manipulation shifted response tendency (intercept) rather than discrimination sensitivity (slope). ")
+        paste0(
+          "This was not significant. Both analyses reject a reliable slope change (H1b not supported), ",
+          "but they do not agree in direction: per-participant PF slopes were numerically shallower under High effort, ",
+          "whereas the trial-level interaction was positive ($\\beta_7$ = ", b, ", *p* = ", p, "). ",
+          "They converge on a null only—not on directional agreement. ",
+          "The effort manipulation shifted response tendency (intercept) rather than discrimination sensitivity (slope). "
+        )
       },
       if (nrow(ef_row) == 1L) {
         paste0(
@@ -870,32 +900,24 @@ if (!is.null(baseline_effort_effects)) {
   assign("b1_result", b1, envir = .GlobalEnv)
 
   cat(
-    "Because the two metrics use different subtractive baselines, the dissociation must be read against raw baseline levels rather than inferred from the AUC signs alone. ",
-    "Pre-squeeze baseline diameter (B0; the reference for Total AUC) did **not** differ by effort condition ",
+    "Total AUC and Cognitive AUC reference different subtractive baselines (B0 pre-squeeze vs. B1 pre-target), ",
+    "so the dissociation must be read against those baselines and against raw pupil level, not from AUC signs alone. ",
+    "Pre-squeeze B0 did **not** differ by effort ",
     "(High \u2212 Low: ",
     if (!is.null(b0)) format_beta_manuscript(b0$estimate) else "\u2014",
-    ", *SE* = ",
-    if (!is.null(b0)) sprintf("%.3f", b0$std.error) else "\u2014",
-    ", *t* = ",
-    if (!is.null(b0)) sprintf("%.2f", b0$statistic) else "\u2014",
     ", *p* ",
     if (!is.null(b0)) format_p_manuscript(b0$p.value) else "\u2014",
     "). ",
-    "Accordingly, the Total AUC increase reflects greater sustained dilation during the grip epoch itself, not a pre-trial baseline shift. ",
-    "By contrast, pre-target baseline diameter (B1; the reference subtracted before the cognitive window) **was** elevated under High effort ",
+    "Pre-target B1 **was** elevated ",
     "(High \u2212 Low: ",
     if (!is.null(b1)) format_beta_manuscript(b1$estimate) else "\u2014",
-    ", *SE* = ",
-    if (!is.null(b1)) sprintf("%.3f", b1$std.error) else "\u2014",
-    ", *t* = ",
-    if (!is.null(b1)) sprintf("%.2f", b1$statistic) else "\u2014",
     ", *p* ",
     if (!is.null(b1)) format_p_manuscript(b1$p.value) else "\u2014",
     "). ",
-    "Because Cognitive AUC is computed on B1-corrected waveforms, this elevation mechanically lowers the cognitive metric even when raw pupil diameter in the cognitive window is unchanged. ",
-    "The observed Cognitive AUC reduction is therefore **partly** a baseline-correction artifact, although it is not fully explained by B1 elevation alone: @fig-pupil-timeseries shows that High-effort waveforms remain elevated through the pre-target interval, yet the cognitive-window increment above that elevated level is smaller than under Low effort. ",
-    "A hard iris-ceiling account was also not supported: High-effort trials were not disproportionately concentrated in the upper tail of the Cognitive AUC distribution. ",
-    "Taken together, the dissociation reflects both genuine sustained effort-related dilation (Total AUC) and metric-specific baseline choice (B1-corrected Cognitive AUC), rather than a uniform tonic increase followed by uniform phasic suppression.\n\n",
+    "Total AUC therefore reflects sustained dilation during the grip epoch (consistent with Chapter 1 operationalization), ",
+    "whereas Cognitive AUC subtracts the elevated B1 reference and can fall even when raw diameter in the cognitive window does not. ",
+    "@fig-pupil-timeseries shows a smaller incremental rise above the elevated pre-target level as well, ",
+    "so the dissociation is not fully explained by baseline subtraction alone.\n\n",
     sep = ""
   )
 } else {
@@ -903,34 +925,6 @@ if (!is.null(baseline_effort_effects)) {
   assign("b1_result", NULL, envir = .GlobalEnv)
   cat("*Baseline decomposition unavailable (merged data not loaded in this render).*\\n\\n")
 }
-```
-
-```{r metric-choice-note, results = "asis"}
-#| echo: false
-
-# All values sourced from b0_result / b1_result set above — no hardcoded
-# statistics in this paragraph.
-b0_p <- if (!is.null(b0_result)) format_p_manuscript(b0_result$p.value) else "= .705"
-b1_beta <- if (!is.null(b1_result)) format_beta_manuscript(b1_result$estimate) else "\u2014"
-b1_p    <- if (!is.null(b1_result)) format_p_manuscript(b1_result$p.value)    else "\u2014"
-
-cat(
-  "A note on metric choice. Total AUC is referenced to B0 (pre-squeeze, \u22120.5 to 0 s relative to squeeze onset), ",
-  "and B0 did not differ between effort conditions (*p* ", b0_p, "). ",
-  "The Total AUC increase under High effort therefore captures genuine sustained dilation that builds during the grip itself, ",
-  "not a carry-over from the inter-trial interval. ",
-  "Cognitive AUC, on the other hand, is referenced to B1 (pre-target, 3.85\u20134.35 s), ",
-  "and B1 was elevated under High effort ($\\beta$ = ", b1_beta, ", *p* ", b1_p, "). ",
-  "Subtractive baseline correction means that any rise in B1 mechanically reduces the apparent Cognitive AUC ",
-  "even if raw pupil level in the cognitive window is unchanged. ",
-  "For this reason, the two metrics are best thought of as capturing different windows with different baselines ",
-  "rather than as pure tonic and phasic readouts. ",
-  "Total AUC is the primary index of sustained effort-related arousal\u2014a usage consistent with Chapter 1 ",
-  "and with the role it played in confirming the grip manipulation across tasks. ",
-  "Cognitive AUC isolates the incremental task-evoked response above the elevated pre-target level, ",
-  "with the caveat that the B1 elevation introduces a baseline-correction asymmetry that partially drives the observed metric dissociation.\n\n",
-  sep = ""
-)
 ```
 
 ```{r raw-cognitive-pupil, results = "asis"}
@@ -946,7 +940,7 @@ if (!is.null(raw_cognitive_pupil_effects)) {
     ", *SE* = ", sprintf("%.3f", raw$std.error),
     ", *t* = ", sprintf("%.2f", raw$statistic),
     ", *p* ", format_p_manuscript(raw$p.value),
-    "). Raw pupil therefore did not fall under High effort; the negative Cognitive AUC effect is driven by the elevated B1 reference, consistent with the baseline-decomposition pattern above.\n\n",
+    "). Raw pupil therefore did not fall under High effort; the negative Cognitive AUC effect is driven primarily by the elevated B1 reference (@sec-manipulation-check).\n\n",
     sep = ""
   )
 }
@@ -954,9 +948,7 @@ if (!is.null(raw_cognitive_pupil_effects)) {
 
 ### H2 summary and tonic–phasic dissociation
 
-H2a predicted greater sustained trial-period arousal (Total AUC) under High effort, and the data support that pattern—Total AUC rose significantly ($\beta = 0.857$, $p = .023$) while pre-squeeze B0 did not differ (*p* `r if (!is.null(b0_result)) format_p_manuscript(b0_result$p.value) else "= .705"`), so the increase built during the grip epoch rather than carrying over from the inter-trial interval. H2b predicted larger task-evoked responses (Cognitive AUC) under High effort; that prediction was not supported. Cognitive AUC fell ($\beta = -0.012$, $p < .001$). The metrics moved in opposite directions: Total AUC, referenced to stable B0, tracks sustained dilation during the squeeze, whereas Cognitive AUC subtracts a B1 baseline that itself rose with effort—partly compressing the corrected value. The waveforms in @fig-pupil-timeseries nonetheless suggest some genuine attenuation of the incremental response above the elevated pre-target level.
-
-The opposite signs of these two effects are the central result of the manipulation check. @fig-effort-dissociation places the effort effect on each metric on a common axis: overall arousal rises while the task-evoked response falls. Participant-level means for each metric are shown in @sec-appendix-g (@fig-effort-pupil).
+H2a was supported (Total AUC increased under High effort) and H2b was not (Cognitive AUC decreased). The baseline decomposition above explains why the two metrics moved in opposite directions. @fig-effort-dissociation places the effort effects on a common axis; participant-level means appear in @sec-appendix-g (@fig-effort-pupil).
 
 ```{r fig-effort-dissociation}
 #| label: fig-effort-dissociation
@@ -1112,7 +1104,7 @@ Two checks confirm the null does not hinge on a few influential participants. In
 
 The full pairwise correlation matrix across ΔCognitive AUC, ΔTotal AUC, ΔThreshold, and ΔSlope is shown in @sec-appendix-d, together with z-scored scatter overlays for raw Δ clouds on shared axes.
 
-One exploratory pattern deserves note: a significant negative association emerged between effort-evoked changes in Cognitive AUC and Total AUC (r = −0.352, p < .01), so participants with larger total-arousal increases under High effort showed larger *reductions* in task-evoked cognitive pupil response. Because this pattern comes from the broader subject-level correlation matrix rather than a focal confirmatory hypothesis test, it should be treated as hypothesis-generating rather than definitive evidence for suppression or reallocation.
+One exploratory pattern deserves note: a significant negative association emerged between effort-evoked changes in Cognitive AUC and Total AUC (*r* = `r if (!is.null(delta_pupil_effort_cor)) sprintf("%.3f", delta_pupil_effort_cor$r) else "−0.361"`, *p* < .01; subject × task Δ rows, *n* = `r if (!is.null(delta_pupil_effort_cor)) delta_pupil_effort_cor$n else 80`), so participants with larger total-arousal increases under High effort showed larger *reductions* in task-evoked cognitive pupil response. Because both metrics share overlapping epoch structure and subtractive baselines that reference the pre-target interval, part of this Δ–Δ association may be mechanical rather than physiological. The pattern comes from the broader subject-level correlation matrix rather than a focal confirmatory test and should be treated as hypothesis-generating rather than definitive evidence for suppression or reallocation.
 
 ```{r h4-results-interpretation, results = "asis"}
 h4 <- h4_coupling_summary
@@ -1191,11 +1183,11 @@ if (file.exists(mech_path)) {
 
 The present data show weaker pupil–sensitivity coupling than predicted. The trial-level interaction was non-significant and, by the equivalence test, statistically negligible relative to the SESOI, and the subject-level correlations were uniformly small (@fig-subject-coupling-forest). The one correlation large enough to suggest a modality difference—VDT threshold—fell to near zero once a few influential participants were removed (@sec-subject-coupling). So the subject-level results carry little weight on their own; the strongest claim the data support is the bounded trial-level null. When Chapter 1 reports coupling in younger adults on the same continuous-intensity GLMM, that cross-chapter contrast will be a direct test of age-related attenuation of LC–NE gain modulation [@lee2018; @mather2016]. A second reading, not mutually exclusive, is that the effort-related response shift in @tbl-pupil-psychometric alongside the null interaction reflects older adults treating high-effort demand as contextual load rather than something that reshapes moment-to-moment arousal–sensitivity coupling.
 
-The observed dissociation between elevated Total AUC and attenuated Cognitive AUC under high effort (@sec-manipulation-check) reflects both sustained effort-related dilation and metric-specific baseline choice (see @fig-mechanism). One possibility (@fig-mechanism, panel B) is phasic suppression: the neural resources required to maintain a 40% MVC grip actively compete with, or inhibit the gain of, the LC–NE phasic response to the target stimulus, producing a smaller incremental dilation above the pre-target level despite elevated overall arousal. A complementary account (@fig-mechanism, panel C) is baseline-correction asymmetry: B1 rises under High effort while B0 does not, so the B1-corrected Cognitive AUC can fall even when raw pupil diameter in the cognitive epoch remains elevated. Both mechanisms would produce lower Cognitive AUC under high effort, but only the first implies a genuine attenuation of task-evoked neuromodulatory response. Empirically distinguishing them would require reporting raw (uncorrected) pupil levels alongside corrected metrics, or fitting deconvolution-based tonic/phasic models.
+The observed dissociation between elevated Total AUC and attenuated Cognitive AUC under high effort (@sec-manipulation-check) reflects both sustained effort-related dilation and metric-specific baseline choice (see @fig-mechanism). One possibility (@fig-mechanism, panel B) is phasic suppression: the neural resources required to maintain a 40% MVC grip actively compete with, or inhibit the gain of, the LC–NE phasic response to the target stimulus, producing a smaller incremental dilation above the pre-target level despite elevated overall arousal. A complementary account (@fig-mechanism, panel C) is baseline-correction asymmetry: B1 rises under High effort while B0 does not, so the B1-corrected Cognitive AUC can fall even when raw pupil diameter in the cognitive epoch remains elevated—as the raw cognitive-window analysis in @sec-manipulation-check confirms (High − Low numerically positive, *p* `r if (!is.null(raw_cognitive_pupil_effects)) format_p_manuscript(raw_cognitive_pupil_effects$p.value[1]) else "= .050"`). Both mechanisms would produce lower Cognitive AUC under high effort, but only the first implies a genuine attenuation of task-evoked neuromodulatory response beyond baseline subtraction.
 
 Either reading fits the leftward shift on the Yerkes–Dodson curve in @fig-mechanism (panel D). If older adults' optimal zone sits at lower objective demand, a 40% MVC context may land them past the peak, degrading fine-grained trial-by-trial modulation even when group-level response tendency shifts under load (@tbl-pupil-psychometric).
 
-At the same time, subject-level changes in Cognitive AUC and Total AUC were negatively correlated across participants (@sec-subject-coupling; r = −0.352, p < .01), indicating that larger effort-evoked total arousal co-occurred with larger *reductions* in task-evoked cognitive pupil response. This exploratory pattern parallels the @sec-manipulation-check dissociation and is consistent with a suppression or reallocation account, but it should be treated as hypothesis-generating rather than confirmatory.
+At the same time, subject-level changes in Cognitive AUC and Total AUC were negatively correlated across participants (@sec-subject-coupling; *r* = `r if (!is.null(delta_pupil_effort_cor)) sprintf("%.3f", delta_pupil_effort_cor$r) else "−0.361"`, *p* < .01, *n* = `r if (!is.null(delta_pupil_effort_cor)) delta_pupil_effort_cor$n else 80` subject × task Δ rows), indicating that larger effort-evoked total arousal co-occurred with larger *reductions* in task-evoked cognitive pupil response. Because the two metrics share epoch overlap and subtractive baselines tied to the pre-target interval, part of this association may be metric-induced rather than independent physiological reallocation. This exploratory pattern parallels the @sec-manipulation-check dissociation and is consistent with a suppression or reallocation account, but it should be treated as hypothesis-generating rather than confirmatory.
 
 ## Limitations
 
@@ -1204,6 +1196,8 @@ Several limitations should be considered when interpreting the findings. Pupil d
 ### Missingness and selection bias {#sec-missingness-limitation}
 
 Missingness was non-random: High-effort trials had significantly higher odds of usable pupil data than Low-effort trials (OR = 1.203, *p* < .001), and VDT trials had nearly twice the odds of usable data compared to ADT trials (OR = 1.967, *p* < .001; @sec-missingness). This means the analysis samples are not identical across conditions, introducing potential selection bias. The effort-direction effect (more data retained under High effort, likely due to reduced blinking during demanding grip) does not obviously favour the null hypothesis, but the modality difference (far more ADT data missing) limits the symmetry of cross-task comparisons. Missingness was not predicted by stimulus intensity (*p* = .565) or response time (*p* = .982), suggesting that the psychometric intensity structure of retained trials is not systematically distorted. However, these diagnostics do not rule out missing-not-at-random mechanisms in which the physiological state being indexed by the pupil itself contributes to track loss or blink-related dropout. The robustness checks across quality tiers (@sec-appendix-b) further indicate that primary-tier findings are not uniquely driven by the specific inclusion threshold, though systematic missingness remains an inherent limitation of older-adult pupillometry in this paradigm.
+
+The same selection process applies directly to the effort–pupil manipulation check (H2). High-effort trials were more likely to enter the primary-tier sample than Low-effort trials, so Total AUC and Cognitive AUC are compared across slightly different retained trial pools. Because retention favoured High effort, any bias would tend to inflate High-effort pupil metrics rather than suppress them; it therefore does not offer a straightforward alternative explanation for the Cognitive AUC decrease or the trial-level coupling null. Nevertheless, H2 effect sizes should be read with the same MNAR caveat as the GLMM: the manipulation check confirms effort-related pupil change in the trials that survived QC, not in an identical trial set across conditions.
 
 The PF-based behavioral backbone also has important design limitations. Individual Weibull fits were estimated with free guess and lapse parameters from a small number of stimulus levels per condition, which can leave slope estimates weakly constrained at the participant level when the effective stimulus grid is coarse. Cross-checking against raw Psignifit `.mat` outputs can still be useful for boundary- or lapse-driven behavior in individual participants.
 
