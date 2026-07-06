@@ -292,3 +292,64 @@ get_baseline_effort_row <- function(effects, metric) {
   }
   effects %>% dplyr::filter(.data$metric == metric) %>% dplyr::slice(1)
 }
+
+COGNITIVE_WINDOW_DURATION_SEC <- 1.2
+
+#' Mean uncorrected pupil diameter in the fixed cognitive window (4.85--6.05 s).
+summarize_raw_cognitive_pupil_effects <- function(dat) {
+  if (is.null(dat) || !nrow(dat)) {
+    return(NULL)
+  }
+  req <- c("quality_primary", "effort", "task", "sub", "cog_auc", "baseline_b0_mean")
+  if (!all(req %in% names(dat))) {
+    return(NULL)
+  }
+
+  md <- filter_quality_primary(dat) %>%
+    dplyr::mutate(
+      effort_factor = factor(.data$effort, levels = c("Low", "High")),
+      task_factor = factor(.data$task),
+      raw_cog_mean = .data$cog_auc / COGNITIVE_WINDOW_DURATION_SEC + .data$baseline_b0_mean
+    ) %>%
+    dplyr::filter(is.finite(.data$raw_cog_mean))
+
+  if (nrow(md) < 10L) {
+    return(NULL)
+  }
+
+  m <- lme4::lmer(
+    raw_cog_mean ~ effort_factor * task_factor + (1 | sub),
+    data = md,
+    REML = FALSE
+  )
+  fe <- broom.mixed::tidy(m, effects = "fixed")
+  row <- fe %>% dplyr::filter(.data$term == "effort_factorHigh")
+  if (nrow(row) != 1L) {
+    return(NULL)
+  }
+  row %>%
+    dplyr::transmute(
+      metric = "raw_cog_mean",
+      estimate = .data$estimate,
+      std.error = .data$std.error,
+      statistic = .data$statistic,
+      p.value = 2 * stats::pnorm(-abs(.data$statistic))
+    )
+}
+
+#' Proportion of "different" responses at the zero-offset stimulus level by task.
+summarize_zero_offset_fa_rates <- function(dat) {
+  if (is.null(dat) || !nrow(dat) || !all(c("task", "stimulus_intensity", "choice") %in% names(dat))) {
+    return(NULL)
+  }
+
+  dat %>%
+    dplyr::group_by(.data$task) %>%
+    dplyr::mutate(min_int = min(.data$stimulus_intensity, na.rm = TRUE)) %>%
+    dplyr::filter(abs(.data$stimulus_intensity - .data$min_int) < 1e-6) %>%
+    dplyr::summarise(
+      n = dplyr::n(),
+      p_different = mean(as.logical(.data$choice), na.rm = TRUE),
+      .groups = "drop"
+    )
+}

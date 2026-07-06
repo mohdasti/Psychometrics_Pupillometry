@@ -1,5 +1,5 @@
 ---
-title: "Dissociated Arousal: Physical Effort Attenuates Task-Evoked Pupil Responses but Preserves Psychometric Sensitivity in Aging"
+title: "Physical Effort Dissociates Sustained and Task-Evoked Pupil Responses in Older Adults: Bounded Trial-Level Coupling with Psychometric Sensitivity"
 bibliography: references.bib
 csl: apa-7th-edition.csl
 format:
@@ -284,6 +284,37 @@ baseline_effort_effects <- if (!is.null(merged_data)) {
 } else {
   NULL
 }
+raw_cognitive_pupil_effects <- if (!is.null(merged_data)) {
+  summarize_raw_cognitive_pupil_effects(merged_data)
+} else {
+  NULL
+}
+zero_offset_fa_rates <- if (!is.null(merged_data)) {
+  summarize_zero_offset_fa_rates(merged_data)
+} else {
+  NULL
+}
+
+adt_zero_fa_pct <- if (!is.null(zero_offset_fa_rates)) {
+  100 * zero_offset_fa_rates$p_different[zero_offset_fa_rates$task == "ADT"]
+} else {
+  NA_real_
+}
+adt_zero_fa_n <- if (!is.null(zero_offset_fa_rates)) {
+  zero_offset_fa_rates$n[zero_offset_fa_rates$task == "ADT"]
+} else {
+  NA_integer_
+}
+vdt_zero_fa_pct <- if (!is.null(zero_offset_fa_rates)) {
+  100 * zero_offset_fa_rates$p_different[zero_offset_fa_rates$task == "VDT"]
+} else {
+  NA_real_
+}
+vdt_zero_fa_n <- if (!is.null(zero_offset_fa_rates)) {
+  zero_offset_fa_rates$n[zero_offset_fa_rates$task == "VDT"]
+} else {
+  NA_integer_
+}
 ```
 
 \newpage 
@@ -410,7 +441,7 @@ First, does effort change the behavioral psychometric function? We compare high 
 
 Second, does high effort raise arousal as intended? Following the operationalization in Chapter 1, we distinguish two pupil-based arousal indices. H2a predicts greater sustained trial-period dilation (Total AUC, referenced to pre-squeeze B0) under high effort—a signature of overall effort-related arousal during the grip epoch. H2b predicts larger stimulus-locked task-evoked responses (Cognitive AUC, B1-corrected) under high effort—a signature of enhanced phasic event-related arousal. Pre-squeeze baseline diameter (B0) serves as a supplementary, cleaner index of resting pupil state and is analyzed alongside Total AUC to separate pre-trial tonic level from effort-induced dilation.
 
-Third, does momentary arousal modulate sensitivity? Modeling intensity continuously, we test the stimulus intensity × pupil-state interaction. The primary prediction is a negative interaction, shallower slopes on higher-arousal trials, consistent with supra-optimal arousal degrading the sensory evidence; a positive interaction, indicating enhancement at moderate arousal, is the alternative. Trait-level arousal is expected to show weaker or null effects, since it may be confounded with individual differences such as cognitive reserve (H3).
+Third, does momentary arousal modulate sensitivity? H3a predicts a negative stimulus intensity × pupil-state interaction—shallower psychometric slopes on higher-arousal trials, consistent with supra-optimal arousal degrading the sensory evidence. H3b treats a positive interaction as the alternative (enhancement at moderate arousal). H3c expects minimal effects of between-subject pupil trait on sensitivity, since trait differences may be confounded with individual factors such as cognitive reserve.
 
 Finally, do people who react more strongly to effort change more behaviorally? We test whether larger effort-evoked pupil changes (Δpupil) accompany larger changes in psychometric parameters (Δthreshold, Δslope), predicting that stronger physiological reactivity tracks larger behavioral shifts (H4).
 
@@ -534,7 +565,7 @@ $$
 
 where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (mean dilation, trial value − subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The primary coupling term $X_{ij} \times P^{(\text{state})}_{ij}$ ($\beta_5$) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity. The term $X_{ij} \times \text{Effort}_{ij}$ ($\beta_7$) tests whether effort modulates the slope of the psychometric function at the trial level, providing a direct within-subjects complement to the per-participant PF comparison for H1. The term $\beta_6 P^{(\text{trait})}_{j}$ tests whether between-subject differences in average arousal relate to sensitivity. The random effects $u_{0j}$ and $u_{1j}$ allow each participant to have their own baseline performance level and intensity sensitivity, respectively.
 
-For model fitting, stimulus intensity was standardized within task, and the pupil state and trait components were z-scored across retained trials before estimation, so fixed-effect coefficients are interpretable on a standardized latent scale. The probit link was chosen for consistency with signal-detection-style latent evidence formulations. Probit coefficients lie on a standard-normal latent scale (variance = 1), so conventional standardized effect-size benchmarks apply directly; logistic coefficients would require rescaling by $\pi/\sqrt{3}$ to map to the same scale [@chinn2000]. For response probabilities in the present range, probit and logit links would be expected to yield qualitatively similar conclusions. The reported model includes random intercepts and by-subject slopes for stimulus intensity. Exploratory refits that additionally allowed by-subject random slopes for effort and pupil state produced singular fits; those extended specifications were not used for primary inference (see Results).
+For model fitting, stimulus intensity was standardized within task, and the pupil state and trait components were z-scored across retained trials before estimation, so fixed-effect coefficients are interpretable on a standardized latent scale. The probit link was chosen for consistency with signal-detection-style latent evidence formulations. Probit coefficients lie on a standard-normal latent scale (variance = 1), so conventional standardized effect-size benchmarks apply directly; logistic coefficients would require rescaling by $\pi/\sqrt{3}$ to map to the same scale [@chinn2000]. For response probabilities in the present range, probit and logit links would be expected to yield qualitatively similar conclusions. The reported model includes random intercepts and by-subject slopes for stimulus intensity, which partially account for subject-level nesting in the effort main effect ($\beta_2$). Exploratory refits that additionally allowed by-subject random slopes for effort and pupil state produced singular fits; those extended specifications were not used for primary inference (see Results).
 
 ### Same–different task and probit link {#sec-probit-sdt}
 
@@ -544,7 +575,7 @@ $$
 P(\text{"different"} \mid \Delta) = \Phi\!\left(\frac{\Delta - k}{\sqrt{2}\,\sigma}\right) + \Phi\!\left(\frac{-\Delta - k}{\sqrt{2}\,\sigma}\right)
 $$ {#eq-diff-sdt}
 
-where $\Delta$ is the physical stimulus difference, $\sigma$ is internal-noise standard deviation, and $\Phi$ is the standard normal CDF. When the false-alarm rate (at $\Delta = 0$) is low—that is, $\Phi(-k/\sqrt{2}\sigma)$ is small—the second term in @eq-diff-sdt is negligible, and the expression reduces to $\Phi\!\left((\Delta - k)/(\sqrt{2}\sigma)\right)$, which is exactly a probit function of $\Delta$. The probit GLMM is therefore the correct functional form for this task structure in the practical operating range. At the trial level, fitting a full two-parameter SDT model (separate $d'$ and criterion per trial) is not feasible without multiple observations at each intensity per trial; the slope of the probit GLMM captures psychometric steepness (sensitivity) and the intercept captures response tendency (criterion), which is the maximum resolution the design allows.
+where $\Delta$ is the physical stimulus difference, $\sigma$ is internal-noise standard deviation, and $\Phi$ is the standard normal CDF. When the false-alarm rate (at $\Delta = 0$) is low—that is, $\Phi(-k/\sqrt{2}\sigma)$ is small—the second term in @eq-diff-sdt contributes negligibly, and the expression reduces to $\Phi\!\left((\Delta - k)/(\sqrt{2}\sigma)\right)$, which is exactly a probit function of $\Delta$. In the present behavioral sample, the proportion of "different" responses at the zero-offset condition (physically identical standard and probe) averaged `r if (!is.na(adt_zero_fa_pct)) sprintf("%.1f%%", adt_zero_fa_pct) else "—"` in ADT (*n* = `r if (!is.na(adt_zero_fa_n)) adt_zero_fa_n else "—"`) and `r if (!is.na(vdt_zero_fa_pct)) sprintf("%.1f%%", vdt_zero_fa_pct) else "—"` in VDT (*n* = `r if (!is.na(vdt_zero_fa_n)) vdt_zero_fa_n else "—"`), confirming that the second term is small in the operating range used here. The probit GLMM is therefore the appropriate functional form for this task structure. At the trial level, fitting a full two-parameter SDT model (separate $d'$ and criterion per trial) is not feasible without multiple observations at each intensity per trial; the slope of the probit GLMM captures psychometric steepness (sensitivity) and the intercept captures response tendency (criterion), which is the maximum resolution the design allows.
 
 The IO model, which predicts $P(\text{"different"}) = \Phi(d'/2 - c) + \Phi(-d'/2 - c)$, is non-monotone at very negative criteria but converges numerically with the DIFF probit form over the response-probability range in these data. Neither model provides stronger inferential leverage than the probit GLMM here. The probit specification is the appropriate choice.
 
@@ -902,6 +933,25 @@ cat(
 )
 ```
 
+```{r raw-cognitive-pupil, results = "asis"}
+#| echo: false
+
+if (!is.null(raw_cognitive_pupil_effects)) {
+  raw <- raw_cognitive_pupil_effects %>% dplyr::slice(1)
+  cat(
+    "**Raw cognitive-window pupil.** To test whether the Cognitive AUC reduction reflects baseline subtraction rather than lower absolute pupil level, ",
+    "mean uncorrected diameter in the fixed 4.85\u20136.05 s window was recomputed as Cognitive AUC divided by window duration plus the pre-target B1 baseline. ",
+    "High effort was associated with numerically larger raw values (High \u2212 Low: ",
+    format_beta_manuscript(raw$estimate),
+    ", *SE* = ", sprintf("%.3f", raw$std.error),
+    ", *t* = ", sprintf("%.2f", raw$statistic),
+    ", *p* ", format_p_manuscript(raw$p.value),
+    "). Raw pupil therefore did not fall under High effort; the negative Cognitive AUC effect is driven by the elevated B1 reference, consistent with the baseline-decomposition pattern above.\n\n",
+    sep = ""
+  )
+}
+```
+
 ### H2 summary and tonic–phasic dissociation
 
 H2a predicted greater sustained trial-period arousal (Total AUC) under High effort, and the data support that pattern—Total AUC rose significantly ($\beta = 0.857$, $p = .023$) while pre-squeeze B0 did not differ (*p* `r if (!is.null(b0_result)) format_p_manuscript(b0_result$p.value) else "= .705"`), so the increase built during the grip epoch rather than carrying over from the inter-trial interval. H2b predicted larger task-evoked responses (Cognitive AUC) under High effort; that prediction was not supported. Cognitive AUC fell ($\beta = -0.012$, $p < .001$). The metrics moved in opposite directions: Total AUC, referenced to stable B0, tracks sustained dilation during the squeeze, whereas Cognitive AUC subtracts a B1 baseline that itself rose with effort—partly compressing the corrected value. The waveforms in @fig-pupil-timeseries nonetheless suggest some genuine attenuation of the incremental response above the elevated pre-target level.
@@ -975,6 +1025,14 @@ if (!is.null(pupil_psychometric_effects)) {
 
   tbl <- tbl %>%
     dplyr::mutate(term = dplyr::recode(term, !!!term_labels)) %>%
+    dplyr::mutate(
+      estimate = round(estimate, 4),
+      `95% CI Lower` = round(`95% CI Lower`, 4),
+      `95% CI Upper` = round(`95% CI Upper`, 4),
+      std.error = round(std.error, 4),
+      statistic = round(statistic, 3),
+      p.value = signif(p.value, 3)
+    ) %>%
     dplyr::select(term, estimate, `95% CI Lower`, `95% CI Upper`, std.error, statistic, p.value)
 
   make_table(
@@ -1350,7 +1408,8 @@ Together these metrics help separate **genuine low dilation** (clean data, small
 
 For **motor-buffered** analyses, window definitions truncate the primary cognitive window 150 ms before the button press, recording the adjusted window end time on each trial, reducing motor-, movement-, and blink-related contamination; full AUC extraction requires re-processing trial-level files with RT and is left for future work. A **pre-response** definition instead aligns a decision window to the last 500 ms before the response (excluding the final 150 ms), targeting decision-related arousal with minimal motor overlap; that pipeline likewise awaits full re-processing. These definitions are documented for reproducibility and were **not** analyzed in the present chapter.
 
-## Appendix F: Behavioral Psychometric-Function Descriptives {#sec-appendix-f}
+
+## Appendix B: Behavioral Psychometric-Function Descriptives {#sec-appendix-f}
 
 Descriptive threshold and slope estimates by task and effort condition (PF-valid sample; @sec-analytic-samples). The effort contrasts that test H1 appear in @tbl-pf-effort-test in the main text.
 
@@ -1381,7 +1440,8 @@ if (!is.null(pf_params)) {
 }
 ```
 
-## Appendix G: Effort–Pupil Manipulation (Participant-Level) {#sec-appendix-g}
+
+## Appendix C: Effort–Pupil Manipulation (Participant-Level) {#sec-appendix-g}
 
 @fig-effort-pupil shows Total and Cognitive AUC under Low and High effort for each participant, with violin distributions, boxplots, and within-subject connecting lines. It complements the group-level dissociation in @fig-effort-dissociation (@sec-manipulation-check).
 
@@ -1410,7 +1470,8 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 }
 ```
 
-## Appendix C: Missingness Diagnostic — Full Model and Figure {#sec-appendix-c}
+
+## Appendix D: Missingness Diagnostic — Full Model and Figure {#sec-appendix-c}
 
 ```{r appendix-c-table5}
 #| label: tbl-appendix-missingness
@@ -1459,7 +1520,8 @@ if (!is.null(fig_miss) && file.exists(fig_miss)) {
 }
 ```
 
-## Appendix B: Trial-Level Coupling — Robustness and Supplementary Figures {#sec-appendix-b}
+
+## Appendix E: Trial-Level Coupling — Robustness and Supplementary Figures {#sec-appendix-b}
 
 Quality-tier interaction estimates and the interpretation that the effect is not robust at the primary tier are summarized in @sec-pupil-quality-tier. The subsections below provide AIC comparison, TOST detail, the slow-RT sensitivity refit, and supplementary coupling figures.
 
@@ -1568,7 +1630,7 @@ Model-predicted psychometric functions at low (−1 SD) and high (+1 SD) within-
 ```{r appendix-b-fig-b1}
 #| label: fig-appendix-b1-predicted
 #| fig-cap: >
-#|   Model predictions from the primary GLMM (Appendix B): predicted probability of a "different"
+#|   Model predictions from the primary GLMM (Appendix E): predicted probability of a "different"
 #|   response as a function of scaled stimulus intensity, for within-subject pupil cognitive state
 #|   held at $-1$, $0$, and $+1$ SD (Low / Medium / High pupil; trait fixed at mean).
 #|   Caution: Visual separation between curves reflects model extrapolation across the full intensity range.
@@ -1600,7 +1662,7 @@ if (length(found) >= 1L) {
 ```{r appendix-b-fig-b2-tertiles}
 #| label: fig-appendix-b2-tertiles
 #| fig-cap: >
-#|   Exploratory psychometric functions by pupil-state tertile (Appendix B). Binned mean
+#|   Exploratory psychometric functions by pupil-state tertile (Appendix E). Binned mean
 #|   proportion "different" as a function of stimulus intensity, faceted by task and effort.
 #|   Descriptive only; the primary GLMM interaction was non-significant ($\beta = +0.035$, $p = .245$).
 #| fig-width: 12
@@ -1620,7 +1682,8 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
 }
 ```
 
-## Appendix D: Subject-Level Correlation Matrix {#sec-appendix-d}
+
+## Appendix F: Subject-Level Correlation Matrix {#sec-appendix-d}
 
 ### ΔPupil–ΔPF correlation table
 
@@ -1678,7 +1741,7 @@ if (!is.null(pf_pupil_coupling_sensitivity)) {
 ```{r appendix-d-zscatter}
 #| label: fig-appendix-coupling-zscatter
 #| fig-cap: >
-#|   Z-scored subject-level coupling (Appendix D). Δpupil and ΔPF parameters
+#|   Z-scored subject-level coupling (Appendix F). Δpupil and ΔPF parameters
 #|   standardized within modality; ADT and VDT overlaid on shared axes. OLS
 #|   slope equals Pearson *r* on z-scored data.
 #| fig-width: 10
