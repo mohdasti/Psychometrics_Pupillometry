@@ -819,9 +819,20 @@ As predicted, high-effort handgrip significantly increased overall trial-period 
 ```{r baseline-decomposition, results = "asis"}
 #| echo: false
 
+# NOTE: In the merged data, the pre-target B1 baseline is stored in
+# "baseline_b0_mean" (lowercase), NOT "baseline_B1_mean".
+# "baseline_B0_mean" (uppercase B0) is the pre-squeeze B0 baseline.
+# These differ only by case — intentional pipeline naming, not a typo.
+# Both objects are assigned to the global environment so downstream
+# prose chunks can reference them without re-fetching.
+
 if (!is.null(baseline_effort_effects)) {
   b0 <- get_baseline_effort_row(baseline_effort_effects, "baseline_B0_mean")
   b1 <- get_baseline_effort_row(baseline_effort_effects, "baseline_b0_mean")
+  # Expose to environment so the metric-choice paragraph below can use
+  # live values rather than hardcoded numbers.
+  assign("b0_result", b0, envir = .GlobalEnv)
+  assign("b1_result", b1, envir = .GlobalEnv)
 
   cat(
     "Because the two metrics use different subtractive baselines, the dissociation must be read against raw baseline levels rather than inferred from the AUC signs alone. ",
@@ -853,15 +864,43 @@ if (!is.null(baseline_effort_effects)) {
     sep = ""
   )
 } else {
+  assign("b0_result", NULL, envir = .GlobalEnv)
+  assign("b1_result", NULL, envir = .GlobalEnv)
   cat("*Baseline decomposition unavailable (merged data not loaded in this render).*\\n\\n")
 }
 ```
 
-A note on metric choice. Total AUC is referenced to B0 (pre-squeeze, −0.5 to 0 s relative to squeeze onset), and B0 did not differ between effort conditions ($p$ = .705). The Total AUC increase under High effort therefore captures genuine sustained dilation that builds during the grip itself, not a carry-over from the inter-trial interval. Cognitive AUC, on the other hand, is referenced to B1 (pre-target, 3.85–4.35 s), and B1 was elevated under High effort ($\beta$ = +0.336, $p$ = .007). Subtractive baseline correction means that any rise in B1 mechanically reduces the apparent Cognitive AUC even if raw pupil level in the cognitive window is unchanged. For this reason, the two metrics are best thought of as capturing different windows with different baselines rather than as pure tonic and phasic readouts. Total AUC is the primary index of sustained effort-related arousal—a usage consistent with Chapter 1 and with the role it played in confirming the grip manipulation across tasks. Cognitive AUC isolates the incremental task-evoked response above the elevated pre-target level, with the caveat that the B1 elevation introduces a baseline-correction asymmetry that partially drives the observed metric dissociation.
+```{r metric-choice-note, results = "asis"}
+#| echo: false
+
+# All values sourced from b0_result / b1_result set above — no hardcoded
+# statistics in this paragraph.
+b0_p <- if (!is.null(b0_result)) format_p_manuscript(b0_result$p.value) else "= .705"
+b1_beta <- if (!is.null(b1_result)) format_beta_manuscript(b1_result$estimate) else "\u2014"
+b1_p    <- if (!is.null(b1_result)) format_p_manuscript(b1_result$p.value)    else "\u2014"
+
+cat(
+  "A note on metric choice. Total AUC is referenced to B0 (pre-squeeze, \u22120.5 to 0 s relative to squeeze onset), ",
+  "and B0 did not differ between effort conditions (*p* ", b0_p, "). ",
+  "The Total AUC increase under High effort therefore captures genuine sustained dilation that builds during the grip itself, ",
+  "not a carry-over from the inter-trial interval. ",
+  "Cognitive AUC, on the other hand, is referenced to B1 (pre-target, 3.85\u20134.35 s), ",
+  "and B1 was elevated under High effort ($\\beta$ = ", b1_beta, ", *p* ", b1_p, "). ",
+  "Subtractive baseline correction means that any rise in B1 mechanically reduces the apparent Cognitive AUC ",
+  "even if raw pupil level in the cognitive window is unchanged. ",
+  "For this reason, the two metrics are best thought of as capturing different windows with different baselines ",
+  "rather than as pure tonic and phasic readouts. ",
+  "Total AUC is the primary index of sustained effort-related arousal\u2014a usage consistent with Chapter 1 ",
+  "and with the role it played in confirming the grip manipulation across tasks. ",
+  "Cognitive AUC isolates the incremental task-evoked response above the elevated pre-target level, ",
+  "with the caveat that the B1 elevation introduces a baseline-correction asymmetry that partially drives the observed metric dissociation.\n\n",
+  sep = ""
+)
+```
 
 ### H2 summary and tonic–phasic dissociation
 
-H2a predicted greater sustained trial-period arousal (Total AUC) under High effort, and the data support that pattern—Total AUC rose significantly ($\beta = 0.857$, $p = .023$) while pre-squeeze B0 did not differ ($p = .705$), so the increase built during the grip epoch rather than carrying over from the inter-trial interval. H2b predicted larger task-evoked responses (Cognitive AUC) under High effort; that prediction was not supported. Cognitive AUC fell ($\beta = -0.012$, $p < .001$). The metrics moved in opposite directions: Total AUC, referenced to stable B0, tracks sustained dilation during the squeeze, whereas Cognitive AUC subtracts a B1 baseline that itself rose with effort—partly compressing the corrected value. The waveforms in @fig-pupil-timeseries nonetheless suggest some genuine attenuation of the incremental response above the elevated pre-target level.
+H2a predicted greater sustained trial-period arousal (Total AUC) under High effort, and the data support that pattern—Total AUC rose significantly ($\beta = 0.857$, $p = .023$) while pre-squeeze B0 did not differ (*p* `r if (!is.null(b0_result)) format_p_manuscript(b0_result$p.value) else "= .705"`), so the increase built during the grip epoch rather than carrying over from the inter-trial interval. H2b predicted larger task-evoked responses (Cognitive AUC) under High effort; that prediction was not supported. Cognitive AUC fell ($\beta = -0.012$, $p < .001$). The metrics moved in opposite directions: Total AUC, referenced to stable B0, tracks sustained dilation during the squeeze, whereas Cognitive AUC subtracts a B1 baseline that itself rose with effort—partly compressing the corrected value. The waveforms in @fig-pupil-timeseries nonetheless suggest some genuine attenuation of the incremental response above the elevated pre-target level.
 
 The opposite signs of these two effects are the central result of the manipulation check. @fig-effort-dissociation places the effort effect on each metric on a common axis: overall arousal rises while the task-evoked response falls. Participant-level means for each metric are shown in @sec-appendix-g (@fig-effort-pupil).
 

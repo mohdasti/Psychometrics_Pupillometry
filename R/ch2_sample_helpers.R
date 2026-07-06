@@ -244,6 +244,10 @@ summarize_baseline_effort_effects <- function(dat) {
     row %>% dplyr::mutate(metric = y, .before = 1L)
   }
 
+  # Column naming convention (make_quick_share_v7.R):
+  #   "baseline_B0_mean"  (uppercase B0) = pre-squeeze B0 baseline (Total AUC reference)
+  #   "baseline_b0_mean"  (lowercase b0) = pre-target B1 baseline (Cognitive AUC reference)
+  # These differ only by case. There is no "baseline_B1_mean" column in the data.
   out <- dplyr::bind_rows(
     fit_effort("baseline_B0_mean"),
     fit_effort("baseline_b0_mean"),
