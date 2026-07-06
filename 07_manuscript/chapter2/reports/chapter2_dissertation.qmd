@@ -1277,7 +1277,15 @@ The work presented here establishes the empirical and methodological foundation 
 
 ## Appendix A: Gap-Aware QC Metric Specifications {#sec-appendix-a}
 
-In addition to percentage-validity thresholds, gap-aware quality control metrics identify trials with problematic missing-data patterns. Percentage-validity thresholds are necessary but not sufficient: a trial can have acceptable overall validity (e.g., 60%) but contain large contiguous gaps that distort AUC estimates. Following @kret2019preprocessing, each trial carried **`cog_auc_max_gap_ms`** (longest contiguous missing segment in the cognitive window in ms; gaps over 250 ms should not be interpolated and can distort AUC even when percent-valid looks acceptable), **`cog_window_duration`** (realized cognitive-window duration in seconds, which should stay near 1.20 s for the fixed window), **`cog_auc_n_valid`** (count of non-NA samples; ~300 at 250 Hz over 1.20 s), **`cog_auc_n_segments`** (number of contiguous valid segments, where fragmentation flags unreliable AUC), and **`cog_auc_prop_valid`** (valid samples divided by expected count at 250 Hz). Together these metrics help separate **genuine low dilation** (clean data, small gaps) from **artifactual lows** (gaps or fragmentation), so acceptable physiology is retained and problematic trials can be excluded.
+In addition to percentage-validity thresholds, gap-aware quality control metrics identify trials with problematic missing-data patterns. Percentage-validity thresholds are necessary but not sufficient: a trial can have acceptable overall validity (e.g., 60%) but contain large contiguous gaps that distort AUC estimates. Following @kret2019preprocessing, each trial carried five gap-aware summaries for the cognitive window (4.85–6.05 s):
+
+- **Maximum contiguous gap (ms).** Longest missing segment in the cognitive window. Gaps over 250 ms should not be interpolated and can distort AUC even when percent-valid looks acceptable.
+- **Realized window duration (s).** Actual span of the cognitive window, which should stay near 1.20 s for the fixed window definition.
+- **Count of valid samples.** Number of non-missing samples (~300 at 250 Hz over 1.20 s).
+- **Number of valid segments.** Count of contiguous valid runs; fragmentation flags unreliable AUC.
+- **Proportion valid.** Valid samples divided by the expected count at 250 Hz.
+
+Together these metrics help separate **genuine low dilation** (clean data, small gaps) from **artifactual lows** (gaps or fragmentation), so acceptable physiology is retained and problematic trials can be excluded. Column names in the merged trial file match the preprocessing pipeline documentation for reproducibility.
 
 ## Appendix B: Robustness Checks — Model Comparison and Supplementary Tables {#sec-appendix-b}
 
@@ -1308,7 +1316,7 @@ if (file.exists(mod_w) && file.exists(mod_wo)) {
       digits = 2
     )
 } else {
-  cat("*AIC comparison: model RDS files not found.*")
+  cat("*AIC comparison unavailable (saved model objects not found).*")
 }
 ```
 
@@ -1373,7 +1381,7 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
   if (!is.null(fig_path_abs2) && file.exists(fig_path_abs2)) {
     knitr::include_graphics(fig_path("psychometric_by_pupil_state.png"))
   } else {
-    cat("*Figure B2 is missing: run `04_pupil_psychometric_coupling/06_pupil_psychometric_coupling.R`.*")
+    cat("*Figure B2 is missing; regenerate supplementary psychometric-by-pupil-state figures from the coupling analysis pipeline.*")
   }
 }
 ```
@@ -1406,7 +1414,7 @@ found <- cand[file.exists(cand)]
 if (length(found) >= 1L) {
   knitr::include_graphics(found[1])
 } else {
-  cat("*Figure B1 is missing: run `04_pupil_psychometric_coupling/06_pupil_psychometric_coupling.R` (or place `pupil_psychometric_interaction.png` in `06_visualization/output/figures/`).*")
+  cat("*Figure B1 is missing; regenerate the predicted psychometric figure from the coupling analysis pipeline.*")
 }
 ```
 
@@ -1464,7 +1472,7 @@ if (!is.null(fig_path_abs) && file.exists(fig_path_abs)) {
   if (!is.null(fig_path_abs2) && file.exists(fig_path_abs2)) {
   knitr::include_graphics(fig_path("effort_manipulation_cog_auc.png"))
 } else {
-    cat("*Figure: fig2_effort_pupil_manipulation.png not yet generated.*")
+    cat("*Figure missing; regenerate the participant-level effort–pupil manipulation figure.*")
   }
 }
 ```
@@ -1514,7 +1522,7 @@ fig_miss <- fig_path("fig4_missingness_diagnostic.png", return_absolute = TRUE)
 if (!is.null(fig_miss) && file.exists(fig_miss)) {
   knitr::include_graphics(fig_path("fig4_missingness_diagnostic.png"))
 } else {
-  cat("*Figure: fig4_missingness_diagnostic.png not found. Run 06_visualization/08_generate_figures.R.*")
+  cat("*Figure missing; regenerate manuscript figures from the visualization pipeline.*")
 }
 ```
 
@@ -1545,7 +1553,11 @@ if (!is.null(pf_pupil_coupling_sensitivity)) {
   pf_pupil_coupling_sensitivity %>%
     dplyr::mutate(
       Task = as.character(.data$task),
-      Pair = .data$row_label,
+      Pair = dplyr::recode(
+        .data$row_label,
+        "Cog AUC \u00d7 slope" = "Cognitive AUC \u00d7 slope",
+        "Cog AUC \u00d7 threshold" = "Cognitive AUC \u00d7 threshold"
+      ),
       `r (Pearson)` = sprintf("%+.3f", .data$r_pearson),
       `95% CI` = sprintf("[%+.3f, %+.3f]", .data$ci_lower, .data$ci_upper),
       `p` = vapply(.data$p_pearson, format_coupling_p, character(1L)),
@@ -1577,7 +1589,7 @@ fig_z <- fig_path("fig_subject_coupling_zscatter.png", return_absolute = TRUE)
 if (!is.null(fig_z) && file.exists(fig_z)) {
   knitr::include_graphics(fig_path("fig_subject_coupling_zscatter.png"))
 } else {
-  cat("*Figure: fig_subject_coupling_zscatter.png not found. Run subject-level coupling script.*")
+  cat("*Figure missing; regenerate subject-level coupling scatter plots from the coupling analysis pipeline.*")
 }
 ```
 
@@ -1592,13 +1604,13 @@ fig_mat <- fig_path("pf_pupil_coupling_matrix.png", return_absolute = TRUE)
 if (!is.null(fig_mat) && file.exists(fig_mat)) {
   knitr::include_graphics(fig_path("pf_pupil_coupling_matrix.png"))
 } else {
-  cat("*Figure: pf_pupil_coupling_matrix.png not found. Run subject-level coupling script.*")
+  cat("*Figure missing; regenerate the subject-level correlation matrix from the coupling analysis pipeline.*")
 }
 ```
 
 ## Appendix E: Pre-Specified Future Sensitivity Windows {#sec-appendix-e}
 
-For **motor-buffered** analyses, window definitions truncate the primary cognitive window 150 ms before the button press (endpoint stored as `cog_win_primary_end_motorbuffered`), reducing motor-, movement-, and blink-related contamination; full AUC extraction requires re-processing trial-level files with RT and is left for future work. A **pre-response** definition instead aligns a decision window to the last 500 ms before the response (excluding the final 150 ms), targeting decision-related arousal with minimal motor overlap; that pipeline likewise awaits full re-processing. These definitions are documented for reproducibility and were **not** analyzed in the present chapter.
+For **motor-buffered** analyses, window definitions truncate the primary cognitive window 150 ms before the button press, recording the adjusted window end time on each trial, reducing motor-, movement-, and blink-related contamination; full AUC extraction requires re-processing trial-level files with RT and is left for future work. A **pre-response** definition instead aligns a decision window to the last 500 ms before the response (excluding the final 150 ms), targeting decision-related arousal with minimal motor overlap; that pipeline likewise awaits full re-processing. These definitions are documented for reproducibility and were **not** analyzed in the present chapter.
 
 ## Appendix F: Behavioral Psychometric-Function Descriptives {#sec-appendix-f}
 
