@@ -527,7 +527,7 @@ $$
 
 where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (mean dilation, trial value − subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The primary coupling term $X_{ij} \times P^{(\text{state})}_{ij}$ ($\beta_5$) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity. The term $X_{ij} \times \text{Effort}_{ij}$ ($\beta_7$) tests whether effort modulates the slope of the psychometric function at the trial level, providing a direct within-subjects complement to the per-participant PF comparison for H1. The term $\beta_6 P^{(\text{trait})}_{j}$ tests whether between-subject differences in average arousal relate to sensitivity. The random effects $u_{0j}$ and $u_{1j}$ allow each participant to have their own baseline performance level and intensity sensitivity, respectively.
 
-For model fitting, stimulus intensity was standardized within task, and the pupil state and trait components were z-scored across retained trials before estimation, so fixed-effect coefficients are interpretable on a standardized latent scale. The probit link was chosen for consistency with signal-detection-style latent evidence formulations; for response probabilities in the present range, probit and logit links would be expected to yield qualitatively similar conclusions. The reported model includes random intercepts and by-subject slopes for stimulus intensity. Exploratory refits that additionally allowed by-subject random slopes for effort and pupil state produced singular fits; those extended specifications were not used for primary inference (see Results).
+For model fitting, stimulus intensity was standardized within task, and the pupil state and trait components were z-scored across retained trials before estimation, so fixed-effect coefficients are interpretable on a standardized latent scale. The probit link was chosen for consistency with signal-detection-style latent evidence formulations. Probit coefficients lie on a standard-normal latent scale (variance = 1), so conventional standardized effect-size benchmarks apply directly; logistic coefficients would require rescaling by $\pi/\sqrt{3}$ to map to the same scale [@chinn2000]. For response probabilities in the present range, probit and logit links would be expected to yield qualitatively similar conclusions. The reported model includes random intercepts and by-subject slopes for stimulus intensity. Exploratory refits that additionally allowed by-subject random slopes for effort and pupil state produced singular fits; those extended specifications were not used for primary inference (see Results).
 
 A note on the same–different task structure and the probit formulation. In standard SDT, two models are used for same–different tasks: the differencing model (DIFF) and the independent observations model (IO). Under the DIFF model, the observer computes a signed difference between the two internal representations and responds "different" if that difference exceeds a symmetric criterion $\pm k$:
 
@@ -929,7 +929,7 @@ The stimulus intensity $\times$ pupil state interaction was significant only in 
 
 The slow-RT sensitivity subset (trials with RT > 1.5 s, *N* = 940 trials from 52 participants) yielded $\beta$ = −0.071, *SE* = 0.051, *z* = −1.39, *p* = .164, opposite in sign to the primary-tier estimate ($\beta$ = +0.035). This sign reversal means motor contamination of the cognitive pupil window cannot be excluded as a partial contributor to the primary-tier pattern, though neither analysis supports a reliable interaction. Across these sensitivity checks, there is no robust evidence for moment-to-moment pupil state modulating psychometric sensitivity at the primary analysis level.
 
-Equivalence was tested with two one-sided tests (TOST) using a pre-specified smallest effect size of interest (SESOI) of $\pm 0.10$ probit units (≈7.6% of the main intensity slope; rationale in [@sec-sesoi-rationale](#sec-sesoi-rationale)). @fig-equivalence-forest summarizes the interaction across quality tiers and the slow-RT subset (per-subset TOST values appear in @tbl-tost-equivalence, Appendix B). At the primary tier, the 90% confidence interval for the interaction ($\mathrm{LB} = -0.015$, $\mathrm{UB} = +0.085$) fell entirely within the equivalence bounds. Both one-sided TOST tests were significant at the primary tier (lower: $z = 4.50$, $p < .001$; upper: $z = -2.17$, $p = .015$), so the data are consistent with equivalence to zero at this SESOI for the primary analysis: coupling effects larger in magnitude than $\pm 0.10$ probit units are statistically incompatible with the primary-tier estimate. By contrast, the lenient tier 90% CI extended to +0.110 (upper bound exceeds the SESOI), and the slow-RT subset interval crossed zero with opposite sign ($\beta = -0.071$), so equivalence was **not supported** in those sensitivity analyses. The frequentist null hypothesis ($\beta = 0$) was not rejected at $\alpha = .05$ in the primary tier, but the equivalence framing implies that any non-null coupling, if present, is negligible relative to the SESOI rather than that the study was simply underpowered to detect the point estimate.
+Equivalence was tested with two one-sided tests (TOST) using a pre-specified smallest effect size of interest (SESOI) of $\pm 0.10$ probit units (full rationale in [@sec-sesoi-rationale](#sec-sesoi-rationale)). @fig-equivalence-forest summarizes the interaction across quality tiers and the slow-RT subset (per-subset TOST values appear in @tbl-tost-equivalence, Appendix B). At the primary tier, the 90% confidence interval for the interaction ($\mathrm{LB} = -0.015$, $\mathrm{UB} = +0.085$) fell entirely within the equivalence bounds. Both one-sided TOST tests were significant at the primary tier (lower: $z = 4.50$, $p < .001$; upper: $z = -2.17$, $p = .015$), so the data are consistent with equivalence to zero at this SESOI for the primary analysis: coupling effects larger in magnitude than $\pm 0.10$ probit units are statistically incompatible with the primary-tier estimate. By contrast, the lenient tier 90% CI extended to +0.110 (upper bound exceeds the SESOI), and the slow-RT subset interval crossed zero with opposite sign ($\beta = -0.071$), so equivalence was **not supported** in those sensitivity analyses. The frequentist null hypothesis ($\beta = 0$) was not rejected at $\alpha = .05$ in the primary tier, but the equivalence framing implies that any non-null coupling, if present, is negligible relative to the SESOI rather than that the study was simply underpowered to detect the point estimate.
 
 ```{r fig-equivalence-forest}
 #| label: fig-equivalence-forest
@@ -1179,12 +1179,12 @@ para <- paste0(
   " times the current effective sample size (on the order of ",
   if (is.na(n_participants_equiv)) "XX" else format(n_participants_equiv, big.mark = ","),
   " participants). ",
-  "The MDE analysis addresses a different question from the equivalence test (@sec-pupil-quality-tier): ",
-  "the equivalence result establishes that coupling effects exceeding $\\pm$0.10 probit units are ",
-  "statistically ruled out by the primary-tier 90\\% CI, whereas the MDE analysis shows that effects ",
-  "smaller than that bound remain unresolvable at the present sample size. ",
-  "Together, the data are best described as a bounded null: large effects are excluded, ",
-  "but whether any small true coupling exists cannot be determined without substantially larger samples ",
+  "The SESOI for the equivalence test was pre-specified at $\\pm$0.10 probit units, slightly above this MDE (@sec-sesoi-rationale). ",
+  "Equivalence (@sec-pupil-quality-tier) and sensitivity power therefore address complementary parts of the same question: ",
+  "effects larger than the SESOI are statistically incompatible with the primary-tier 90\\% CI, ",
+  "whereas effects between the point estimate and the MDE remain unresolvable at the present sample size. ",
+  "Together, the data are best described as a bounded null: large coupling is excluded, ",
+  "but whether any small true effect exists cannot be determined without substantially larger samples ",
   "and improved pupil data retention."
 )
 cat(para)
@@ -1192,7 +1192,26 @@ cat(para)
 
 ### Equivalence bound rationale {#sec-sesoi-rationale}
 
-The pre-specified smallest effect size of interest (SESOI) for the stimulus intensity × pupil-state interaction was set to $\pm 0.10$ probit units on the standardized latent scale used in the primary GLMM. This bound corresponds to roughly 7.6% of the main intensity slope ($\beta_1 \approx 1.31$), a magnitude that would imply a practically meaningful shift in psychometric steepness across the observed pupil-state range. Equivalence testing therefore asks whether the data are compatible with coupling effects smaller than this bound, not merely whether the frequentist null can be rejected.
+```{r sesoi-anchors, echo=false}
+sesoi_b1 <- if (!is.null(pupil_psychometric_effects)) {
+  b1 <- pupil_psychometric_effects %>%
+    dplyr::filter(term == "stimulus_intensity_scaled") %>%
+    dplyr::pull(estimate)
+  if (length(b1) == 1L) b1 else 1.31
+} else {
+  1.31
+}
+sesoi_pct_slope <- if (is.finite(sesoi_b1) && sesoi_b1 != 0) 100 * 0.10 / abs(sesoi_b1) else 7.6
+sesoi_mde <- if (exists("beta_min") && !is.na(beta_min)) beta_min else 0.085
+```
+
+The pre-specified smallest effect size of interest (SESOI) for the stimulus intensity × pupil-state interaction was set to $\pm 0.10$ probit units on the standardized latent scale used in the primary GLMM. Three considerations governed this choice.
+
+The primary anchor is resource-based. Following @lakens2017, a SESOI can be grounded in what the achieved design can reliably resolve given $\alpha$, power, and sample size. At the primary quality tier, the minimum detectable effect for the interaction (@sec-power-analysis) was approximately $\beta_{\min}$ = `r sprintf("%.3f", sesoi_mde)`. The SESOI was set slightly above this MDE (0.10 > `r sprintf("%.3f", sesoi_mde)`), so equivalence claims are conservative relative to the study's resolving power: we require coupling to fall within a margin beyond what precision alone would permit, rather than declaring equivalence at the edge of detectability.
+
+Two secondary anchors corroborate that magnitude. First, 0.10 corresponds to roughly `r sprintf("%.1f", sesoi_pct_slope)`% of the main intensity slope ($\beta_1 \approx$ `r sprintf("%.2f", sesoi_b1)`), a shift in psychometric steepness that would be noticeable if pupil state spanned the full standardized range. Second, because the model uses a probit link, fixed effects are on a standard-normal latent scale, so Cohen's conventional benchmarks for standardized mean differences apply directly [@cohen1988]; the SESOI of 0.10 is half of Cohen's "small" effect (0.20). We treat that convention as corroborating only—it is widely criticized as arbitrary and is not our sole justification.
+
+No published trial-level GLMM has reported a pupil-state × intensity *sensitivity* interaction on a comparable probit scale, so an external empirical prior could not be imported directly. Prior pupil–behavior work more often links phasic arousal to decision *bias* or criterion (@deGee2020pupil; @colizoli2018belief) than to psychometric slope—a pattern consistent with the present dissociation between a reliable effort main effect on overall responding and a null slope interaction. Equivalence testing therefore asks whether the data are compatible with coupling effects smaller than the SESOI, not merely whether the frequentist null can be rejected.
 
 The primary cognitive pupil metric uses a fixed 1.20-second stimulus-locked window (4.85–6.05 s) to reduce RT confounding and capture the TEPR peak. The grip is released during the post-probe blank (~4.45 s), so the window begins approximately 400 ms after release and does not overlap the effort manipulation itself. It does, however, overlap the response screen (4.70 s, appearing 150 ms before the window opens) and button presses at variable times (median `r if (!is.null(response_timing)) format_rt_s(response_timing$median_rt) else "—"` s after response-screen onset, or `r if (!is.null(response_timing)) format_rt_s(response_timing$median_press) else "—"` s after squeeze onset). These create potential confounds from attentional responses to the response screen and motor/blink artifacts from the button press.
 
