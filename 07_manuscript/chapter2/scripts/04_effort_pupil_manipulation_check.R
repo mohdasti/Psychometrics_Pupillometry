@@ -208,6 +208,42 @@ if ("total_auc" %in% names(dat_analysis) && "cog_auc" %in% names(dat_analysis)) 
   }
 }
 
+# ============================================================================
+# MODEL 3–4: Baseline diameter checks (B0 and B1)
+# ============================================================================
+
+cat("\n=== Model 3: B0 pre-squeeze baseline ~ Effort + Task ===\n")
+
+if ("baseline_B0_mean" %in% names(dat_analysis)) {
+  mod_b0 <- lmer(
+    baseline_B0_mean ~ effort_factor * task_factor + (1 | sub),
+    data = dat_analysis,
+    REML = FALSE
+  )
+  fe_b0 <- broom.mixed::tidy(mod_b0, effects = "fixed")
+  print(fe_b0)
+  saveRDS(mod_b0, file.path(models_dir, "mod_effort_b0_baseline.rds"))
+  write_csv(fe_b0, file.path(tables_dir, "effort_b0_baseline_effects.csv"))
+} else {
+  warning("baseline_B0_mean not found, skipping B0 model")
+}
+
+cat("\n=== Model 4: B1 pre-target baseline ~ Effort + Task ===\n")
+
+if ("baseline_b0_mean" %in% names(dat_analysis)) {
+  mod_b1 <- lmer(
+    baseline_b0_mean ~ effort_factor * task_factor + (1 | sub),
+    data = dat_analysis,
+    REML = FALSE
+  )
+  fe_b1 <- broom.mixed::tidy(mod_b1, effects = "fixed")
+  print(fe_b1)
+  saveRDS(mod_b1, file.path(models_dir, "mod_effort_b1_baseline.rds"))
+  write_csv(fe_b1, file.path(tables_dir, "effort_b1_baseline_effects.csv"))
+} else {
+  warning("baseline_b0_mean not found, skipping B1 model")
+}
+
 cat("\n=== Effort-pupil manipulation check complete ===\n")
 
 

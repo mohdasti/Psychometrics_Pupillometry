@@ -205,3 +205,86 @@ summarize_participant_flow <- function(
 format_flow_n <- function(x) {
   format(as.integer(x), big.mark = ",", scientific = FALSE, trim = TRUE)
 }
+
+#' Effort effects on pre-squeeze (B0), pre-target (B1), Total AUC, and Cognitive AUC.
+summarize_baseline_effort_effects <- function(dat) {
+  if (is.null(dat) || !nrow(dat)) {
+    return(NULL)
+  }
+
+  req <- c("quality_primary", "effort", "task", "sub")
+  if (!all(req %in% names(dat))) {
+    return(NULL)
+  }
+
+  md <- filter_quality_primary(dat) %>%
+    dplyr::mutate(
+      effort_factor = factor(.data$effort, levels = c("Low", "High")),
+      task_factor = factor(.data$task)
+    )
+
+  fit_effort <- function(y) {
+    if (!y %in% names(md)) {
+      return(NULL)
+    }
+    d <- md %>% dplyr::filter(is.finite(.data[[y]]))
+    if (nrow(d) < 10L) {
+      return(NULL)
+    }
+    m <- lme4::lmer(
+      stats::as.formula(paste(y, "~ effort_factor * task_factor + (1|sub)")),
+      data = d,
+      REML = FALSE
+    )
+    fe <- broom.mixed::tidy(m, effects = "fixed")
+    row <- fe %>% dplyr::filter(.data$term == "effort_factorHigh")
+    if (nrow(row) != 1L) {
+      return(NULL)
+    }
+    row %>% dplyr::mutate(metric = y, .before = 1L)
+  }
+
+  out <- dplyr::bind_rows(
+    fit_effort("baseline_B0_mean"),
+    fit_effort("baseline_b0_mean"),
+    fit_effort("total_auc"),
+    fit_effort("cog_auc")
+  )
+
+  if (is.null(out) || nrow(out) == 0L) {
+    return(NULL)
+  }
+
+  out %>%
+    dplyr::transmute(
+      metric = .data$metric,
+      estimate = .data$estimate,
+      std.error = .data$std.error,
+      statistic = .data$statistic,
+      p.value = 2 * stats::pnorm(-abs(.data$statistic))
+    )
+}
+
+format_p_manuscript <- function(p) {
+  if (length(p) == 0L || is.na(p)) {
+    return("\u2014")
+  }
+  if (p < 0.001) {
+    return("< .001")
+  }
+  sprintf("= %.3f", p)
+}
+
+format_beta_manuscript <- function(x, digits = 3L) {
+  if (length(x) == 0L || is.na(x)) {
+    return("\u2014")
+  }
+  sprintf("%+.3f", x)
+}
+
+get_baseline_effort_row <- function(effects, metric) {
+  if (is.null(effects) || !metric %in% effects$metric) {
+    return(NULL)
+  }
+  effects %>% dplyr::filter(.data$metric == metric) %>% dplyr::slice(1)
+}

@@ -279,6 +279,11 @@ participant_flow_summary <- if (!is.null(merged_data) && !is.null(pf_params)) {
 } else {
   NULL
 }
+baseline_effort_effects <- if (!is.null(merged_data)) {
+  summarize_baseline_effort_effects(merged_data)
+} else {
+  NULL
+}
 ```
 
 \newpage 
@@ -403,7 +408,7 @@ The rationale above motivates four questions, each with a directional prediction
 
 First, does effort change the behavioral psychometric function? We compare high (40% MVC) and low (5% MVC) effort on per-participant thresholds and slopes in both tasks. We expect higher thresholds under high effort, while noting that a threshold shift can reflect sensitivity or criterion, and we predict shallower slopes, the signature of reduced discriminability under elevated arousal (H1).
 
-Second, does high effort raise arousal as intended? We predict larger baseline pupil diameter and larger task-evoked responses (AUC) under high effort, indexing elevated tonic and phasic arousal respectively (H2).
+Second, does high effort raise arousal as intended? Following the operationalization in Chapter 1, we distinguish two pupil-based arousal indices. H2a predicts greater sustained trial-period dilation (Total AUC, referenced to pre-squeeze B0) under high effort—a signature of overall effort-related arousal during the grip epoch. H2b predicts larger stimulus-locked task-evoked responses (Cognitive AUC, B1-corrected) under high effort—a signature of enhanced phasic event-related arousal. Pre-squeeze baseline diameter (B0) serves as a supplementary, cleaner index of resting pupil state and is analyzed alongside Total AUC to separate pre-trial tonic level from effort-induced dilation.
 
 Third, does momentary arousal modulate sensitivity? Modeling intensity continuously, we test the stimulus intensity × pupil-state interaction. The primary prediction is a negative interaction, shallower slopes on higher-arousal trials, consistent with supra-optimal arousal degrading the sensory evidence; a positive interaction, indicating enhancement at moderate arousal, is the alternative. Trait-level arousal is expected to show weaker or null effects, since it may be confounded with individual differences such as cognitive reserve (H3).
 
@@ -461,7 +466,7 @@ Stimuli were presented and responses collected using the LC Aging in-scanner set
 
 Pupil diameter was recorded continuously throughout each trial at 250 Hz and processed using a MATLAB preprocessing pipeline that segments trials relative to squeeze onset, flags blinks and track loss events, computes window-specific validity metrics, and implements subtractive baseline correction using pre-event windows.
 
-Metrics and preprocessing. The first derived measure was Total AUC: baseline-corrected area under the pupil curve over a global trial window, indexing overall arousal during concurrent physical effort. The second, which served as the primary predictor in trial-level models, was the cognitive pupil metric: a baseline-corrected, task-evoked summary from a fixed 1.20 s stimulus-locked window spanning 4.85--6.05 s (target onset + 0.50 s through +1.70 s relative to squeeze onset). That window targets the task-evoked pupil response (TEPR) peak, which typically occurs about one second after stimulus onset [@mathot2023methods], while limiting early reflex contributions and RT-driven confounds. Analyses used mean dilation (AUC divided by window duration) rather than raw AUC, which removes duration confounds and is the preferred summary for this window. The distribution of Cognitive AUC was checked against a physiological-ceiling interpretation; results of that check are reported in @sec-manipulation-check with the effort–pupil manipulation.
+Metrics and preprocessing. The first derived measure was Total AUC: baseline-corrected area under the pupil curve over a global trial window (0–4.70 s from squeeze onset, B0 reference), indexing sustained arousal during the concurrent physical effort. This operationalization follows Chapter 1, in which Total AUC reliably tracked the effort manipulation across three cognitive tasks in younger adults; it is dominated by the sustained dilation produced by the handgrip and captures overall physiological state during the task rather than the phasic response to the cognitive target. The second measure, which served as the primary predictor in trial-level models, was the cognitive pupil metric: a baseline-corrected, task-evoked summary from a fixed 1.20 s stimulus-locked window spanning 4.85–6.05 s (target onset + 0.50 s through +1.70 s relative to squeeze onset, B1 reference). That window targets the TEPR peak—typically around one second after stimulus onset [@mathot2023methods]—while limiting early reflex contributions and RT-driven confounds. Chapter 1 used a shorter, probe-proximal window as an exploratory metric; the fixed peak-aligned window here is a deliberate upgrade that better captures the full TEPR. Analyses used mean dilation (AUC divided by window duration) rather than raw AUC, which removes duration confounds. Because Total AUC and Cognitive AUC reference different subtractive baselines (B0 vs. B1), effort effects on each metric were interpreted alongside direct tests of baseline diameter (@sec-manipulation-check).
 
 Baseline correction was implemented subtractively (*pupil* - baseline mean). For Total AUC, the baseline window was the pre-squeeze interval from −0.5 s to 0.0 s relative to squeeze onset (B0 baseline). For the cognitive pupil metric, the baseline window was the pre-target interval from 3.85 s to 4.35 s relative to squeeze onset (B1 baseline). This target-proximal baseline was chosen so that the cognitive window reflects event-linked dilation relative to the immediately preceding pre-target pupil level, while the global Total AUC reflects overall dilation across the sustained effort epoch.
 
@@ -723,11 +728,52 @@ if (file.exists(waveform_path)) {
 }
 ```
 
-As predicted, high-effort handgrip significantly increased overall trial-period arousal (Total AUC: $\beta = 0.857$, $SE = 0.376$, $t = 2.282$, $p = .023$), but significantly attenuated task-evoked responses (Cognitive AUC: $\beta = -0.012$, $SE = 0.003$, $t = -3.859$, $p < .001$). Total AUC indexes overall arousal during the sustained squeeze epoch; Cognitive AUC is the stimulus-locked task-evoked response in the discrimination window. This dissociation is consistent with attenuated task-evoked phasic responding under concurrent high effort, but it is not uniquely diagnostic of such suppression: because the cognitive metric is baseline-corrected subtractively, a higher pre-target baseline under High effort could also reduce the apparent dynamic range available for subsequent dilation. A simple physiological-ceiling account (whereby High-effort trials would cluster at the upper extreme of the observed Cognitive AUC distribution) was not supported: High-effort trials were not disproportionately concentrated in the upper tail relative to Low-effort trials, which is inconsistent with a hard iris ceiling and instead favors interpreting the pattern in terms of reduced dynamic range after baseline elevation. Mixed-effects models tested whether effort condition predicted pupil metrics (Total AUC and Cognitive AUC) while controlling for task modality.
+As predicted, high-effort handgrip significantly increased overall trial-period arousal (Total AUC: $\beta = 0.857$, $SE = 0.376$, $t = 2.282$, $p = .023$), but significantly attenuated task-evoked responses (Cognitive AUC: $\beta = -0.012$, $SE = 0.003$, $t = -3.859$, $p < .001$). Total AUC indexes overall arousal during the sustained squeeze epoch; Cognitive AUC is the stimulus-locked task-evoked response in the discrimination window. Mixed-effects models tested whether effort condition predicted pupil metrics (Total AUC and Cognitive AUC) while controlling for task modality.
 
-Note: Hypothesis 2a (tonic arousal) was operationalized using Total AUC (the baseline-corrected area under the pupil curve over the global trial window) rather than a dedicated pre-stimulus baseline pupil measure. Total AUC during the squeeze epoch captures sustained arousal-related dilation that reflects both tonic state and the ongoing effort response, making it an appropriate but imperfect proxy for tonic arousal. A pre-stimulus baseline measure would more directly index tonic pupil state and could be explored in future analyses.
+```{r baseline-decomposition, results = "asis"}
+#| echo: false
 
-Hypothesis Testing: Hypothesis 2a predicted that tonic arousal would be elevated under High effort; this received **indirect, qualified support** via the significant increase in Total AUC (statistics above), recognizing that Total AUC is not a pure tonic measure. Hypothesis 2b predicted that task-evoked pupil responses (Cognitive AUC) would also be larger under High effort; this hypothesis was **not supported**; instead, Cognitive AUC was significantly *reduced* under High effort (statistics above). Rather than confirming a uniform arousal increase, these results suggest a tonic-phasic dissociation whose interpretation remains non-exclusive: the pattern is compatible with phasic suppression or reallocation under high effort, but could also partly reflect reduced dynamic range after baseline elevation.
+if (!is.null(baseline_effort_effects)) {
+  b0 <- get_baseline_effort_row(baseline_effort_effects, "baseline_B0_mean")
+  b1 <- get_baseline_effort_row(baseline_effort_effects, "baseline_b0_mean")
+
+  cat(
+    "Because the two metrics use different subtractive baselines, the dissociation must be read against raw baseline levels rather than inferred from the AUC signs alone. ",
+    "Pre-squeeze baseline diameter (B0; the reference for Total AUC) did **not** differ by effort condition ",
+    "(High \u2212 Low: ",
+    if (!is.null(b0)) format_beta_manuscript(b0$estimate) else "\u2014",
+    ", *SE* = ",
+    if (!is.null(b0)) sprintf("%.3f", b0$std.error) else "\u2014",
+    ", *t* = ",
+    if (!is.null(b0)) sprintf("%.2f", b0$statistic) else "\u2014",
+    ", *p* ",
+    if (!is.null(b0)) format_p_manuscript(b0$p.value) else "\u2014",
+    "). ",
+    "Accordingly, the Total AUC increase reflects greater sustained dilation during the grip epoch itself, not a pre-trial baseline shift. ",
+    "By contrast, pre-target baseline diameter (B1; the reference subtracted before the cognitive window) **was** elevated under High effort ",
+    "(High \u2212 Low: ",
+    if (!is.null(b1)) format_beta_manuscript(b1$estimate) else "\u2014",
+    ", *SE* = ",
+    if (!is.null(b1)) sprintf("%.3f", b1$std.error) else "\u2014",
+    ", *t* = ",
+    if (!is.null(b1)) sprintf("%.2f", b1$statistic) else "\u2014",
+    ", *p* ",
+    if (!is.null(b1)) format_p_manuscript(b1$p.value) else "\u2014",
+    "). ",
+    "Because Cognitive AUC is computed on B1-corrected waveforms, this elevation mechanically lowers the cognitive metric even when raw pupil diameter in the cognitive window is unchanged. ",
+    "The observed Cognitive AUC reduction is therefore **partly** a baseline-correction artifact, although it is not fully explained by B1 elevation alone: @fig-pupil-timeseries shows that High-effort waveforms remain elevated through the pre-target interval, yet the cognitive-window increment above that elevated level is smaller than under Low effort. ",
+    "A hard iris-ceiling account was also not supported: High-effort trials were not disproportionately concentrated in the upper tail of the Cognitive AUC distribution. ",
+    "Taken together, the dissociation reflects both genuine sustained effort-related dilation (Total AUC) and metric-specific baseline choice (B1-corrected Cognitive AUC), rather than a uniform tonic increase followed by uniform phasic suppression.\n\n",
+    sep = ""
+  )
+} else {
+  cat("*Baseline decomposition unavailable (merged data not loaded in this render).*\\n\\n")
+}
+```
+
+A note on metric choice. Total AUC is referenced to B0 (pre-squeeze, −0.5 to 0 s relative to squeeze onset), and B0 did not differ between effort conditions ($p$ = .705). The Total AUC increase under High effort therefore captures genuine sustained dilation that builds during the grip itself, not a carry-over from the inter-trial interval. Cognitive AUC, on the other hand, is referenced to B1 (pre-target, 3.85–4.35 s), and B1 was elevated under High effort ($\beta$ = +0.336, $p$ = .007). Subtractive baseline correction means that any rise in B1 mechanically reduces the apparent Cognitive AUC even if raw pupil level in the cognitive window is unchanged. For this reason, the two metrics are best thought of as capturing different windows with different baselines rather than as pure tonic and phasic readouts. Total AUC is the primary index of sustained effort-related arousal—a usage consistent with Chapter 1 and with the role it played in confirming the grip manipulation across tasks. Cognitive AUC isolates the incremental task-evoked response above the elevated pre-target level, with the caveat that the B1 elevation introduces a baseline-correction asymmetry that partially drives the observed metric dissociation.
+
+Hypothesis Testing: H2a predicted greater sustained trial-period arousal (Total AUC) under High effort; this was **supported**—Total AUC increased significantly ($\beta = 0.857$, $p = .023$), and pre-squeeze B0 did not differ ($p = .705$), confirming the increase arose during the grip epoch itself rather than from a pre-trial state difference. H2b predicted larger task-evoked responses (Cognitive AUC) under High effort; this was **not supported**—Cognitive AUC was significantly *reduced* ($\beta = -0.012$, $p < .001$). The opposite-sign effects reflect a metric dissociation rather than a simple arousal increase: Total AUC captures sustained dilation against a stable B0, while Cognitive AUC's B1 reference rose with effort, mechanically compressing the corrected metric and making the drop partly an artifact of baseline choice. The incremental task-evoked response above the elevated pre-target level also appears genuinely attenuated, as the waveforms in @fig-pupil-timeseries show.
 
 The opposite signs of these two effects are the central result of the manipulation check. @fig-effort-dissociation places the effort effect on each metric on a common axis: overall arousal rises while the task-evoked response falls. Participant-level means for each metric are shown in Appendix B (@fig-effort-pupil).
 
@@ -941,7 +987,7 @@ Pupil state did not significantly predict sensitivity (interaction p = .245), an
 #|   Theoretical mechanisms of effort-induced pupil dissociation.
 #|   **(A) Observed dissociation.** High-effort handgrip (red) elevates overall arousal (Total AUC) while simultaneously blunting the task-evoked pupil response (Cognitive AUC) in the stimulus-locked cognitive window (4.85--6.05 s), relative to low effort (blue).
 #|   **(B) Phasic suppression.** Under this account, the neural resources sustained to maintain 40% MVC grip actively inhibit the gain of the LC--NE phasic response to task-relevant targets, producing the blunted cognitive-window response despite elevated baseline arousal.
-#|   **(C) Reduced dynamic range.** Alternatively, the elevated baseline under high effort may approach a physiological saturation ceiling, restricting the available dynamic range for further dilation and thereby attenuating the apparent task-evoked response through a mechanical rather than inhibitory process.
+#|   **(C) Baseline-correction asymmetry.** Cognitive AUC subtracts a pre-target baseline (B1) that itself rises under High effort, mechanically compressing the cognitive metric even when raw pupil diameter remains elevated; Total AUC instead references pre-squeeze B0, which did not shift with effort in this sample.
 #|   **(D) Age-related shift to supra-optimal zone.** A stylised Yerkes--Dodson representation showing how an age-related leftward shift of the optimal arousal zone makes older adults more vulnerable to performance decrements in high-effort contexts, consistent with the non-significant coupling observed here.
 #| fig-width: 11
 #| fig-height: 6
@@ -962,9 +1008,9 @@ if (file.exists(mech_path)) {
 
 ## Implications for Aging and Arousal
 
-The present data show weaker pupil–sensitivity coupling than predicted. The trial-level interaction was non-significant and, by the equivalence test, statistically negligible relative to the SESOI, and the subject-level correlations were uniformly small (@fig-subject-coupling-forest). The one correlation large enough to suggest a modality difference, VDT threshold, fell to near zero once a few influential participants were removed (@sec-subject-coupling). The subject-level results therefore carry little weight on their own; the strongest claim the data support is the bounded trial-level null. If Chapter 1 (younger adults) shows more robust coupling on the same continuous-intensity test, that cross-chapter contrast would be consistent with age-related attenuation of LC–NE gain modulation, in line with structural LC degradation and altered phasic responsiveness in aging [@lee2018; @mather2016]. A second reading, not mutually exclusive, is that the significant negative effort main effect alongside the null interaction reflects older adults treating high-effort demand as a contextual load, a group-level shift in response tendency, rather than fine-grained moment-to-moment arousal regulation.
+The present data show weaker pupil–sensitivity coupling than predicted. The trial-level interaction was non-significant and, by the equivalence test, statistically negligible relative to the SESOI, and the subject-level correlations were uniformly small (@fig-subject-coupling-forest). The one correlation large enough to suggest a modality difference—VDT threshold—fell to near zero once a few influential participants were removed (@sec-subject-coupling). So the subject-level results carry little weight on their own; the strongest claim the data support is the bounded trial-level null. When Chapter 1 reports coupling in younger adults on the same continuous-intensity GLMM, that cross-chapter contrast will be a direct test of age-related attenuation of LC–NE gain modulation [@lee2018; @mather2016]. A second reading, not mutually exclusive, is that the significant negative effort main effect alongside the null interaction reflects older adults treating high-effort demand as a contextual load—a group-level shift in response tendency—rather than something that reshapes moment-to-moment arousal–sensitivity coupling.
 
-The observed dissociation between elevated Total AUC and attenuated Cognitive AUC under high effort (@sec-manipulation-check) suggests that older adults may be operating under specific physiological constraints (see @fig-mechanism). One possibility (@fig-mechanism, panel B) is phasic suppression: the neural resources required to maintain a 40% MVC grip actively compete with, or inhibit the gain of, the LC–NE phasic response to the target stimulus, producing a blunted cognitive-window dilation despite elevated overall arousal. A complementary account (@fig-mechanism, panel C) is reduced dynamic range: the high baseline arousal elicited by physical effort may bring the pupil near its upper physiological limit, mechanically restricting the amplitude of any further event-locked dilation. Both mechanisms would produce the same surface signature (lower Cognitive AUC under high effort) but differ in whether the source is active inhibition or passive saturation. Empirically distinguishing them would require either a dedicated within-session ceiling check (comparing raw pupil diameter under High effort against each participant's observed maximum) or a deconvolution-based pupil model that separates tonic and phasic components.
+The observed dissociation between elevated Total AUC and attenuated Cognitive AUC under high effort (@sec-manipulation-check) reflects both sustained effort-related dilation and metric-specific baseline choice (see @fig-mechanism). One possibility (@fig-mechanism, panel B) is phasic suppression: the neural resources required to maintain a 40% MVC grip actively compete with, or inhibit the gain of, the LC–NE phasic response to the target stimulus, producing a smaller incremental dilation above the pre-target level despite elevated overall arousal. A complementary account (@fig-mechanism, panel C) is baseline-correction asymmetry: B1 rises under High effort while B0 does not, so the B1-corrected Cognitive AUC can fall even when raw pupil diameter in the cognitive epoch remains elevated. Both mechanisms would produce lower Cognitive AUC under high effort, but only the first implies a genuine attenuation of task-evoked neuromodulatory response. Empirically distinguishing them would require reporting raw (uncorrected) pupil levels alongside corrected metrics, or fitting deconvolution-based tonic/phasic models.
 
 Either way, the saturation or suppression interpretation is consistent with the age-related positioning on the Yerkes–Dodson curve shown in @fig-mechanism (panel D). If older adults' optimal arousal zone is shifted leftward relative to younger adults, a high-effort context is more likely to push them into a supra-optimal region where fine-grained, trial-by-trial sensitivity modulation is degraded. This would explain why effort produced a significant group-level shift in response tendency ($\beta$ = −0.139, *p* = .003) without generating the continuous, within-trial arousal–sensitivity coupling captured by the stimulus intensity × pupil state interaction ($\beta$ = +0.035, *p* = .245).
 
@@ -1118,13 +1164,16 @@ cat(
   "and subject-level Δpupil–ΔPF correlations were uniformly small (",
   h4_txt,
   "). ",
-  "Chapter 1 will provide the younger-adult benchmark for direct comparison; until then, ",
-  "the present chapter documents weak primary-tier coupling and inconsistent lenient-tier significance in older adults.\n\n",
+  "Chapter 1 will provide the younger-adult benchmark for direct comparison; the comparison matters because Chapter 1 used the same continuous-intensity GLMM framework and the same Total AUC / Cognitive AUC decomposition, so any difference in coupling magnitude between chapters can be attributed to age rather than to methodological divergence.\n\n",
   sep = ""
 )
 ```
 
-Chapter 3 will use hierarchical drift diffusion modeling to decompose the behavioral patterns observed in Chapter 2 into latent decision parameters (drift rate, boundary separation, starting point, non-decision time). This will test whether arousal effects are more consistent with altered evidence quality (drift rate changes) versus strategic response adjustments (boundary separation changes), providing a mechanistic account of how physical effort and arousal reshape perceptual decisions in aging.
+Several contrasts between the two chapters bear on the interpretation of the present null. In Chapter 1, Total AUC increased with effort across all three tasks (visual working memory, auditory discrimination, visual discrimination), confirming that 40% MVC grip reliably raises overall arousal in healthy younger adults. Cognitive AUC in that sample was treated as exploratory because the measurement window was short and only partially captured the TEPR peak; effects were smaller and less consistent. The present chapter improves on that design in two ways: the cognitive window is fixed at 4.85–6.05 s to align with the expected TEPR peak, and the analysis adds the continuous-intensity GLMM coupling test that Chapter 1 did not include.
+
+Whether Chapter 1 shows trial-level pupil–sensitivity coupling in younger adults is an open question at this stage. If it does, the contrast with the bounded null here fits a straightforward story about aging: older adults' LC–NE system, already degraded structurally [@mather2016], may not generate the fine-grained phasic gain modulation that drives within-trial arousal–sensitivity coupling in younger adults. If coupling is absent in both chapters, the shared null points instead to limitations of the metric or task design. Either way, the side-by-side comparison is the strongest test of the age-related hypothesis, and the present chapter documents the older-adult side of it in full.
+
+Chapter 3 will apply hierarchical drift diffusion modeling to decompose the behavioral patterns here into latent decision parameters—drift rate, boundary separation, starting point, and non-decision time. That decomposition will test whether the effort main effect on "different" responding (a response-tendency shift, not a sensitivity decrement by the present analysis) maps onto boundary adjustment, lower drift rate, or some combination. It will also clarify whether any arousal-linked effects, however small, trace back to evidence quality or to strategic control—a question the psychometric framework alone cannot fully resolve.
 
 ## Conclusions and Future Directions
 
