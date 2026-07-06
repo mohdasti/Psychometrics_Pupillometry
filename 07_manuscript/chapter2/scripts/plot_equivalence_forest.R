@@ -27,10 +27,7 @@ write_csv(
   file.path(tables_dir, "pupil_psychometric_tost_equivalence.csv")
 )
 
-p <- plot_equivalence_forest(
-  tost_summary,
-  line_color = unname(effort_colors["Low"])
-)
+p <- plot_equivalence_forest(tost_summary)
 
 out_png <- file.path(figures_dir, "fig_equivalence_forest.png")
 out_pdf <- file.path(figures_dir, "fig_equivalence_forest.pdf")

@@ -21,14 +21,18 @@ readr::write_csv(cor_summary, file.path(tables_dir, "pf_pupil_coupling_correlati
 readr::write_csv(sensitivity, file.path(tables_dir, "pf_pupil_coupling_sensitivity.csv"))
 readr::write_csv(influence_audit, file.path(tables_dir, "pf_pupil_coupling_influence_audit.csv"))
 
-p_forest <- plot_subject_coupling_forest(cor_summary, task_color_map = task_colors)
+p_forest <- plot_subject_coupling_forest(
+  cor_summary,
+  sensitivity_df = sensitivity,
+  task_color_map = task_colors
+)
 ggplot2::ggsave(
   file.path(figures_dir, "fig_subject_coupling_forest.png"),
-  p_forest, width = 8.5, height = 5.5, dpi = 300, bg = "white"
+  p_forest, width = 9, height = 5.5, dpi = 300, bg = "white"
 )
 ggplot2::ggsave(
   file.path(figures_dir, "fig_subject_coupling_forest.pdf"),
-  p_forest, width = 8.5, height = 5.5, bg = "white"
+  p_forest, width = 9, height = 5.5, bg = "white"
 )
 
 p_z <- plot_subject_coupling_zscatter(coupling_data_complete, task_color_map = task_colors)

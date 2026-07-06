@@ -54,14 +54,18 @@ if (!is.null(pf_params) && nrow(pf_params) > 0) {
   cat("\n✓ Correlation and sensitivity tables saved\n")
 
   cat("\n=== Creating figures ===\n")
-  p_forest <- plot_subject_coupling_forest(cor_summary, task_color_map = task_colors)
+  p_forest <- plot_subject_coupling_forest(
+    cor_summary,
+    sensitivity_df = sensitivity,
+    task_color_map = task_colors
+  )
   ggsave(
     file.path(figures_dir, "fig_subject_coupling_forest.png"),
-    p_forest, width = 8.5, height = 5.5, dpi = 300, bg = "white"
+    p_forest, width = 9, height = 5.5, dpi = 300, bg = "white"
   )
   ggsave(
     file.path(figures_dir, "fig_subject_coupling_forest.pdf"),
-    p_forest, width = 8.5, height = 5.5, bg = "white"
+    p_forest, width = 9, height = 5.5, bg = "white"
   )
   cat("✓ Saved: fig_subject_coupling_forest.png / .pdf\n")
 

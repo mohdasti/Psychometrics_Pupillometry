@@ -398,10 +398,7 @@ write_csv(
   tost_summary,
   file.path(tables_dir, "pupil_psychometric_tost_equivalence.csv")
 )
-p_eq <- plot_equivalence_forest(
-  tost_summary,
-  line_color = unname(effort_colors["Low"])
-)
+p_eq <- plot_equivalence_forest(tost_summary)
 ggplot2::ggsave(
   file.path(figures_dir, "fig_equivalence_forest.png"),
   p_eq, width = 8, height = 5.5, dpi = 300, bg = "white"

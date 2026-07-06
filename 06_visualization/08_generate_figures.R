@@ -13,6 +13,7 @@ library(ggtext)
 
 source(file.path(here(), "config", "paths_config.R"))
 source(file.path(here(), "R", "colors_manuscript.R"))
+source(file.path(here(), "R", "plot_effort_pupil_manipulation.R"))
 
 # Load data
 cat("Loading data for figure generation...\n")
@@ -171,57 +172,9 @@ cat("✓ Saved: fig1_psychometric_by_effort.png\n")
 
 cat("\n=== Figure 2: Effort-Pupil Manipulation Check ===\n")
 
-dat_fig2 <- dat %>%
-  filter(quality_primary == TRUE) %>%
-  mutate(
-    effort_factor = factor(effort, levels = c("Low", "High")),
-    task_factor = factor(task)
-  )
+dat_fig2_subj <- prepare_effort_pupil_subject_means(dat)
 
-# Subject means for connected-dot / half-violin display
-dat_fig2_subj <- dat_fig2 %>%
-  group_by(sub, task_factor, effort_factor) %>%
-  summarise(
-    total_auc_mean = mean(total_auc, na.rm = TRUE),
-    cog_auc_mean   = mean(cog_auc,   na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  pivot_longer(cols = c(total_auc_mean, cog_auc_mean),
-               names_to = "metric", values_to = "value") %>%
-  mutate(metric_label = factor(metric,
-                               levels = c("total_auc_mean", "cog_auc_mean"),
-                               labels = c("Total AUC (a.u., baseline-corrected)",
-                                          "Cognitive AUC (a.u., baseline-corrected)")))
-
-# Wide for paired lines
-dat_fig2_wide <- dat_fig2_subj %>%
-  pivot_wider(names_from = effort_factor, values_from = value)
-
-p2a <- dat_fig2_subj %>%
-  ggplot(aes(x = effort_factor, y = value, colour = effort_factor)) +
-  # Connecting lines per subject
-  geom_line(data = dat_fig2_wide %>%
-              pivot_longer(c(Low, High), names_to = "effort_factor",
-                           values_to = "value") %>%
-              mutate(effort_factor = factor(effort_factor,
-                                           levels = c("Low", "High"))),
-            aes(group = sub), alpha = 0.25, colour = "grey55", linewidth = 0.45) +
-  geom_point(alpha = 0.65, size = 1.6, position = position_jitter(width = 0.04, seed = 1)) +
-  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, colour = "black") +
-  stat_summary(fun.data = mean_se, geom = "errorbar",
-               width = 0.15, linewidth = 0.9, colour = "black") +
-  facet_grid(metric_label ~ task_factor, scales = "free_y") +
-  scale_colour_manual(values = effort_colors) +
-  labs(
-    x = "Effort condition",
-    y = "Pupil AUC (a.u., baseline-corrected)",
-    colour = "Effort",
-    title = "Effort–Pupil Manipulation Check",
-    subtitle = "Points = participant means; diamonds = group mean ± 1 SE; lines connect the same participant"
-  ) +
-  theme_ch2(11) +
-  theme(legend.position = "none",
-        strip.text.y = element_text(size = 9))
+p2a <- plot_effort_pupil_manipulation(dat_fig2_subj)
 
 ggsave(file.path(figures_dir, "fig2_effort_pupil_manipulation.png"),
        p2a, width = 10, height = 8, dpi = 300)

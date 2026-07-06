@@ -934,7 +934,7 @@ Equivalence was tested with two one-sided tests (TOST) using a pre-specified sma
 #| label: fig-equivalence-forest
 #| fig-cap: >
 #|   TOST equivalence for the stimulus intensity x pupil-state interaction across analysis subsets.
-#|   Points show probit-scale interaction estimates with 90% confidence intervals; the shaded band marks the pre-specified SESOI (+/-0.10 probit units). Wald *p* values appear at right. Primary-tier estimates fall within the equivalence region; lenient-tier and slow-RT subsets do not.
+#|   Points show probit-scale interaction estimates with 90% confidence intervals; the shaded band marks the pre-specified SESOI (+/-0.10 probit units). Point color indicates the TOST equivalence verdict; trial and participant counts and Wald *p* values appear at right.
 #| fig-width: 8
 #| fig-height: 5.5
 #| out-width: "90%"
@@ -966,7 +966,7 @@ Subject-level coupling asks whether participants with larger effort-evoked pupil
 
 ```{r subject-coupling-forest-fig}
 #| label: fig-subject-coupling-forest
-#| fig-cap: !expr sprintf("Subject-level PF–Pupil coupling forest. Pearson *r* (95%% CI) for effort-evoked Δpupil vs ΔPF parameter for all eight task × pupil-metric × PF-parameter combinations (ADT *n* = %s; VDT *n* = %s). Dashed line = no coupling (*r* = 0). All confidence intervals cross zero.", n_adt_coupling, n_vdt_coupling)
+#| fig-cap: !expr sprintf("Subject-level PF–Pupil coupling forest. Pearson *r* (95%% CI) for effort-evoked Δpupil vs ΔPF parameter in a 2 × 2 grid (pupil metric × PF parameter), with ADT and VDT in each panel (ADT *n* = %s; VDT *n* = %s). Dashed line = no coupling (*r* = 0). The VDT Cognitive AUC × threshold point (open ring) is outlier-sensitive; the panel annotation reports *r* after excluding influential cases.", n_adt_coupling, n_vdt_coupling)
 #| fig-width: 9
 #| fig-height: 5.5
 #| out-width: "100%"
@@ -1416,17 +1416,16 @@ if (!is.null(pupil_psychometric_slow_rt)) {
 }
 ```
 
-**Participant-level pupil AUC by effort.** @fig-effort-pupil shows Total and Cognitive AUC under Low and High effort for each participant, with group means and standard errors. It complements the group-level dissociation in @fig-effort-dissociation.
+**Participant-level pupil AUC by effort.** @fig-effort-pupil shows Total and Cognitive AUC under Low and High effort for each participant, with violin distributions, boxplots, and within-subject connecting lines. It complements the group-level dissociation in @fig-effort-dissociation.
 
 ```{r effort-pupil-fig}
 #| label: fig-effort-pupil
 #| fig-cap: >
 #|   Effort–Pupil Manipulation Check. Participant-level mean pupil AUC (a.u., baseline-corrected)
 #|   for Total AUC (top; overall trial arousal) and Cognitive AUC (bottom; stimulus-locked
-#|   task-evoked response) under Low and High effort, separately for ADT and VDT. Arbitrary
-#|   units reflect baseline-corrected area under the pupil dilation curve; values are not in millimetres.
-#|   Points show individual participant means; diamonds and error bars show the group mean ± 1 SE;
-#|   lines connect the same participant across conditions.
+#|   task-evoked response) under Low and High effort, separately for ADT and VDT. Violin
+#|   distributions, boxplots, and jittered points show the participant distribution; lines connect the
+#|   same participant across effort conditions (primary pupil-quality tier).
 #| fig-width: 10
 #| fig-height: 8
 #| out-width: "100%"
