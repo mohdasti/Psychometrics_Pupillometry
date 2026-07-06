@@ -424,7 +424,7 @@ Participants were aged 60 or older, right-handed, had normal or corrected-to-nor
 
 Trial-level analyses use the merged behavioral--pupil file. The primary GLMM requires complete cognitive pupil metrics, stimulus intensity, and choice (@sec-power-analysis).
 
-## Task Paradigm
+## Task Paradigm {#sec-task-paradigm}
 
 Task overview. Participants completed two same–different discrimination tasks (an Auditory Discrimination Task [ADT] and a Visual Discrimination Task [VDT]) while maintaining concurrent isometric hand-grip on a dynamometer. On each trial, a *standard* and *probe* stimulus were presented in sequence; participants judged whether the two were the same or different, then rated their confidence. Both tasks used the same response-signal timeline and effort manipulation (@fig-paradigm).
 
@@ -709,56 +709,13 @@ if (exists("pf_h1_infer") && !is.null(pf_h1_infer) && nrow(pf_h1_infer) == 4) {
     "(ADT *p* = ", format_p_inline(adt_sl$p), "; VDT *p* = ", format_p_inline(vdt_sl$p), "), so H1b was **not supported** by the per-participant PF analysis. ",
     "The slope null held across both tasks, and auditory slopes varied widely across participants (SD = ", sprintf("%.3f", adt_slope_sd),
     "), so it does not stem from compressed or floor-limited estimates. ",
-    "The trial-level effort × intensity interaction ($\\beta_7$) from the GLMM provides a complementary and more statistically powerful test of the same question (below). ",
+    "The trial-level effort × intensity interaction ($\\beta_7$) from the expanded GLMM provides a complementary and more statistically powerful test of the same question (@sec-h1b-trial-level). ",
     "On balance, the grip manipulation behaved as a physiological stressor that nudged the auditory threshold without reliably flattening either psychometric function. ",
     "That shift is more consistent with a change in response criterion or task difficulty than with a genuine loss of sensitivity, for which the slope is the cleaner index.\n\n",
     sep = ""
   )
 } else {
   cat("*Inferential tests for PF effort effects not available.*\n\n")
-}
-```
-
-```{r trial-level-effort-intensity, results = "asis"}
-#| echo: false
-
-# Trial-level effort × intensity: direct test of whether effort changes
-# the slope of the psychometric function (β7 from eq-primary-glmm).
-
-if (!is.null(pupil_psychometric_effort_intensity)) {
-  ei_row <- pupil_psychometric_effort_intensity %>%
-    dplyr::filter(term == "stimulus_intensity_scaled:effort_factorHigh")
-  ef_row <- pupil_psychometric_effort_intensity %>%
-    dplyr::filter(term == "effort_factorHigh")
-  if (nrow(ei_row) == 1L) {
-    b   <- sprintf("%+.3f", ei_row$estimate)
-    se  <- sprintf("%.3f", ei_row$std.error)
-    z   <- sprintf("%.2f", ei_row$statistic)
-    p   <- format_p_inline(ei_row$p.value)
-    cat(
-      "Trial-level effort \u00d7 intensity interaction ($\\beta_7$). ",
-      "The stimulus intensity \u00d7 effort interaction in the expanded GLMM was $\\beta_7$ = ", b,
-      " (*SE* = ", se, ", *z* = ", z, ", *p* = ", p, "). ",
-      if (ei_row$p.value < .05) {
-        paste0("This is significant, indicating that effort changed the steepness of the psychometric function at the trial level\u2014a direct sensitivity shift, not merely an intercept change. ")
-      } else {
-        paste0("This was not significant. The null trial-level slope change converges with the per-participant PF analysis (H1b not supported) and is consistent with the overall picture: the effort manipulation shifted response tendency (intercept) rather than discrimination sensitivity (slope). ")
-      },
-      if (nrow(ef_row) == 1L) {
-        paste0(
-          "The effort main effect remained negative ($\\beta_2$ = ", sprintf("%+.3f", ef_row$estimate),
-          ", *SE* = ", sprintf("%.3f", ef_row$std.error),
-          ", *p* = ", format_p_inline(ef_row$p.value),
-          "), consistent with the primary-model result. "
-        )
-      } else { "" },
-      "\n\n", sep = ""
-    )
-  } else {
-    cat("*Trial-level effort \u00d7 intensity term not available in saved results.*\n\n")
-  }
-} else {
-  cat("*Effort \u00d7 intensity model results not available; run* `04_pupil_psychometric_coupling/06_pupil_psychometric_coupling.R` *to generate.*\n\n")
 }
 ```
 
@@ -934,6 +891,51 @@ Hypothesis 3a predicted a negative intensity × pupil-state interaction—shallo
 
 Model-predicted psychometric functions at low (−1 SD) and high (+1 SD) pupil state are shown in @sec-appendix-b (@fig-appendix-b1-predicted). Apparent separation between curves reflects extrapolation across the full scaled intensity range and should not be read as evidence for coupling given the null primary interaction (@tbl-pupil-psychometric). Exploratory binned functions by pupil tertile (@fig-appendix-b2-tertiles, @sec-appendix-b) are descriptive only and can overstate coupling when the GLMM interaction is null.
 
+### Trial-level effort × intensity (H1b) {#sec-h1b-trial-level}
+
+```{r trial-level-effort-intensity, results = "asis"}
+#| echo: false
+
+# Trial-level effort × intensity: direct test of whether effort changes
+# the slope of the psychometric function (β7 from eq-primary-glmm).
+
+if (!is.null(pupil_psychometric_effort_intensity)) {
+  ei_row <- pupil_psychometric_effort_intensity %>%
+    dplyr::filter(term == "stimulus_intensity_scaled:effort_factorHigh")
+  ef_row <- pupil_psychometric_effort_intensity %>%
+    dplyr::filter(term == "effort_factorHigh")
+  if (nrow(ei_row) == 1L) {
+    b   <- sprintf("%+.3f", ei_row$estimate)
+    se  <- sprintf("%.3f", ei_row$std.error)
+    z   <- sprintf("%.2f", ei_row$statistic)
+    p   <- format_p_inline(ei_row$p.value)
+    cat(
+      "H1b also asked whether high effort flattened psychometric slopes. ",
+      "The stimulus intensity \u00d7 effort interaction in the expanded GLMM was $\\beta_7$ = ", b,
+      " (*SE* = ", se, ", *z* = ", z, ", *p* = ", p, "). ",
+      if (ei_row$p.value < .05) {
+        paste0("This is significant, indicating that effort changed the steepness of the psychometric function at the trial level\u2014a direct sensitivity shift, not merely an intercept change. ")
+      } else {
+        paste0("This was not significant. The null trial-level slope change converges with the per-participant PF analysis (@sec-pf-backbone; H1b not supported) and is consistent with the overall picture: the effort manipulation shifted response tendency (intercept) rather than discrimination sensitivity (slope). ")
+      },
+      if (nrow(ef_row) == 1L) {
+        paste0(
+          "The effort main effect remained negative ($\\beta_2$ = ", sprintf("%+.3f", ef_row$estimate),
+          ", *SE* = ", sprintf("%.3f", ef_row$std.error),
+          ", *p* = ", format_p_inline(ef_row$p.value),
+          "), consistent with the primary-model result (@tbl-pupil-psychometric). "
+        )
+      } else { "" },
+      "\n\n", sep = ""
+    )
+  } else {
+    cat("*Trial-level effort \u00d7 intensity term not available in saved results.*\n\n")
+  }
+} else {
+  cat("*Effort \u00d7 intensity model results not available; run* `04_pupil_psychometric_coupling/06_pupil_psychometric_coupling.R` *to generate.*\n\n")
+}
+```
+
 ### Robustness checks: quality tiers and equivalence (TOST) {#sec-pupil-quality-tier}
 
 The stimulus intensity $\times$ pupil state interaction was significant only in the lenient quality tier ($\beta = +0.064$, $SE = 0.028$, $z = 2.30$, $p = .021$), but did not persist in the primary tier ($\beta = +0.035$, $SE = 0.030$, $z = 1.163$, $p = .245$) or the strict tier ($\beta = +0.039$, $SE = 0.032$, $z = 1.213$, $p = .225$). This inconsistency across quality tiers indicates the effect is **not robust**: the lenient tier includes trials with lower data quality, and the lenient-tier significance likely reflects greater statistical power from the larger trial count rather than a consistent signal. AIC comparison showed the model without the interaction term fit marginally better (Without: 4187.47; With: 4188.13; $\Delta$AIC = 0.66), consistent with the non-significant interaction coefficient. Supplementary tier-wise output and AIC tables appear in @sec-appendix-b.
@@ -1015,7 +1017,7 @@ if (!is.null(h4) && !identical(h4$primary_statistic, "—")) {
 }
 ```
 
-## Summary of Hypothesis Testing
+## Summary of Hypothesis Testing {#sec-hypothesis-summary}
 
 ```{r hypothesis-summary}
 #| label: tbl-hypothesis-summary
@@ -1037,15 +1039,15 @@ hypothesis_summary %>%
   )
 ```
 
-H1a and H1b were tested with within-subject PF models (@sec-pf-backbone; @tbl-pf-effort-test) and the trial-level effort × intensity term ($\beta_7$) in the GLMM. All other hypotheses use the analyses summarized in this table.
+H1a and H1b were tested with within-subject PF models (@sec-pf-backbone; @tbl-pf-effort-test) and the trial-level effort × intensity term ($\beta_7$; @sec-h1b-trial-level). All other hypotheses use the analyses summarized in this table.
 
 # Discussion
 
-## Integration with Theoretical Frameworks
+## Integration with Theoretical Frameworks {#sec-discussion-mechanisms}
 
-At the primary quality tier, the stimulus intensity × pupil-state interaction was not significant, and the equivalence test ruled out effects exceeding ±0.10 probit units (@sec-pupil-quality-tier). That combination supports a bounded null: the data do not show reliable coupling, and large effects are statistically incompatible with the primary-tier estimate. Whether small coupling exists remains unresolvable at the present sample size (see @sec-power-analysis). The sign of the interaction is not stable across sensitivity checks (@sec-pupil-quality-tier), so neither supra-optimal impairment nor moderate-arousal enhancement follows from these estimates. High effort shifted overall responding in @tbl-pupil-psychometric—a tendency change more than a clear sensitivity loss—and pupil trait was null (H3c). Because the coupling test used a phasic, stimulus-locked metric rather than tonic baseline diameter, the design cannot separate weak true coupling from a suboptimal index of LC-linked gain (@fig-mechanism).
+Chapter 2 asked whether moment-to-moment arousal indexed by pupil diameter modulates perceptual sensitivity in older adults under concurrent physical effort. The primary trial-level coupling test and subject-level correlations both failed to support strong pupil–psychometric coupling (@sec-coupling-primary; @sec-subject-coupling), while the effort manipulation produced a dissociation between sustained and task-evoked pupil metrics (@sec-manipulation-check). The bounded-null equivalence framing and sensitivity checks are reported in @sec-pupil-quality-tier; precision limits are discussed in @sec-power-analysis.
 
-Because trial-wise pupil state did not predict sensitivity beyond effort condition, the present data do not support trial-level arousal modulation of psychometric steepness in this sample. The effort main effect in @tbl-pupil-psychometric may reflect dual-task interference, group-level arousal, strategic responding, or some mix; resource-competition accounts are compatible but not uniquely supported.
+Because trial-wise pupil state did not predict sensitivity beyond effort condition, the present data do not support trial-level arousal modulation of psychometric steepness in this sample. The effort main effect in @tbl-pupil-psychometric may reflect dual-task interference, group-level arousal, strategic responding, or some mix; resource-competition accounts are compatible but not uniquely supported. Because the coupling test used a phasic, stimulus-locked metric rather than tonic baseline diameter, the design cannot separate weak true coupling from a suboptimal index of LC-linked gain (@fig-mechanism).
 
 ```{r mechanism-fig}
 #| label: fig-mechanism
@@ -1220,9 +1222,11 @@ Two secondary anchors corroborate that magnitude. First, 0.10 corresponds to rou
 
 No published trial-level GLMM has reported a pupil-state × intensity *sensitivity* interaction on a comparable probit scale, so an external empirical prior could not be imported directly. Prior pupil–behavior work more often links phasic arousal to decision *bias* or criterion (@deGee2020pupil; @colizoli2018belief) than to psychometric slope—a pattern consistent with the present dissociation between a reliable effort main effect on overall responding and a null slope interaction. Equivalence testing therefore asks whether the data are compatible with coupling effects smaller than the SESOI, not merely whether the frequentist null can be rejected.
 
-The primary cognitive pupil metric uses a fixed 1.20-second stimulus-locked window (4.85–6.05 s) to reduce RT confounding and capture the TEPR peak. The grip is released during the post-probe blank (~4.45 s), so the window begins approximately 400 ms after release and does not overlap the effort manipulation itself. It does, however, overlap the response screen (4.70 s, appearing 150 ms before the window opens) and button presses at variable times (median `r if (!is.null(response_timing)) format_rt_s(response_timing$median_rt) else "—"` s after response-screen onset, or `r if (!is.null(response_timing)) format_rt_s(response_timing$median_press) else "—"` s after squeeze onset). These create potential confounds from attentional responses to the response screen and motor/blink artifacts from the button press.
+### Cognitive window and motor confounds {#sec-window-confounds}
 
-Several mitigation strategies are implemented. Mean dilation (AUC/duration) is used rather than raw AUC to remove duration confounds; sensitivity analyses use slow-RT trials where motor cannot contaminate the primary window; and motor-buffered and pre-response window definitions are computed and available for future sensitivity analyses when full AUC computation is completed. However, complete elimination of temporal overlap confounds is impossible given the task design, and the primary window represents a trade-off between capturing relevant arousal dynamics and minimizing measurement artifacts. Response-locked metrics (available for future sensitivity analyses) can capture decision-related arousal more directly but are more susceptible to RT confounding. The choice of window definition represents a trade-off between physiological validity and measurement confounds.
+The primary cognitive pupil metric uses a fixed 1.20-second stimulus-locked window (4.85–6.05 s) to reduce RT confounding and capture the TEPR peak (@sec-response-timing). The grip is released during the post-probe blank (~4.45 s), so the window begins approximately 400 ms after release and does not overlap the effort manipulation itself. It does, however, overlap the response screen (4.70 s, appearing 150 ms before the window opens) and button presses at variable times (median `r if (!is.null(response_timing)) format_rt_s(response_timing$median_rt) else "—"` s after response-screen onset, or `r if (!is.null(response_timing)) format_rt_s(response_timing$median_press) else "—"` s after squeeze onset). These create potential confounds from attentional responses to the response screen and motor/blink artifacts from the button press.
+
+Several mitigation strategies are implemented. Mean dilation (AUC/duration) is used rather than raw AUC to remove duration confounds; sensitivity analyses use slow-RT trials where motor cannot contaminate the primary window; and motor-buffered and pre-response window definitions are computed and available for future sensitivity analyses when full AUC computation is completed (@sec-appendix-e). However, complete elimination of temporal overlap confounds is impossible given the task design, and the primary window represents a trade-off between capturing relevant arousal dynamics and minimizing measurement artifacts.
 
 The slow-RT sensitivity subset (trials with RT > 1.5 s, where button press falls outside the cognitive window) yielded an interaction estimate of opposite sign relative to the primary-tier result (@sec-pupil-quality-tier). Although neither estimate is statistically significant, the sign reversal indicates that motor or response-screen contamination of the cognitive window plausibly contributed to the positive direction of the primary-tier point estimate. This prevents a clean attribution of even the non-significant positive trend to genuine arousal–sensitivity coupling. Future analyses using motor-buffered or response-locked pupil windows (@sec-appendix-e) would provide a cleaner test.
 
@@ -1277,7 +1281,9 @@ In addition to percentage-validity thresholds, gap-aware quality control metrics
 
 ## Appendix B: Robustness Checks — Model Comparison and Supplementary Tables {#sec-appendix-b}
 
-Quality-tier interaction estimates and the interpretation that the effect is not robust at the primary tier are summarized in @sec-pupil-quality-tier. The appendix below provides AIC comparison, the slow-RT subset refit, and the model-predicted psychometric figure.
+Quality-tier interaction estimates and the interpretation that the effect is not robust at the primary tier are summarized in @sec-pupil-quality-tier. The subsections below provide AIC comparison, TOST detail, supplementary figures, slow-RT refits, and participant-level effort-pupil plots.
+
+### Model comparison (AIC)
 
 ```{r appendix-b-table8}
 #| label: tbl-appendix-aic-comparison
@@ -1307,6 +1313,8 @@ if (file.exists(mod_w) && file.exists(mod_wo)) {
 ```
 
 Akaike Information Criterion (AIC) comparison addresses whether the stimulus intensity $\times$ pupil-state interaction improves fit beyond the main-effects structure. A lower AIC for the model **without** the interaction indicates that the interaction does not improve fit enough to offset its complexity; in the present analysis, the no-interaction model fit marginally better ($\Delta$AIC = +0.66 for adding the interaction).
+
+### TOST equivalence table
 
 ```{r tbl-tost-equivalence}
 #| label: tbl-tost-equivalence
@@ -1342,6 +1350,8 @@ if (!is.null(pupil_psychometric_tost) && nrow(pupil_psychometric_tost)) {
   cat("*TOST equivalence table not yet available.*")
 }
 ```
+
+### Supplementary figures
 
 **Exploratory tertile psychometric functions.** @fig-appendix-b2-tertiles shows binned proportion-"different" curves split by within-trial pupil tertile (Low / Medium / High cognitive pupil state). This figure is descriptive only: binning can suggest separation even when the primary GLMM interaction is small and non-significant, and it should not be used as confirmatory evidence for coupling.
 
@@ -1400,7 +1410,9 @@ if (length(found) >= 1L) {
 }
 ```
 
-**Pre-specified slow-RT sensitivity (motor overlap).** The primary cognitive window overlaps the response screen and typical button presses (@sec-response-timing). A pre-specified sensitivity analysis restricted the GLMM to trials where the button press fell entirely outside the cognitive window (RT > 1.5 s; motor-uncontaminated subset), so motor execution could not contaminate the pupil epoch. The stimulus intensity $\times$ pupil state interaction was non-significant and opposite in sign to the primary-tier estimate (@sec-pupil-quality-tier). The small positive interaction at the primary tier therefore cannot rule out motor overlap as a partial contributor; the slow-RT subset is consistent with unknown sign for any true effect.
+### Slow-RT sensitivity subset
+
+The primary cognitive window overlaps the response screen and typical button presses (@sec-response-timing; @sec-window-confounds). A pre-specified sensitivity analysis restricted the GLMM to trials where the button press fell entirely outside the cognitive window (RT > 1.5 s; motor-uncontaminated subset), so motor execution could not contaminate the pupil epoch. The stimulus intensity $\times$ pupil state interaction was non-significant and opposite in sign to the primary-tier estimate (@sec-pupil-quality-tier). The small positive interaction at the primary tier therefore cannot rule out motor overlap as a partial contributor; the slow-RT subset is consistent with unknown sign for any true effect.
 
 ```{r appendix-b-slow-rt-table}
 #| label: tbl-appendix-slow-rt
@@ -1428,7 +1440,9 @@ if (!is.null(pupil_psychometric_slow_rt)) {
 }
 ```
 
-**Participant-level pupil AUC by effort.** @fig-effort-pupil shows Total and Cognitive AUC under Low and High effort for each participant, with violin distributions, boxplots, and within-subject connecting lines. It complements the group-level dissociation in @fig-effort-dissociation.
+### Participant-level effort–pupil plot
+
+@fig-effort-pupil shows Total and Cognitive AUC under Low and High effort for each participant, with violin distributions, boxplots, and within-subject connecting lines. It complements the group-level dissociation in @fig-effort-dissociation.
 
 ```{r effort-pupil-fig}
 #| label: fig-effort-pupil
