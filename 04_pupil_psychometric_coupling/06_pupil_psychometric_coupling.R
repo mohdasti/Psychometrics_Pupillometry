@@ -159,6 +159,45 @@ if (aic_primary < aic_no_int) {
 saveRDS(mod_no_interaction, file.path(models_dir, "mod_pupil_psychometric_no_interaction.rds"))
 
 # ============================================================================
+# EFFORT × INTENSITY MODEL: Direct test of effort modulating psychometric slope
+# ============================================================================
+# This model adds effort_factor * stimulus_intensity_scaled to the primary model.
+# The effort main effect tests whether effort shifts overall "different" responding
+# (criterion/intercept); the effort × intensity interaction tests whether effort
+# changes the steepness of the psychometric function (sensitivity).
+
+cat("\n=== Fitting effort × intensity model ===\n")
+cat("Model: choice ~ stimulus_intensity * pupil_state + stimulus_intensity * effort + task + pupil_trait + (1 + intensity | sub)\n")
+
+mod_effort_intensity <- glmer(
+  choice_num ~ stimulus_intensity_scaled * pupil_cognitive_state_scaled +
+    stimulus_intensity_scaled * effort_factor +
+    task_factor +
+    pupil_cognitive_trait_scaled +
+    (1 + stimulus_intensity_scaled | sub),
+  data = dat_primary,
+  family = binomial(link = "probit")
+)
+
+cat("\nEffort × intensity model summary:\n")
+print(summary(mod_effort_intensity))
+
+fe_effort_intensity <- broom.mixed::tidy(mod_effort_intensity, effects = "fixed")
+cat("\nFixed effects:\n")
+print(fe_effort_intensity)
+
+saveRDS(mod_effort_intensity, file.path(models_dir, "mod_pupil_psychometric_effort_intensity.rds"))
+write_csv(fe_effort_intensity, file.path(tables_dir, "pupil_psychometric_effort_intensity_effects.csv"))
+
+eff_int_term <- fe_effort_intensity %>%
+  filter(term == "stimulus_intensity_scaled:effort_factorHigh")
+if (nrow(eff_int_term) > 0) {
+  cat(sprintf("\n  Effort × Intensity: beta = %.4f, SE = %.4f, z = %.3f, p = %.4f\n",
+              eff_int_term$estimate, eff_int_term$std.error,
+              eff_int_term$statistic, eff_int_term$p.value))
+}
+
+# ============================================================================
 # ROBUSTNESS CHECKS: Test across quality tiers
 # ============================================================================
 

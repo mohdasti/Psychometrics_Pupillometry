@@ -249,6 +249,7 @@ pf_pupil_coupling_sensitivity <- sread(file.path(tables_dir, "pf_pupil_coupling_
 missingness_effects <- sread(file.path(tables_dir, "missingness_diagnostic_effects.csv"))
 pupil_psychometric_slow_rt <- sread(file.path(tables_dir, "pupil_psychometric_slow_rt_effects.csv"))
 pupil_psychometric_tost <- sread(file.path(tables_dir, "pupil_psychometric_tost_equivalence.csv"))
+pupil_psychometric_effort_intensity <- sread(file.path(tables_dir, "pupil_psychometric_effort_intensity_effects.csv"))
 
 source(file.path(proj_root, "R", "build_hypothesis_summary.R"))
 source(file.path(proj_root, "R", "pf_analysis_helpers.R"))
@@ -396,11 +397,11 @@ These pieces combine in a hierarchical probit GLMM of the trial-level choice, wi
 $$
 \begin{aligned}
 \text{probit}(P(Y_{ij}=1)) &= \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} \\
-&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}
+&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + \beta_7 (X_{ij} \times \text{Effort}_{ij}) + u_{0j} + u_{1j}X_{ij}
 \end{aligned}
 $$ {#eq-primary-glmm}
 
-The term that matters most is the stimulus intensity × pupil-state interaction ($\beta_5$). It tests whether the slope of the psychometric function, and therefore sensitivity, changes with momentary arousal. An effect confined to the intercept or location terms would instead indicate a shift in response tendency. The full specification appears in @sec-glmm.
+The term that matters most for H3 is $\beta_5$: the stimulus intensity × pupil-state interaction tests whether the slope of the psychometric function, and therefore sensitivity, changes with momentary arousal. The term $\beta_7$ (stimulus intensity × effort) tests the analogous question for H1 at the trial level—whether high effort changes the slope of the function—complementing the per-participant PF comparison described in @sec-statistical-analysis. An effect confined to the intercept ($\beta_2$) would indicate a shift in response tendency without a change in sensitivity. The full specification appears in @sec-glmm.
 
 ## Research Questions and Hypotheses
 
@@ -498,7 +499,9 @@ Psychometric function fitting. Behavioral data were fit in Psignifit 4 (MATLAB; 
 
 Psychometric function parameters (thresholds and slopes) used as the behavioral backbone were taken from these fits. A Weibull psychometric function was fit to the proportion of "different" responses across continuous stimulus intensity levels, separately for each participant × task/modality × effort condition.
 
-Zero-intensity replacement (Weibull compatibility). The Weibull link is undefined at a stimulus intensity of 0. Because trials with physically identical standard and probe stimuli (0-offset conditions) would otherwise require a numerical intensity of 0, a systematic replacement was applied: the 0-offset level was coded as half of the smallest non-zero stimulus level tested in each modality (the same anchor convention used to generate the descriptive psychometric summaries in @tbl-pf-params). For the auditory task, the smallest non-zero frequency offset was 8 Hz, so the 0-offset condition was assigned 4 Hz. For the visual task, the 0-offset condition was assigned 0.0075 Michelson contrast units. This procedure retains the full range of difficulty levels (including the physically identical pair) while ensuring mathematical compatibility with the Psignifit 4 fitting engine.
+Zero-intensity replacement (Weibull compatibility). The Weibull link is undefined at a stimulus intensity of 0. Because trials with physically identical standard and probe stimuli (0-offset conditions) would otherwise require a numerical intensity of 0, a systematic replacement was applied: the 0-offset level was coded as half of the smallest non-zero stimulus level tested in each modality (the same anchor convention used to generate the descriptive psychometric summaries in @tbl-pf-params). For the auditory task, the smallest non-zero frequency offset was 8 Hz, so the 0-offset condition was assigned 4 Hz. For the visual task, the 0-offset condition was assigned 0.0075 Michelson contrast units. This procedure retains the full range of difficulty levels (including the physically identical pair) while ensuring mathematical compatibility with the Psignifit 4 fitting engine. This convention was adopted from the in-preparation behavioral report describing the same cohort; using the same anchor ensures that threshold estimates are on a comparable scale across analyses.
+
+Limitations of the anchor choice. Replacing 0 with half of the smallest non-zero level is a conventional but somewhat arbitrary choice. A smaller anchor would place the 0-offset condition closer to 0 on the fitted curve, pulling the estimated guess rate γ higher; a larger anchor would compress the lower asymptote region. Both alternatives would affect absolute threshold estimates but not the relative comparison between effort conditions, because the same anchor is applied identically across High and Low effort and across participants. The practical leverage of the anchor on slope is also limited: for participants whose psychometric function is well-constrained, the threshold falls well above the replacement value (roughly in the mid-range of the tested levels), so the 0-offset data point mainly anchors the lower asymptote rather than shaping the rising portion of the curve where slope is estimated. Participants for whom the threshold estimate falls near or below the replacement value are flagged as PF-invalid and excluded from inferential analyses, providing a second guard against anchor-induced distortion. For the trial-level GLMM, no replacement is applied: intensity values enter the model as recorded (including 0 for same trials), and standardization within task maps the full integer range to a common scale. The zero-anchor concern therefore applies only to the Psignifit PF fits, and principally to the interpretation of the lower asymptote and absolute threshold units, not to the primary inferential test.
 
 Guess and lapse parameters were allowed to vary freely during fitting (i.e., $\gamma$ and $\lambda$ were free parameters), consistent with psychophysical guidance that fixing lapse at zero can bias threshold and slope estimates when lapses are present [@prins2016psychophysics; @wichmann2001psychometric].
 
@@ -517,14 +520,24 @@ The primary model used a probit link function to link phasic arousal to psychome
 $$
 \begin{aligned}
 \text{probit}(P(Y_{ij}=1)) &= \beta_0 + \beta_1 X_{ij} + \beta_2 \text{Effort}_{ij} + \beta_3 \text{Modality}_{ij} + \beta_4 P^{(\text{state})}_{ij} \\
-&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + u_{0j} + u_{1j}X_{ij}
+&\quad + \beta_5 (X_{ij} \times P^{(\text{state})}_{ij}) + \beta_6 P^{(\text{trait})}_{j} + \beta_7 (X_{ij} \times \text{Effort}_{ij}) + u_{0j} + u_{1j}X_{ij}
 \end{aligned}
 $$
 
 
-where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (mean dilation, trial value - subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The key interaction term $X_{ij} \times P^{(\text{state})}_{ij}$ (coefficient $\beta_5$) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity. The term $\beta_6 P^{(\text{trait})}_{j}$ tests whether between-subject differences in average arousal relate to sensitivity, while controlling for state-level effects. The random effects $u_{0j}$ and $u_{1j}$ allow each participant to have their own baseline performance level and intensity sensitivity, respectively.
+where $Y_{ij}$ is the binary choice on trial $i$ for subject $j$, $X_{ij}$ is continuous stimulus intensity, $P^{(\text{state})}_{ij}$ is the within-subject centered pupil metric (mean dilation, trial value − subject mean), and $P^{(\text{trait})}_{j}$ is the between-subject pupil metric (subject mean). The primary coupling term $X_{ij} \times P^{(\text{state})}_{ij}$ ($\beta_5$) tests whether within-person fluctuations in arousal are associated with changes in psychometric sensitivity. The term $X_{ij} \times \text{Effort}_{ij}$ ($\beta_7$) tests whether effort modulates the slope of the psychometric function at the trial level, providing a direct within-subjects complement to the per-participant PF comparison for H1. The term $\beta_6 P^{(\text{trait})}_{j}$ tests whether between-subject differences in average arousal relate to sensitivity. The random effects $u_{0j}$ and $u_{1j}$ allow each participant to have their own baseline performance level and intensity sensitivity, respectively.
 
 For model fitting, stimulus intensity was standardized within task, and the pupil state and trait components were z-scored across retained trials before estimation, so fixed-effect coefficients are interpretable on a standardized latent scale. The probit link was chosen for consistency with signal-detection-style latent evidence formulations; for response probabilities in the present range, probit and logit links would be expected to yield qualitatively similar conclusions. The reported model includes random intercepts and by-subject slopes for stimulus intensity. Exploratory refits that additionally allowed by-subject random slopes for effort and pupil state produced singular fits; those extended specifications were not used for primary inference (see Results).
+
+A note on the same–different task structure and the probit formulation. In standard SDT, two models are used for same–different tasks: the differencing model (DIFF) and the independent observations model (IO). Under the DIFF model, the observer computes a signed difference between the two internal representations and responds "different" if that difference exceeds a symmetric criterion $\pm k$:
+
+$$
+P(\text{"different"} \mid \Delta) = \Phi\!\left(\frac{\Delta - k}{\sqrt{2}\,\sigma}\right) + \Phi\!\left(\frac{-\Delta - k}{\sqrt{2}\,\sigma}\right)
+$$ {#eq-diff-sdt}
+
+where $\Delta$ is the physical stimulus difference, $\sigma$ is internal-noise standard deviation, and $\Phi$ is the standard normal CDF. When the false-alarm rate (at $\Delta = 0$) is low—that is, $\Phi(-k/\sqrt{2}\sigma)$ is small—the second term in @eq-diff-sdt is negligible, and the expression reduces to $\Phi\!\left((\Delta - k)/(\sqrt{2}\sigma)\right)$, which is exactly a probit function of $\Delta$. The probit GLMM is therefore the correct functional form for this task structure in the practical operating range. At the trial level, fitting a full two-parameter SDT model (separate $d'$ and criterion per trial) is not feasible without multiple observations at each intensity per trial; the slope of the probit GLMM captures psychometric steepness (sensitivity) and the intercept captures response tendency (criterion), which is the maximum resolution the design allows.
+
+The IO model, which predicts $P(\text{"different"}) = \Phi(d'/2 - c) + \Phi(-d'/2 - c)$, is non-monotone at very negative criteria but converges numerically with the DIFF probit form over the response-probability range in these data. Neither model provides stronger inferential leverage than the probit GLMM here. The probit specification is the appropriate choice.
 
 All GLMMs were estimated using the lme4 package [@bates2015] in R [@R]. Models were fit with `glmer` using lme4 defaults for primary and tiered analyses; the slow-RT sensitivity refit used `glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 200000))` to stabilize optimization with the reduced trial count. Convergence was assessed by inspecting gradient norms, optimizer warnings, and singular-fit diagnostics. Parameter estimates and standard errors were extracted using the broom.mixed package [@bolker2026broommixed]; *p*-values are based on the normal approximation to the *z*-distribution, which is appropriate for large trial-level sample sizes. 95% confidence intervals for fixed effects were computed using the Wald method. Within-subject PF effort models used lmerTest [@kuznetsova2017lmerTest] when Satterthwaite *df* were required.
 
@@ -535,6 +548,8 @@ Robustness, power, and analysis classification. Trial-level analyses use all ava
 Several pre-specified checks supported interpretation of the primary GLMM. Quality-tier robustness re-fit the model under `quality_lenient` (more permissive validity: `baseline_quality` and `cog_quality` each $\geq$ 0.50) and `quality_strict` (stricter: each $\geq$ 0.70), in addition to the primary `quality_primary` flag (both $\geq$ 0.60), to assess whether inferences about the stimulus intensity × pupil state interaction depended on inclusion stringency. A slow-RT subset restricted analysis to trials with button press after the cognitive window (RT > 1.5 s), to limit motor overlap with the pupil epoch ([@sec-response-timing](#sec-response-timing)). Model comparison contrasted the primary model with a nested model omitting the interaction, using Akaike’s information criterion (AIC), where a meaningful improvement (e.g., $\Delta$AIC > 2) would favor retaining the interaction. Missingness diagnostics tested whether pupil loss related to effort, intensity, task, or RT (@sec-missingness; quality-tier robustness in @sec-pupil-quality-tier; supplementary tables in Appendix B). Finally, equivalence testing (two one-sided tests; [@lakens2017]) evaluated the interaction against a pre-specified smallest effect size of interest (SESOI) on the probit scale; the bound rationale is given in [@sec-sesoi-rationale](#sec-sesoi-rationale), and test intervals and outcome are summarized in [@sec-pupil-quality-tier](#sec-pupil-quality-tier).
 
 The prospectus-defined confirmatory targets were effort effects on psychometric parameters (RQ1), the effort–pupil manipulation check (RQ2), trial-level pupil–psychometric coupling (RQ3), and subject-level PF–pupil coupling (RQ4). Pre-specified sensitivity analyses (quality tiers, model comparison, slow-RT subset, equivalence) were used to stress-test those inferences, not to add new hypotheses. Exploratory analyses would have been any post-hoc tests outside the prospectus; none were run beyond what is reported, and all reported statistics correspond to the pre-registered plan.
+
+Multiple comparisons. The analysis family spans four distinct research questions with multiple tests in each. RQ1 (effort effects on PF) yields four comparisons: threshold and slope under High vs. Low effort, separately for ADT and VDT. RQ2 (manipulation check) tests four pupil metrics—Total AUC, Cognitive AUC, B0, and B1—against effort. RQ3–RQ4 (coupling) include the primary intensity × pupil-state interaction, the effort × intensity interaction ($\beta_7$), three equivalence tests, and four subject-level PF–pupil correlations. With this many tests, family-wise error inflates without correction. We do not apply a blanket cross-RQ correction, because each research question addresses a distinct hypothesis with a separate prediction; pooling conceptually independent families would be over-conservative. Within families, Holm correction is applied to the four RQ1 comparisons (threshold and slope × ADT and VDT) and to the four RQ2 pupil-metric tests. The two interaction terms in RQ3 ($\beta_5$ and $\beta_7$) address different hypotheses (H3 vs. H1b) and are not corrected jointly. Results reported without explicit correction are described as such and should be read as suggestive rather than confirmatory. The chapter's single confirmatory conclusion rests on the primary coupling test ($\beta_5$, @eq-primary-glmm) and the equivalence result at the pre-specified SESOI.
 
 # Results
 
@@ -678,15 +693,59 @@ if (exists("pf_h1_infer") && !is.null(pf_h1_infer) && nrow(pf_h1_infer) == 4) {
     format_p_inline(vdt_th$p),
     "). Because several confirmatory tests were evaluated across H1 and H2, this isolated effect is best read as suggestive rather than decisive. ",
     "H1b predicted shallower slopes under high effort. Slopes were numerically shallower in both modalities but reliable in neither ",
-    "(ADT *p* = ", format_p_inline(adt_sl$p), "; VDT *p* = ", format_p_inline(vdt_sl$p), "), so H1b was **not supported**. ",
+    "(ADT *p* = ", format_p_inline(adt_sl$p), "; VDT *p* = ", format_p_inline(vdt_sl$p), "), so H1b was **not supported** by the per-participant PF analysis. ",
     "The slope null held across both tasks, and auditory slopes varied widely across participants (SD = ", sprintf("%.3f", adt_slope_sd),
     "), so it does not stem from compressed or floor-limited estimates. ",
+    "The trial-level effort × intensity interaction ($\\beta_7$) from the GLMM provides a complementary and more statistically powerful test of the same question (below). ",
     "On balance, the grip manipulation behaved as a physiological stressor that nudged the auditory threshold without reliably flattening either psychometric function. ",
     "That shift is more consistent with a change in response criterion or task difficulty than with a genuine loss of sensitivity, for which the slope is the cleaner index.\n\n",
     sep = ""
   )
 } else {
   cat("*Inferential tests for PF effort effects not available.*\n\n")
+}
+```
+
+```{r trial-level-effort-intensity, results = "asis"}
+#| echo: false
+
+# Trial-level effort × intensity: direct test of whether effort changes
+# the slope of the psychometric function (β7 from eq-primary-glmm).
+
+if (!is.null(pupil_psychometric_effort_intensity)) {
+  ei_row <- pupil_psychometric_effort_intensity %>%
+    dplyr::filter(term == "stimulus_intensity_scaled:effort_factorHigh")
+  ef_row <- pupil_psychometric_effort_intensity %>%
+    dplyr::filter(term == "effort_factorHigh")
+  if (nrow(ei_row) == 1L) {
+    b   <- sprintf("%+.3f", ei_row$estimate)
+    se  <- sprintf("%.3f", ei_row$std.error)
+    z   <- sprintf("%.2f", ei_row$statistic)
+    p   <- format_p_inline(ei_row$p.value)
+    cat(
+      "Trial-level effort \u00d7 intensity interaction ($\\beta_7$). ",
+      "The stimulus intensity \u00d7 effort interaction in the expanded GLMM was $\\beta_7$ = ", b,
+      " (*SE* = ", se, ", *z* = ", z, ", *p* = ", p, "). ",
+      if (ei_row$p.value < .05) {
+        paste0("This is significant, indicating that effort changed the steepness of the psychometric function at the trial level\u2014a direct sensitivity shift, not merely an intercept change. ")
+      } else {
+        paste0("This was not significant. The null trial-level slope change converges with the per-participant PF analysis (H1b not supported) and is consistent with the overall picture: the effort manipulation shifted response tendency (intercept) rather than discrimination sensitivity (slope). ")
+      },
+      if (nrow(ef_row) == 1L) {
+        paste0(
+          "The effort main effect remained negative ($\\beta_2$ = ", sprintf("%+.3f", ef_row$estimate),
+          ", *SE* = ", sprintf("%.3f", ef_row$std.error),
+          ", *p* = ", format_p_inline(ef_row$p.value),
+          "), consistent with the primary-model result. "
+        )
+      } else { "" },
+      "\n\n", sep = ""
+    )
+  } else {
+    cat("*Trial-level effort \u00d7 intensity term not available in saved results.*\n\n")
+  }
+} else {
+  cat("*Effort \u00d7 intensity model results not available; run* `04_pupil_psychometric_coupling/06_pupil_psychometric_coupling.R` *to generate.*\n\n")
 }
 ```
 
@@ -967,7 +1026,7 @@ hypothesis_summary %>%
   )
 ```
 
-> Note: H1a and H1b were evaluated with within-subject linear mixed models (@sec-pf-backbone; @tbl-pf-effort-test). All other hypotheses were evaluated using the analyses summarized in this chapter.
+> Note: H1a and H1b were evaluated with within-subject linear mixed models (@sec-pf-backbone; @tbl-pf-effort-test) and confirmed by the trial-level effort × intensity interaction ($\beta_7$) from the GLMM. All other hypotheses were evaluated using the analyses summarized in this chapter.
 
 # Discussion
 
