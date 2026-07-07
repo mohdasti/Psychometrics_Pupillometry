@@ -1,6 +1,7 @@
 # TOST equivalence helpers for the primary GLMM interaction (Chapter 2).
 
 CH2_INTERACTION_TERM <- "stimulus_intensity_scaled:pupil_cognitive_state_scaled"
+CH2_MOTORBUFFER_INTERACTION_TERM <- "stimulus_intensity_scaled:pupil_cognitive_state_motorbuffer_scaled"
 CH2_TOST_SESOI <- 0.10
 CH2_TOST_ALPHA <- 0.05
 CH2_TOST_Z90 <- stats::qnorm(1 - CH2_TOST_ALPHA)
@@ -66,20 +67,22 @@ build_interaction_tost_summary <- function(
     models_dir,
     sesoi = CH2_TOST_SESOI) {
   specs <- tibble::tibble(
-    analysis_id = c("lenient", "primary", "strict", "slow_rt"),
+    analysis_id = c("lenient", "primary", "strict", "slow_rt", "motorbuffer"),
     file = c(
       "mod_pupil_psychometric_lenient.rds",
       "mod_pupil_psychometric_primary.rds",
       "mod_pupil_psychometric_strict.rds",
-      "mod_pupil_psychometric_slow_rt.rds"
+      "mod_pupil_psychometric_slow_rt.rds",
+      "mod_pupil_psychometric_motorbuffer.rds"
     ),
     analysis_label = c(
       "Lenient tier (validity >= .50)",
       "Primary tier (validity >= .60)",
       "Strict tier (validity >= .70)",
-      "Slow-RT subset (RT > 1.5 s)"
+      "Slow-RT subset (RT > 1.5 s)",
+      "Motor-buffered window (truncated 150 ms pre-press)"
     ),
-    plot_order = c(1L, 2L, 3L, 4L)
+    plot_order = c(1L, 2L, 3L, 4L, 5L)
   )
 
   res <- lapply(seq_len(nrow(specs)), function(i) {
@@ -88,8 +91,14 @@ build_interaction_tost_summary <- function(
       return(NULL)
     }
     mod <- readRDS(path)
+    term <- if (specs$analysis_id[i] == "motorbuffer") {
+      CH2_MOTORBUFFER_INTERACTION_TERM
+    } else {
+      CH2_INTERACTION_TERM
+    }
     out <- extract_interaction_tost(
       mod,
+      term = term,
       sesoi = sesoi,
       analysis_id = specs$analysis_id[i],
       analysis_label = specs$analysis_label[i]

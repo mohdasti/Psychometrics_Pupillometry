@@ -407,3 +407,65 @@ summarize_delta_pupil_effort_correlation <- function(dat, pf) {
     n = nrow(cd)
   )
 }
+
+#' Motor-buffer sensitivity GLMM sample and interaction summary for QMD inline text.
+summarize_motorbuffer_sensitivity <- function(dat, effects = NULL, summary = NULL) {
+  if (is.null(dat) || !nrow(dat)) {
+    return(NULL)
+  }
+
+  req <- c(
+    "quality_primary", "cog_win_motorbuffer_valid",
+    "pupil_cognitive_state_motorbuffer", "stimulus_intensity", "choice_num", "sub"
+  )
+  if (!all(req %in% names(dat))) {
+    return(NULL)
+  }
+
+  md <- dat %>%
+    dplyr::filter(
+      .data$quality_primary == TRUE,
+      .data$cog_win_motorbuffer_valid == TRUE,
+      !is.na(.data$pupil_cognitive_state_motorbuffer),
+      !is.na(.data$stimulus_intensity),
+      !is.na(.data$choice_num)
+    )
+
+  out <- list(
+    n_trials = nrow(md),
+    n_sub = dplyr::n_distinct(md$sub),
+    pct_truncated = mean(md$cog_win_truncated_by_motor, na.rm = TRUE),
+    median_duration = stats::median(md$cog_win_motorbuffer_duration, na.rm = TRUE)
+  )
+
+  if (!is.null(effects) && "term" %in% names(effects)) {
+    int <- effects %>%
+      dplyr::filter(.data$term == "stimulus_intensity_scaled:pupil_cognitive_state_motorbuffer_scaled")
+    if (nrow(int)) {
+      out$interaction_beta <- int$estimate[1L]
+      out$interaction_se <- int$std.error[1L]
+      out$interaction_z <- int$statistic[1L]
+      out$interaction_p <- int$p.value[1L]
+    }
+  }
+
+  if (!is.null(summary) && nrow(summary)) {
+    out$interaction_beta <- summary$interaction_beta[1L]
+    out$interaction_se <- summary$interaction_se[1L]
+    out$interaction_z <- summary$interaction_z[1L]
+    out$interaction_p <- summary$interaction_p[1L]
+  }
+
+  out
+}
+
+format_motorbuffer_beta_p <- function(mb) {
+  if (is.null(mb) || is.na(mb$interaction_beta)) {
+    return("—")
+  }
+  sprintf(
+    "$\\beta = %s$, $p %s$",
+    format_beta_manuscript(mb$interaction_beta),
+    format_p_manuscript(mb$interaction_p)
+  )
+}

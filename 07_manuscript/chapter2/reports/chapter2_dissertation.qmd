@@ -247,6 +247,8 @@ pf_pupil_correlations <- sread(file.path(tables_dir, "pf_pupil_coupling_correlat
 pf_pupil_coupling_sensitivity <- sread(file.path(tables_dir, "pf_pupil_coupling_sensitivity.csv"))
 missingness_effects <- sread(file.path(tables_dir, "missingness_diagnostic_effects.csv"))
 pupil_psychometric_slow_rt <- sread(file.path(tables_dir, "pupil_psychometric_slow_rt_effects.csv"))
+pupil_psychometric_motorbuffer <- sread(file.path(tables_dir, "pupil_psychometric_motorbuffer_effects.csv"))
+pupil_psychometric_motorbuffer_summary <- sread(file.path(tables_dir, "pupil_psychometric_motorbuffer_summary.csv"))
 pupil_psychometric_tost <- sread(file.path(tables_dir, "pupil_psychometric_tost_equivalence.csv"))
 pupil_psychometric_effort_intensity <- sread(file.path(tables_dir, "pupil_psychometric_effort_intensity_effects.csv"))
 
@@ -270,6 +272,15 @@ glmm_primary_sample <- if (!is.null(merged_data)) {
 }
 response_timing <- if (!is.null(merged_data)) {
   summarize_response_timing(merged_data, use_glmm_primary = TRUE)
+} else {
+  NULL
+}
+motorbuffer_sensitivity <- if (!is.null(merged_data)) {
+  summarize_motorbuffer_sensitivity(
+    merged_data,
+    effects = pupil_psychometric_motorbuffer,
+    summary = pupil_psychometric_motorbuffer_summary
+  )
 } else {
   NULL
 }
@@ -473,12 +484,12 @@ Participants completed two same–different discrimination tasks (an Auditory Di
 
 ### Trial timeline and effort
 
-Each trial began with a jittered blank interval (1.5–4.5 s) on a gray background. Participants then saw a 3 s rectangular grip gauge whose marker indicated the target force (either 5% or 40% of maximum voluntary contraction [MVC]) to be held with the left hand on a handheld dynamometer. MVC was assessed in a short calibration before each task. Participants were instructed to maintain force through the probe stimulus and to release the grip at the onset of the subsequent 0.25 s post-probe blank screen (a blue-bordered blank appearing at approximately 4.45 s from squeeze onset), roughly 400 ms before the cognitive AUC window opened. After that blank came a 3 s same/different response window, and a 3 s four-point confidence rating. From squeeze onset through the end of the confidence period, the fixed portion of the timeline lasted 10.7 s; including the pre-trial jitter and the preprocessed pre-squeeze baseline used for pupil segmentation, the full trial epoch matches the 13.7 s timeline used in the MATLAB preprocessing pipeline.
+Each trial began with a variable inter-trial interval (1.55–5.05 s) on a gray background to provide MRI timing jitter. This pre-trial interval precedes squeeze onset and is not included in the saved pupil epoch. The fixed trial sequence then unfolded as follows, with all event times relative to squeeze onset (*t* = 0): a 3 s rectangular grip gauge inside a salmon-colored border cued participants to squeeze and maintain the target force (either 5% or 40% of maximum voluntary contraction [MVC]) with the left hand on a handheld dynamometer; a 0.25 s blank and 0.5 s fixation preceded a 0.1 s standard stimulus (3.75 s), a 0.5 s inter-stimulus interval, and a 0.1 s probe (4.35 s). Participants maintained force through the salmon-bordered grip and stimulus period until probe offset; a subsequent 0.25 s post-probe blank with a blue border cued release (4.45–4.70 s), roughly 400 ms before the cognitive AUC window opens (4.85 s). After that blank came a 3 s same/different response window (4.70–7.70 s) and a 3 s four-point confidence rating. MVC was assessed in a short calibration before each task. From squeeze onset through the end of the confidence period, the fixed post-squeeze timeline lasted 10.7 s. Preprocessed pupil files segment a 13.7 s window from −3.0 to +10.7 s relative to squeeze onset (including a pre-squeeze baseline for B0 correction), independent of the variable ITI.
 
 ```{r paradigm-schematic}
 #| label: fig-paradigm
 #| fig-cap: >
-#|   Experimental paradigm (response-signal design). Jittered pre-trial interval followed by a 3 s grip-gauge period (Low vs. High effort), fixation and standard–probe sequence, then 3 s same/different and 3 s confidence. Auditory and visual stimulus classes are summarized in the task sections below; timing follows the schematic.
+#|   Experimental paradigm (response-signal design). Variable pre-trial ITI (1.55–5.05 s), then a 3 s salmon-bordered grip-gauge period (Low vs. High effort), 0.25 s blank, 0.5 s fixation, standard–probe sequence (0.1 s + 0.5 s ISI + 0.1 s), blue-bordered release blank (0.25 s), 3 s same/different, and 3 s confidence. Auditory and visual stimulus classes are summarized below; event times follow the schematic.
 #| fig-width: 10
 #| fig-height: 7
 #| out-width: "75%"
@@ -505,7 +516,7 @@ In VDT, the standard was a foveal sinusoidal Gabor patch (1.5 cycles/°, Michels
 
 ### Responses, scheduling, and apparatus
 
-After stimulus offset, participants released the grip and used the right hand to respond within 3 s (index finger = “different,” middle finger = “same”). A 3 s confidence screen followed (four levels, 1 = lowest to 4 = highest confidence).
+After the probe and blue-bordered release cue, participants used the right hand to respond within the 3 s same/different window (index finger = “different,” middle finger = “same”). A 3 s confidence screen followed (four levels, 1 = lowest to 4 = highest confidence).
 
 Each task comprised 150 trials per full set (five blocks of 30), crossing the five stimulus levels (standard plus four offsets) with the two effort conditions in pseudorandom order with equal allocation (three trials per stimulus × effort combination per block when the full schedule was collected). Grip performance was reviewed between blocks; participants received corrective feedback if force was repeatedly off-target or not maintained through the probe as required. Task runs were acquired in-scanner (Session 2 and Session 3 in the study database; practice and Session 1 were excluded from analysis files). Low- and high-effort trials were intermixed within runs rather than blocked by session. Realized trial counts vary when runs were omitted (@sec-data-quality).
 
@@ -527,9 +538,9 @@ Pupil-based analyses used three pre-defined percentage-validity tiers from the p
 
 ### Cognitive window and response-screen timing {#sec-response-timing}
 
-The primary cognitive window (4.85–6.05 s from squeeze onset) targets the TEPR peak following the probe stimulus. The grip is released at the onset of the post-probe blank (~4.45 s), so the effort manipulation is complete approximately 400 ms before the window opens. This means the cognitive metric reflects post-release pupil state plus the task-evoked response to the discrimination target, not ongoing grip-related dilation. The window does, however, unavoidably overlap two other task events: the response screen at 4.70 s (350 ms after target onset at 4.35 s) and the button press at a variable time. In the primary GLMM sample, **RT** was measured from response-screen onset (4.70 s); median RT was `r if (!is.null(response_timing)) format_rt_s(response_timing$median_rt) else "—"` s overall (`r format_task_timing(response_timing, "median_rt")`), corresponding to median press times of `r if (!is.null(response_timing)) format_rt_s(response_timing$median_press) else "—"` s relative to squeeze onset (`r format_task_timing(response_timing, "median_press")`). These values align with the median response markers in @fig-pupil-timeseries. The analytic goal is not to eliminate the response-screen and motor confounds (which is impossible), but to limit their impact, acknowledge what remains, and support conclusions with sensitivity analyses.
+The primary cognitive window (4.85–6.05 s from squeeze onset) targets the TEPR peak following the probe stimulus (4.35–4.45 s). The grip is released during the blue-bordered post-probe blank (4.45–4.70 s), so the effort manipulation is complete approximately 400 ms before the window opens. This means the cognitive metric reflects post-release pupil state plus the task-evoked response to the discrimination target, not ongoing grip-related dilation. The window does, however, unavoidably overlap two other task events: the response screen at 4.70 s (350 ms after target onset at 4.35 s) and the button press at a variable time. In the primary GLMM sample, **RT** was measured from response-screen onset (4.70 s); median RT was `r if (!is.null(response_timing)) format_rt_s(response_timing$median_rt) else "—"` s overall (`r format_task_timing(response_timing, "median_rt")`), corresponding to median press times of `r if (!is.null(response_timing)) format_rt_s(response_timing$median_press) else "—"` s relative to squeeze onset (`r format_task_timing(response_timing, "median_press")`). These values align with the median response markers in @fig-pupil-timeseries. The analytic goal is not to eliminate the response-screen and motor confounds (which is impossible), but to limit their impact, acknowledge what remains, and support conclusions with sensitivity analyses.
 
-Accordingly, the primary cognitive window (4.85--6.05 s) was stimulus-locked and of fixed duration, and the pupil summary was mean dilation (AUC divided by duration), which together reduce mechanical coupling of RT to AUC and duration-related artifacts relative to raw AUC. Motor-buffered and pre-response window definitions were also pre-computed (truncating the primary window 150 ms before button press, and a decision-aligned window excluding the final 150 ms before response, respectively); full AUC computation for those windows requires re-processing and is reserved for future sensitivity analyses (@sec-appendix-e). Finally, a slow-RT sensitivity subset flags trials where the button press falls after the cognitive window (RT > 1.5 s, press after 6.20 s), so motor execution cannot overlap the pupil epoch; that subset feeds the analysis in @sec-pupil-quality-tier and @sec-appendix-b.
+Accordingly, the primary cognitive window (4.85--6.05 s) was stimulus-locked and of fixed duration, and the pupil summary was mean dilation (AUC divided by duration), which together reduce mechanical coupling of RT to AUC and duration-related artifacts relative to raw AUC. A **motor-buffered** variant truncates that window 150 ms before the button press on each trial (`min[6.05 s, press − 150 ms]`; mean dilation with the same B1 baseline); this sensitivity analysis is reported in @sec-pupil-quality-tier and @sec-appendix-e. A **pre-response** decision-aligned window (last 500 ms before press, excluding the final 150 ms) is documented but not analyzed here. Finally, a slow-RT sensitivity subset flags trials where the button press falls after the cognitive window (RT > 1.5 s, press after 6.20 s), so motor execution cannot overlap the pupil epoch; that subset feeds the analysis in @sec-pupil-quality-tier and @sec-appendix-b.
 
 ### Sample retention and exclusions by task {#sec-sample-retention}
 
@@ -1045,15 +1056,19 @@ Model-predicted psychometric functions at low (−1 SD) and high (+1 SD) pupil s
 
 The stimulus intensity $\times$ pupil state interaction was significant only in the lenient quality tier ($\beta = +0.064$, $SE = 0.028$, $z = 2.30$, $p = .021$), but did not persist in the primary tier ($\beta = +0.035$, $SE = 0.030$, $z = 1.163$, $p = .245$) or the strict tier ($\beta = +0.039$, $SE = 0.032$, $z = 1.213$, $p = .225$). This inconsistency across quality tiers indicates the effect is **not robust**: the lenient tier includes trials with lower data quality, and the lenient-tier significance likely reflects greater statistical power from the larger trial count rather than a consistent signal. AIC comparison showed the model without the interaction term fit marginally better (Without: 4187.47; With: 4188.13; $\Delta$AIC = 0.66), consistent with the non-significant interaction coefficient. Supplementary tier-wise output and AIC tables appear in @sec-appendix-b.
 
-The slow-RT sensitivity subset (trials with RT > 1.5 s, *N* = 940 trials from 52 participants) yielded $\beta$ = −0.071, *SE* = 0.051, *z* = −1.39, *p* = .164, opposite in sign to the primary-tier estimate. This sign reversal means motor contamination of the cognitive pupil window cannot be excluded as a partial contributor to the primary-tier pattern, though neither analysis supports a reliable interaction. Across these sensitivity checks, there is no robust evidence for moment-to-moment pupil state modulating psychometric sensitivity at the primary analysis level.
+The slow-RT sensitivity subset (trials with RT > 1.5 s, *N* = 940 trials from 52 participants) yielded $\beta$ = −0.071, *SE* = 0.051, *z* = −1.39, *p* = .164, opposite in sign to the primary-tier estimate. This sign reversal means motor contamination of the cognitive pupil window cannot be excluded as a partial contributor to the primary-tier pattern, though neither analysis supports a reliable interaction.
 
-Equivalence was tested with two one-sided tests (TOST) using a pre-specified smallest effect size of interest (SESOI) of $\pm 0.10$ probit units (full rationale in @sec-sesoi-rationale). @fig-equivalence-forest summarizes the interaction across quality tiers and the slow-RT subset (per-subset TOST values appear in @tbl-tost-equivalence, @sec-appendix-b). At the primary tier, the 90% confidence interval for the interaction ($\mathrm{LB} = -0.015$, $\mathrm{UB} = +0.085$) fell entirely within the equivalence bounds. Both one-sided TOST tests were significant at the primary tier (lower: $z = 4.50$, $p < .001$; upper: $z = -2.17$, $p = .015$), so the data are consistent with equivalence to zero at this SESOI for the primary analysis: coupling effects larger in magnitude than $\pm 0.10$ probit units are statistically incompatible with the primary-tier estimate. By contrast, the lenient tier 90% CI extended to +0.110 (upper bound exceeds the SESOI), and the slow-RT subset interval crossed zero with opposite sign ($\beta = -0.071$), so equivalence was **not supported** in those sensitivity analyses. The frequentist null hypothesis ($\beta = 0$) was not rejected at $\alpha = .05$ in the primary tier, but the equivalence framing implies that any non-null coupling, if present, is negligible relative to the SESOI rather than that the study was simply underpowered to detect the point estimate.
+A **motor-buffered** sensitivity analysis recomputed trial-level mean dilation in `[4.85 s, min(6.05 s, press − 150 ms)]` (same B1 baseline; trials required ≥ 0.6 s valid duration after truncation). On the primary quality tier, `r if (!is.null(motorbuffer_sensitivity)) motorbuffer_sensitivity$n_trials else "—"` trials from `r if (!is.null(motorbuffer_sensitivity)) motorbuffer_sensitivity$n_sub else "—"` participants passed this gate (`r if (!is.null(motorbuffer_sensitivity) && is.finite(motorbuffer_sensitivity$pct_truncated)) sprintf("%.0f%%", 100 * motorbuffer_sensitivity$pct_truncated) else "—"` truncated before 6.05 s). The intensity × pupil-state interaction was `r if (!is.null(motorbuffer_sensitivity)) format_motorbuffer_beta_p(motorbuffer_sensitivity) else "—"`, matching the primary-tier sign and remaining non-significant (@tbl-appendix-motorbuffer). TOST equivalence at the ±0.10 probit SESOI was supported for this subset (@fig-equivalence-forest). Together with the slow-RT reversal, these checks indicate that overlap with the response screen and variable motor timing complicate interpretation, but they do not reveal a hidden positive coupling effect once motor execution is buffered out.
+
+Across these sensitivity checks, there is no robust evidence for moment-to-moment pupil state modulating psychometric sensitivity at the primary analysis level.
+
+Equivalence was tested with two one-sided tests (TOST) using a pre-specified smallest effect size of interest (SESOI) of $\pm 0.10$ probit units (full rationale in @sec-sesoi-rationale). @fig-equivalence-forest summarizes the interaction across quality tiers, the slow-RT subset, and the motor-buffered window (per-subset TOST values appear in @tbl-tost-equivalence, @sec-appendix-b). At the primary tier, the 90% confidence interval for the interaction ($\mathrm{LB} = -0.015$, $\mathrm{UB} = +0.085$) fell entirely within the equivalence bounds. Both one-sided TOST tests were significant at the primary tier (lower: $z = 4.50$, $p < .001$; upper: $z = -2.17$, $p = .015$), so the data are consistent with equivalence to zero at this SESOI for the primary analysis: coupling effects larger in magnitude than $\pm 0.10$ probit units are statistically incompatible with the primary-tier estimate. By contrast, the lenient tier 90% CI extended to +0.110 (upper bound exceeds the SESOI), and the slow-RT subset interval crossed zero with opposite sign ($\beta = -0.071$), so equivalence was **not supported** in those sensitivity analyses. The motor-buffered subset returned a small positive estimate within the equivalence bounds (@fig-equivalence-forest). The frequentist null hypothesis ($\beta = 0$) was not rejected at $\alpha = .05$ in the primary tier, but the equivalence framing implies that any non-null coupling, if present, is negligible relative to the SESOI rather than that the study was simply underpowered to detect the point estimate.
 
 ```{r fig-equivalence-forest}
 #| label: fig-equivalence-forest
 #| fig-cap: >
 #|   TOST equivalence for the stimulus intensity x pupil-state interaction across analysis subsets.
-#|   Points show probit-scale interaction estimates with 90% confidence intervals; the shaded band marks the pre-specified SESOI (+/-0.10 probit units). Point color indicates the TOST equivalence verdict; trial and participant counts and Wald *p* values appear at right.
+#|   Points show probit-scale interaction estimates with 90% confidence intervals; the shaded band marks the pre-specified SESOI (+/-0.10 probit units). Point color indicates the TOST equivalence verdict; trial and participant counts and Wald *p* values appear at right. Includes quality tiers, slow-RT, and motor-buffered subsets.
 #| fig-width: 8
 #| fig-height: 5.5
 #| out-width: "90%"
@@ -1333,9 +1348,9 @@ No published trial-level GLMM has reported a pupil-state × intensity *sensitivi
 
 The primary cognitive pupil metric uses a fixed 1.20-second stimulus-locked window (4.85–6.05 s) to reduce RT confounding and capture the TEPR peak (@sec-response-timing). The grip is released during the post-probe blank (~4.45 s), so the window begins approximately 400 ms after release and does not overlap the effort manipulation itself. It does, however, overlap the response screen (4.70 s, appearing 150 ms before the window opens) and button presses at variable times (median `r if (!is.null(response_timing)) format_rt_s(response_timing$median_rt) else "—"` s after response-screen onset, or `r if (!is.null(response_timing)) format_rt_s(response_timing$median_press) else "—"` s after squeeze onset). These create potential confounds from attentional responses to the response screen and motor/blink artifacts from the button press.
 
-Several mitigation strategies are implemented. Mean dilation (AUC/duration) is used rather than raw AUC to remove duration confounds; sensitivity analyses use slow-RT trials where motor cannot contaminate the primary window; and motor-buffered and pre-response window definitions are computed and available for future sensitivity analyses when full AUC computation is completed (@sec-appendix-e). However, complete elimination of temporal overlap confounds is impossible given the task design, and the primary window represents a trade-off between capturing relevant arousal dynamics and minimizing measurement artifacts.
+Several mitigation strategies are implemented. Mean dilation (AUC/duration) is used rather than raw AUC to remove duration confounds; sensitivity analyses use slow-RT trials where motor cannot contaminate the primary window; and a motor-buffered window (truncated 150 ms before button press) was analyzed as the standard alternative (@sec-pupil-quality-tier; @sec-appendix-e). However, complete elimination of temporal overlap confounds is impossible given the task design, and the primary window represents a trade-off between capturing relevant arousal dynamics and minimizing measurement artifacts.
 
-The slow-RT sensitivity subset (trials with RT > 1.5 s, where button press falls outside the cognitive window) yielded an interaction estimate of opposite sign relative to the primary-tier result (@sec-pupil-quality-tier). Although neither estimate is statistically significant, the sign reversal indicates that motor or response-screen contamination of the cognitive window plausibly contributed to the positive direction of the primary-tier point estimate. This prevents a clean attribution of even the non-significant positive trend to genuine arousal–sensitivity coupling. Future analyses using motor-buffered or response-locked pupil windows (@sec-appendix-e) would provide a cleaner test.
+The slow-RT sensitivity subset (trials with RT > 1.5 s, where button press falls outside the cognitive window) yielded an interaction estimate of opposite sign relative to the primary-tier result (@sec-pupil-quality-tier). The motor-buffered GLMM retained the same sign as the primary analysis (`r if (!is.null(motorbuffer_sensitivity)) format_motorbuffer_beta_p(motorbuffer_sensitivity) else "—"`), so button-press motor execution alone does not account for the slow-RT reversal. Neither the primary, motor-buffered, nor slow-RT estimates support reliable arousal–sensitivity coupling.
 
 ## Integration with Chapter 1 and Chapter 3
 
@@ -1367,7 +1382,7 @@ Chapter 3 will apply hierarchical drift diffusion modeling to decompose the beha
 
 Chapter 2 provides a systematic characterization of how pupil-indexed arousal covaries with psychophysical decision behavior in older adults, using continuous stimulus intensity modeling and within-subject centering to preserve individual arousal granularity. The findings contribute to understanding whether physical effort–induced arousal modulates perceptual sensitivity at the trial level, and whether this relationship is robust across data quality thresholds and model specifications.
 
-Future work could test whether alternative pupil windows (motor-buffered, pre-response, or response-locked summaries) show clearer arousal–sensitivity coupling once full AUCs are computed; compare younger and older adults on the same coupling question; use the computational models in Chapter 3 to link behavior to latent decision parameters; and apply event-based GLM or deconvolution to separate target-, response-screen-, and motor-related pupil components.
+Future work could compare younger and older adults on the same coupling question; use the computational models in Chapter 3 to link behavior to latent decision parameters; and apply event-based GLM or deconvolution to separate target-, response-screen-, and motor-related pupil components (a pre-response decision-aligned window is already specified in @sec-appendix-e).
 
 The work presented here establishes the empirical and methodological foundation for Chapter 3, which will examine whether latent decision parameters provide a coherent mechanistic account of how physical effort and arousal reshape perceptual decisions in aging.
 
@@ -1398,11 +1413,37 @@ In addition to percentage-validity thresholds, gap-aware quality control metrics
 
 Together these metrics help separate **genuine low dilation** (clean data, small gaps) from **artifactual lows** (gaps or fragmentation), so acceptable physiology is retained and problematic trials can be excluded. Column names in the merged trial file match the preprocessing pipeline documentation for reproducibility.
 
-### Pre-specified future sensitivity windows {#sec-appendix-e}
+### Motor-buffered cognitive window {#sec-appendix-e}
 
-For **motor-buffered** analyses, window definitions truncate the primary cognitive window 150 ms before the button press, recording the adjusted window end time on each trial, reducing motor-, movement-, and blink-related contamination; full AUC extraction requires re-processing trial-level files with RT and is left for future work. A **pre-response** definition instead aligns a decision window to the last 500 ms before the response (excluding the final 150 ms), targeting decision-related arousal with minimal motor overlap; that pipeline likewise awaits full re-processing. These definitions are documented for reproducibility and were **not** analyzed in the present chapter.
+The primary cognitive window unavoidably overlaps the response screen and typical button presses (@sec-response-timing). As a pre-specified sensitivity analysis, mean dilation was recomputed in a **motor-buffered** window: start fixed at 4.85 s (target + 0.50 s), end at `min(6.05 s, button press − 150 ms)`, with the same B1 baseline (3.85–4.35 s). Trials were retained only if the truncated window spanned ≥ 0.6 s with ≥ 150 valid samples at 250 Hz. The primary GLMM was re-fit using within-subject centered motor-buffered pupil state and trait (@sec-pupil-quality-tier).
 
+A **pre-response** decision-aligned window (last 500 ms before press, excluding the final 150 ms) remains documented for future event-based extensions but was not analyzed here.
 
+```{r appendix-motorbuffer-table}
+#| label: tbl-appendix-motorbuffer
+#| tbl-cap: "Motor-Buffered Sensitivity Subset: Fixed Effects (Primary GLMM Structure)"
+
+if (!is.null(pupil_psychometric_motorbuffer)) {
+  mb_labels <- c(
+    "(Intercept)"                                                            = "Intercept",
+    "stimulus_intensity_scaled"                                              = "Stimulus Intensity",
+    "pupil_cognitive_state_motorbuffer_scaled"                               = "Cognitive Pupil State (motor-buffered, within-person)",
+    "effort_factorHigh"                                                      = "Effort: High vs. Low",
+    "task_factorVDT"                                                         = "Task: VDT vs. ADT",
+    "pupil_cognitive_trait_motorbuffer_scaled"                               = "Cognitive Pupil Trait (motor-buffered, between-person)",
+    "stimulus_intensity_scaled:pupil_cognitive_state_motorbuffer_scaled"       = "Stimulus Intensity × Pupil State"
+  )
+  pupil_psychometric_motorbuffer %>%
+    dplyr::mutate(term = dplyr::recode(term, !!!mb_labels)) %>%
+    dplyr::select(term, estimate, std.error, statistic, p.value) %>%
+    make_table(
+      col.names = c("Term", "Estimate", "SE", "z", "p"),
+      digits = 4
+    )
+} else {
+  cat("*Motor-buffer model effects not available. Run `Rscript 04_pupil_psychometric_coupling/06c_motorbuffer_sensitivity_glmm.R`.*")
+}
+```
 ## Appendix B: Behavioral Psychometric-Function Descriptives {#sec-appendix-f}
 
 Descriptive threshold and slope estimates by task and effort condition (PF-valid sample; @sec-analytic-samples). The effort contrasts that test H1 appear in @tbl-pf-effort-test in the main text.
@@ -1589,7 +1630,7 @@ if (!is.null(pupil_psychometric_tost) && nrow(pupil_psychometric_tost)) {
 
 ### Slow-RT sensitivity subset
 
-The primary cognitive window overlaps the response screen and typical button presses (@sec-response-timing; @sec-window-confounds). A pre-specified sensitivity analysis restricted the GLMM to trials where the button press fell entirely outside the cognitive window (RT > 1.5 s; motor-uncontaminated subset), so motor execution could not contaminate the pupil epoch. The stimulus intensity $\times$ pupil state interaction was non-significant and opposite in sign to the primary-tier estimate (@sec-pupil-quality-tier). The small positive interaction at the primary tier therefore cannot rule out motor overlap as a partial contributor; the slow-RT subset is consistent with unknown sign for any true effect.
+The primary cognitive window overlaps the response screen and typical button presses (@sec-response-timing; @sec-window-confounds). Pre-specified sensitivity analyses restricted the GLMM to (a) trials where the button press fell entirely outside the cognitive window (RT > 1.5 s; slow-RT subset) and (b) a motor-buffered window truncated 150 ms before press (@sec-appendix-e). The slow-RT interaction was non-significant and opposite in sign to the primary-tier estimate; the motor-buffered interaction remained small, positive, and non-significant (@sec-pupil-quality-tier). Response-screen and motor-timing overlap therefore complicates interpretation, but neither alternative supports a reliable positive coupling effect.
 
 ```{r appendix-b-slow-rt-table}
 #| label: tbl-appendix-slow-rt

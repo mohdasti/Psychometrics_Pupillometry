@@ -29,6 +29,7 @@ scripts <- list(
   
   # Stage 2: Pupil Quality Control
   list(stage = "02_pupil_quality_control", file = "03_pupil_quality_tiers.R"),
+  list(stage = "01_data_preparation", file = "compute_motorbuffered_cog_mean.R"),
   list(stage = "02_pupil_quality_control", file = "05_missingness_diagnostic.R"),
   
   # Stage 3: Effort Manipulation Check
@@ -36,6 +37,7 @@ scripts <- list(
   
   # Stage 4: Primary Analysis - Pupil-Psychometric Coupling
   list(stage = "04_pupil_psychometric_coupling", file = "06_pupil_psychometric_coupling.R"),
+  list(stage = "04_pupil_psychometric_coupling", file = "06c_motorbuffer_sensitivity_glmm.R"),
   
   # Stage 5: Subject-Level Analysis
   list(stage = "05_subject_level_analysis", file = "07_pf_pupil_subject_coupling.R"),
