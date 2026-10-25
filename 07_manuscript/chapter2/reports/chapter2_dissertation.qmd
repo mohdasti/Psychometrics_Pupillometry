@@ -130,6 +130,7 @@ insert_block_rules <- function(tab, block_rows) {
   paste(lines, collapse = "\n")
 }
 kable_page <- function(df, widths, block_rows = NULL, tabcolsep = "2.5pt", size = "\\small", escape = TRUE) {
+  df <- format_coef_cols(df)
   if (!knitr::is_latex_output()) {
     plain <- names(df)
     plain <- gsub("\\\\shortstack\\{", "", plain)
@@ -389,6 +390,7 @@ For older adults, holding a physical effort appears to change how readily a chan
 
 ```{=latex}
 \FloatBarrier
+\Needspace{12\baselineskip}
 ```
 
 ## Fixed effects
@@ -403,7 +405,7 @@ For older adults, holding a physical effort appears to change how readily a chan
 
 ```{r}
 #| label: tbl-fixed-effects
-#| tbl-cap: "Fixed effects for the models in the main text. Terms are labelled."
+#| tbl-cap: "Fixed effects for the models in the main text."
 
 fixed <- read_export("coefficients.csv")
 fixed <- fixed[!fixed$ID %in% c("S1", "S2"), , drop = FALSE]
@@ -418,7 +420,7 @@ kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengt
 
 ```{r}
 #| label: tbl-fixed-effects-diss
-#| tbl-cap: "Fixed effects for every fitted model. Terms are labelled. S2 was not accepted."
+#| tbl-cap: "Fixed effects for every fitted model. S2 was not accepted."
 
 fixed <- read_export("coefficients.csv")
 stopifnot(nrow(fixed) > 0L)
@@ -430,6 +432,7 @@ kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengt
 
 ```{=latex}
 \FloatBarrier
+\Needspace{12\baselineskip}
 ```
 
 ## Random-effects reduction
@@ -512,21 +515,37 @@ if (knitr::is_latex_output()) {
 }
 ```
 
+```{=latex}
+\Needspace{12\baselineskip}
+```
+
 ## Pupil participant flow
 
 ```{r}
 #| label: tbl-pupil-flow
-#| tbl-cap: "How many participants and trials remain at each pupil gate, by task."
+#| tbl-cap: "Participants and trials remaining at each step of the task-evoked pupil sample, by task. A window is valid when at least half of its samples are finite. The grip-window model applies its own window check and is not shown."
 
 flow <- read_export("tbl_pupil_flow.csv")
 stopifnot(nrow(flow) > 0L)
-knitr::kable(flow)
+ge <- if (knitr::is_latex_output()) "$\\geq$" else "\u2265"
+stage_lab <- c(
+  "v2 trials" = "Behavioral trials",
+  "Pupil file present" = "Pupil recording present",
+  "Axis accepted" = "Time axis confirmed (250 Hz)",
+  "B1 gate" = "Pre-probe window valid",
+  "Window gate" = "Task-evoked window valid",
+  "At least 20 trials" = paste0("Participant has ", ge, " 20 valid trials")
+)
+stopifnot(setequal(unique(flow$Stage), names(stage_lab)))
+flow$Stage <- unname(stage_lab[flow$Stage])
+knitr::kable(flow, escape = FALSE)
 ```
 
 ::: {.content-visible when-meta="dissertation"}
 
 ```{=latex}
 \FloatBarrier
+\Needspace{12\baselineskip}
 ```
 
 ## Time axis
@@ -550,6 +569,7 @@ axis_num <- function(note, pattern) {
   as.numeric(parts[2])
 }
 t1 <- axis_num(axis_tab$Note[1], "= ([0-9.]+)\\s*$")
+stopifnot(isTRUE(all.equal(t1, 1)))
 t2_dur <- axis_num(axis_tab$Note[2], "duration ([0-9.]+) s")
 t2_len <- axis_num(axis_tab$Note[2], "length ([0-9.]+) samples")
 t3_b <- axis_num(axis_tab$Note[3], "b = ([0-9.]+)")
@@ -575,9 +595,13 @@ axis_show <- data.frame(
     "Agreement with December 25 processing"
   ),
   n = axis_tab$n,
-  "Implied step (s)" = formatC(as.numeric(axis_tab[["Implied step"]]), format = "f", digits = 4),
+  "Implied step (s)" = {
+    step <- as.numeric(axis_tab[["Implied step"]])
+    stopifnot(isTRUE(all.equal(step[1], 0.004)), isTRUE(all.equal(step[2], 0.004)))
+    c(formatC(step[1:2], format = "f", digits = 3), "\u2014")
+  },
   Note = c(
-    sprintf("Proportion of trials whose median step is 0.004 s: %.2f", t1),
+    "Median step of 0.004 s in every trial",
     sprintf("%g s; median %g samples", t2_dur, t2_len),
     note3
   ),
@@ -605,7 +629,7 @@ if (knitr::is_latex_output()) {
 ```
 
 ```{=latex}
-\Needspace{16\baselineskip}
+\Needspace{12\baselineskip}
 ```
 
 ## Missing pupil data
@@ -633,13 +657,25 @@ kable_page(
 )
 ```
 
+```{=latex}
+\Needspace{12\baselineskip}
+```
+
 ## Area under the curve {#sec-s1}
 
 S1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted random-effects structure did not converge for that outcome (maximum absolute gradient `r fmt_sig(as.numeric(v("s1_max_abs_grad")), 2)` against lme4's default tolerance of 0.002). The ladder was continued from that structure by dropping the offset random slope. That step was accepted (`r v_int("s1_nobs")` trials). The offset-by-state term was `r v("s1_x_c_teprauc_state_est")` (SE `r v("s1_x_c_teprauc_state_se")`), 95% CI `r v("s1_x_c_teprauc_state_ci")`, *p* `r S1_slope$p_fmt`. The state term was `r v("s1_teprauc_state_est")`, *p* `r S1_state$p_fmt`, and the catch-by-state term was `r v("s1_catch_teprauc_state_est")`, *p* `r S1_catch$p_fmt`. The area version agrees with M4b in the sense that none of these intervals excludes zero. M4b itself was not changed.
 
+```{=latex}
+\Needspace{12\baselineskip}
+```
+
 ## Behavior in the pupil subsample {#sec-s2}
 
 S2 fits M1's formula to the `r v_int("s2_nobs")` trials from the `r v_int("s2_n_participants")` participants who contributed to the TEPR sample. The maximal model was singular, so it was not accepted. The point estimates were `r v("s2_effort_c_est")` for effort (*p* `r S2_effort$p_fmt`), `r v("s2_catch_effort_c_est")` for catch-by-effort (*p* `r S2_catch$p_fmt`), and `r v("s2_x_c_effort_c_est")` for offset-by-effort (*p* `r S2_slope$p_fmt`). They are reported only to show the direction in this subset. They are not a second accepted test.
+
+```{=latex}
+\Needspace{12\baselineskip}
+```
 
 ## Optimizer check {#sec-allfit}
 

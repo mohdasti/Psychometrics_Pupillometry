@@ -87,15 +87,42 @@ fmt_p <- function(p) {
   paste0("= ", sub("^0", "", sprintf("%.3f", p)))
 }
 
-# 2 decimals for probit, logit, and pupil; 3 where |x| < .01.
+# Two decimals. Three where the two-decimal form would be 0.00, including exact zero.
 fmt_est <- function(x) {
   if (length(x) != 1L || !is.numeric(x) || is.na(x)) .stop_value("fmt_est expects one number")
-  d <- if (abs(x) > 0 && abs(x) < 0.01) 3L else 2L
+  d <- if (abs(x) < 0.01) 3L else 2L
   fmt_num(x, d)
 }
 
 fmt_ci <- function(lo, hi) {
   paste0("[", fmt_est(lo), ", ", fmt_est(hi), "]")
+}
+
+# Reprint an exported coefficient cell with fmt_est. Accepts the character
+# form, including a Unicode minus, or a number read from the CSV.
+parse_est <- function(x) {
+  if (is.numeric(x)) return(x)
+  as.numeric(gsub(.minus, "-", as.character(x), fixed = TRUE))
+}
+format_coef_cols <- function(df) {
+  if ("Estimate" %in% names(df)) {
+    df$Estimate <- vapply(parse_est(df$Estimate), fmt_est, character(1))
+  }
+  if ("SE" %in% names(df)) {
+    df$SE <- vapply(parse_est(df$SE), fmt_est, character(1))
+  }
+  ci <- "95% CI"
+  if (ci %in% names(df)) {
+    df[[ci]] <- vapply(df[[ci]], function(cell) {
+      inner <- gsub(.minus, "-", as.character(cell), fixed = TRUE)
+      inner <- gsub("[", "", inner, fixed = TRUE)
+      inner <- gsub("]", "", inner, fixed = TRUE)
+      parts <- strsplit(inner, ",", fixed = TRUE)[[1]]
+      if (length(parts) != 2L) .stop_value("CI cell does not have two bounds")
+      fmt_ci(as.numeric(trimws(parts[1])), as.numeric(trimws(parts[2])))
+    }, character(1))
+  }
+  df
 }
 
 # Escape a table cell for XeLaTeX. Statistical letters are left for the caller.
