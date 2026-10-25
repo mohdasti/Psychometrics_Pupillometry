@@ -1,5 +1,5 @@
-Group,N,Age M,Age SD,Age range,Female n,Female %,Education M,Education SD,Education n
-All behavioral,68,69.6,6.4,60–87,34,50.0,15.8,2.5,64
-Auditory,66,69.5,6.4,60–87,33,50.0,15.9,2.5,62
-Visual,66,69.5,6.4,60–87,33,50.0,15.9,2.5,63
-TEPR sample,51,68.5,5.7,60–83,28,54.9,15.8,2.6,48
+Group,N,Age M,Age SD,Age range,Female n,Female %,Education M,Education SD,Education n,T-MoCA M,T-MoCA SD,T-MoCA n
+All behavioral,68,69.6,6.4,60–87,34,50.0,15.8,2.5,64,19.8,1.5,63
+Auditory,66,69.5,6.4,60–87,33,50.0,15.9,2.5,62,19.7,1.5,61
+Visual,66,69.5,6.4,60–87,33,50.0,15.9,2.5,63,19.8,1.5,61
+TEPR sample,51,68.5,5.7,60–83,28,54.9,15.8,2.6,48,19.8,1.6,47

@@ -1,7 +1,7 @@
 ---
 title: "Squeeze Harder, Say \"Same\": Physical Effort Shifts Older Adults' Perceptual Criterion Without Reducing Sensitivity"
 abstract: |
-  Physical effort often accompanies perception in daily life, and its cost may grow with age. Sixty-eight older adults judged whether two tones or two visual gratings were the same or different while holding a light or a strong handgrip, with pupil diameter recorded throughout. Under the strong grip, participants reported a difference less often at every stimulus level, including when the two stimuli were identical, and their discrimination did not become less precise. Effort therefore shifted the criterion for reporting a difference toward "same" rather than degrading sensitivity, in line with earlier analyses of the same cohort. Pupil diameter during the grip did not differ reliably between grip levels, and the pupil response after the probe was smaller under the strong grip, a difference that overlaps with the release of the grip. Pupil size just before the probe was only weakly associated with how precisely participants discriminated on a given trial, and the pupil response after the probe was not associated with it at all. In older adults, physical effort appears to change how readily a difference is reported rather than how well it is perceived, and the pupil-linked arousal measured here did not account for that change.
+  Physical effort often accompanies perception in daily life, and its cost may grow with age. Sixty-eight older adults judged whether two tones or two visual gratings were the same or different while holding a light or a strong handgrip, with pupil diameter recorded throughout. Under the strong grip, participants reported a difference less often at every stimulus level, including when the two stimuli were identical, and their discrimination did not become less precise. Effort therefore shifted the criterion for reporting a difference toward "same" rather than degrading sensitivity, in line with earlier analyses of the same cohort. Pupil diameter during the grip did not differ reliably between grip levels, and the pupil response after the probe was smaller under the strong grip, a difference that overlaps with the release of the grip. Pupil size just before the probe was only weakly associated with how precisely participants discriminated on a given trial, and the pupil response after the probe was not associated with it at all. In older adults, physical effort appears to change how readily a difference is reported rather than how well it is perceived, and pupil size did not account for that change.
 bibliography: references.bib
 csl: apa-7th-edition.csl
 dissertation: true
@@ -98,8 +98,41 @@ read_export <- function(name) {
   stopifnot(file.exists(path))
   utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
 }
-kable_page <- function(df, widths) {
+insert_block_rules <- function(tab, block_rows) {
+  lines <- strsplit(as.character(tab), "\n", fixed = TRUE)[[1]]
+  lastfoot <- which(grepl("\\\\endlastfoot$", lines))
+  if (length(lastfoot) == 1L) {
+    data_idx <- which(seq_along(lines) > lastfoot[[1]] & grepl("\\\\\\\\$", lines))
+  } else {
+    mid <- which(grepl("\\\\midrule$", lines))
+    bottom <- which(grepl("\\\\bottomrule$", lines))
+    if (length(mid) < 1L || length(bottom) < 1L) {
+      stop("fixed-effects table did not have a header rule", call. = FALSE)
+    }
+    data_idx <- which(
+      seq_along(lines) > mid[[1]] &
+        seq_along(lines) < bottom[[length(bottom)]] &
+        grepl("\\\\\\\\$", lines)
+    )
+  }
+  if (sum(block_rows) != length(data_idx)) {
+    stop("block sizes do not match the fixed-effects rows", call. = FALSE)
+  }
+  ends <- cumsum(block_rows)
+  ends <- ends[-length(ends)]
+  for (k in rev(ends)) {
+    lines <- append(lines, "\\midrule", after = data_idx[[k]])
+  }
+  paste(lines, collapse = "\n")
+}
+kable_page <- function(df, widths, block_rows = NULL, tabcolsep = "2.5pt", size = "\\small", escape = TRUE) {
   if (!knitr::is_latex_output()) {
+    plain <- names(df)
+    plain <- gsub("\\\\shortstack\\{", "", plain)
+    plain <- gsub("\\\\\\\\", " ", plain)
+    plain <- gsub("\\}", "", plain)
+    plain <- gsub("\\\\%", "%", plain)
+    names(df) <- plain
     return(knitr::kable(df))
   }
   stopifnot(length(widths) == ncol(df))
@@ -108,21 +141,25 @@ kable_page <- function(df, widths) {
     format = "latex",
     booktabs = TRUE,
     longtable = TRUE,
-    align = widths
+    align = widths,
+    escape = escape
   )
   tab <- sub(
     "\\begin{longtable}",
-    "\\begingroup\\setlength{\\tabcolsep}{2.5pt}\\small\\begin{longtable}",
+    paste0("\\begingroup\\setlength{\\tabcolsep}{", tabcolsep, "}", size, "\\begin{longtable}"),
     tab,
     fixed = TRUE
   )
   tab <- sub("\\end{longtable}", "\\end{longtable}\\endgroup", tab, fixed = TRUE)
+  if (!is.null(block_rows)) tab <- insert_block_rules(tab, block_rows)
   knitr::asis_output(tab)
 }
 fixed_for_page <- function(fixed) {
-  model <- paste0(fixed$Model, " (", fixed$ID, ")")
+  id <- fixed$ID
+  model <- paste0(fixed$Model, " (", id, ")")
   not_ok <- !as.logical(fixed$Accepted)
-  model[not_ok] <- paste0(model[not_ok], ", not accepted")
+  model[not_ok] <- paste0(id[not_ok], " (not accepted)")
+  model[duplicated(id)] <- ""
   data.frame(
     Model = model,
     Term = fixed$Term,
@@ -148,34 +185,55 @@ fixed_widths <- c(
 
 # Introduction
 
-Everyday perception often has to be done while the body is working, such as judging whether a sound has changed while holding a load. Combining a motor demand with a perceptual or cognitive one costs more with age. Older adults show larger dual-task costs than younger adults [@verhaeghen2003], and holding an effortful isometric grip lowered older adults' visual working-memory accuracy when distractors were present [@azer2023]. What such a demand does to a perceptual judgment is less clear.
+Everyday perception often has to be done while the body is working, such as judging whether a sound has changed while holding a load. Such situations combine two demands: the physical effort of the motor task and the difficulty of the perceptual judgment. In this chapter, effort refers to physical effort throughout. Combining demands costs more with age. Older adults show larger dual-task costs than younger adults [@verhaeghen2003], and holding an effortful isometric grip lowered older adults' visual working-memory accuracy when distractors were present [@azer2023]. What physical effort does to a perceptual judgment, and whether its effect depends on the difficulty of the judgment, is less clear.
 
 A same–different judgment can change in two ways. If the sensory evidence becomes noisier, the psychometric function that relates the size of a difference to the probability of reporting it becomes shallower, and sensitivity falls. If the observer instead requires more evidence before reporting a difference, the function shifts toward larger differences without becoming shallower, and reports of a difference on trials with no difference become rarer as well [@macmillan2005detection; @prins2016psychophysics]. The two accounts mean different things for aging. A loss of sensitivity would mean that effort degrades what older adults perceive. A criterion shift would mean that effort changes how readily they report it.
 
-Physical effort may act on the judgment through arousal. Isometric handgrip engages the locus coeruleus–noradrenergic (LC–NE) system, the main source of cortical noradrenaline and a regulator of arousal and attention [@mather2020isometric; @mather2016]. The locus coeruleus is among the brain structures most vulnerable to aging [@mather2016], which makes its role in effort-related changes in older adults' perception a natural question.
+One influential account holds that concurrent demands draw on a shared, limited pool of resources [@kahneman1973]. If a difficult judgment and a strong grip draw on the same pool, the cost of a strong grip should be largest when the judgment is hardest, so physical effort and task difficulty should interact. In a psychometric function, difficulty is the size of the difference between the stimuli, and a cost concentrated on small differences flattens the function, which is the sensitivity account above. Chapter 1 tested the shared-resource account in younger adults performing a visual working-memory task and auditory and visual discrimination tasks. Harder trials were less accurate in every task, and high physical effort slowed responses in the visual discrimination task, but physical effort and task difficulty did not interact on any measure. Whether the same holds in older adults, for whom combining demands is more costly, has not been tested.
 
-Pupil diameter offers a noninvasive index of this system. Pupil size covaries with locus coeruleus activity [@joshi2016], and adaptive gain theory distinguishes two signals [@astonjones2005]. Baseline pupil size tracks a slowly varying control state: larger baselines accompany disengagement from the task [@gilzenrat2010], and performance is best at intermediate baselines [@murphy2011]. The task-evoked pupil response tracks engagement with a particular stimulus or decision [@beatty1982; @gilzenrat2010]. If arousal links effort to the judgment, pupil size just before the stimulus to be judged is the most direct test, because it precedes the judgment it is meant to predict. The task-evoked response follows the stimulus and partly reflects the decision itself, so its association with the judgment is harder to interpret.
+Pupil diameter increases with the processing load of a cognitive task [@beatty1982; @vanderwel2018] and with physical exertion [@zenon2014], so it can register both demands. In Chapter 1, high physical effort enlarged the pupil response in all three tasks, task difficulty did not change the whole-trial response, and the two did not interact. Pupil size before a stimulus and the response the stimulus evokes carry different information. Pupil size just before the stimulus to be judged reflects the state in which the observer meets that stimulus, and baseline pupil size has been linked to how engaged observers are and how well they perform [@gilzenrat2010; @murphy2011]. The task-evoked response follows the stimulus and partly reflects the decision itself, so its association with the judgment is harder to interpret.
 
-Three earlier analyses frame this chapter. In younger adults performing a visual working-memory task and auditory and visual discrimination tasks, Chapter 1 found that high effort increased the pupil response in all three tasks and slowed responses in the visual discrimination task, with no interaction between effort and task difficulty on performance or on the pupil. In the older adults studied here, per-participant psychometric functions showed that high grip raised thresholds without changing slopes, a pattern read as a more conservative criterion for "different" [@sun2026handgrip]. Chapter 3 fitted drift diffusion models to the same trials and found that high effort shifted the drift criterion toward "same" without reducing evidence quality. Whether pupil-linked arousal carries these effects from trial to trial has not been tested, and @sun2026handgrip name it as the next step.
+In the older adults studied here, per-participant psychometric functions showed that high grip raised thresholds without changing slopes, a pattern read as a more conservative criterion for "different" [@sun2026handgrip]. Chapter 3 fitted drift diffusion models to the same trials and found that high effort shifted the drift criterion toward "same" without reducing evidence quality. Neither analysis related these effects to the pupil, and @sun2026handgrip name that as the next step.
 
-This chapter asks two questions. The first is whether a high grip changes the criterion for reporting a difference, the sensitivity of the judgment, or both. A criterion account predicts fewer "different" responses at every stimulus difference, including when the two stimuli are identical, with no change in the slope of the psychometric function. A sensitivity account predicts a shallower slope under high effort. The second question is whether pupil size tracks the slope from trial to trial. Adaptive gain theory predicts that moments of higher tonic arousal, indexed by a larger pupil before the probe, accompany less precise discrimination. The task-evoked response was examined as a secondary predictor, and pupil size during the grip served as a physiological check that the grip raised arousal. All analyses were specified before they were run; the study was not pre-registered.
+This chapter asks two questions. The first is whether a strong grip changes the criterion for reporting a difference, the sensitivity of the judgment, or both. A criterion account predicts fewer "different" responses at every stimulus difference, including when the two stimuli are identical, with no change in the slope of the psychometric function. A shared-resource account predicts a cost concentrated on the smallest differences, which would make the slope shallower under high effort. The second question is whether the pupil tracks these effects: whether pupil size during the grip differs between effort levels, whether the task-evoked response differs with effort and with difficulty, and whether pupil size just before the probe tracks the slope of the judgment from trial to trial. All analyses were specified before they were run; the study was not pre-registered.
 
 # Methods
 
 ## Participants and trials {#sec-participants}
 
-Recruitment, exclusions, and demographics are those of @sun2026handgrip. The behavioral analysis uses that paper's cleaned trial file: `r v_int("m1_nobs")` trials from `r v_int("m1_n_participants")` participants (`r v_int("m1_n_adt")` auditory, `r v_int("m1_n_vdt")` visual). `r v_int("n_one_task")` participants completed only one task.
+Recruitment, exclusions, and demographics are those of @sun2026handgrip. The behavioral analysis uses that paper's cleaned trial file: `r v_int("m1_nobs")` trials from `r v_int("m1_n_participants")` participants (`r v_int("m1_n_adt")` auditory, `r v_int("m1_n_vdt")` visual). `r v_words("n_one_task", capitalize = TRUE)` participants completed only one task.
 
 ```{r}
 #| label: tbl-demographics
-#| tbl-cap: "Age, sex, and education for the behavioral sample, by task, and for the participants in the task-evoked pupil sample. Education n counts participants with a numeric year value. Cells coded as less than 12 years, and blank cells, are not in the education mean. T-MoCA is not in the demographics file or the subject-by-task file supplied with the preprint share, so it is not in this table."
+#| tbl-cap: "Age, sex, education, and T-MoCA for the behavioral sample, by task, and for the participants in the task-evoked pupil sample. Education and T-MoCA means include participants with a recorded value (n columns)."
+#| results: asis
 
 demo_tab <- read_export("tbl_demographics.csv")
 stopifnot(nrow(demo_tab) == 4L)
-knitr::kable(demo_tab)
+if (knitr::is_latex_output()) {
+  body <- paste(apply(demo_tab, 1, function(r) paste(r, collapse = " & ")), collapse = " \\\\\n")
+  cat(sprintf(paste(
+    "\\begingroup",
+    "\\setlength{\\tabcolsep}{3pt}",
+    "\\footnotesize",
+    "\\begin{longtable}{lrrrrrrrrrrrr}",
+    "\\toprule",
+    "Group & N & \\multicolumn{3}{c}{Age} & \\multicolumn{2}{c}{Female} & \\multicolumn{3}{c}{Education} & \\multicolumn{3}{c}{T-MoCA} \\\\",
+    "\\cmidrule(lr){3-5}\\cmidrule(lr){6-7}\\cmidrule(lr){8-10}\\cmidrule(lr){11-13}",
+    "& & M & SD & range & n & \\%% & M & SD & n & M & SD & n \\\\",
+    "\\midrule",
+    "%s \\\\",
+    "\\bottomrule",
+    "\\end{longtable}",
+    "\\endgroup",
+    sep = "\n"
+  ), body))
+} else {
+  knitr::kable(demo_tab)
+}
 ```
 
-Pupil analyses use a subset of the same trials. A trial entered the pupil file only when a recording existed and the sample count and within-trial time step met the checks under Pupil measures (@sec-pupillometry). The grip-window model uses `r v_int("m2_nobs")` trials (`r v_int("m2_n_participants")` participants). The task-evoked models use `r v_int("m3_nobs")` trials (`r v_int("m3_n_participants")` participants; `r v_int("m3_n_adt")` auditory, `r v_int("m3_n_vdt")` visual). The missingness model uses the `r v_int("m5_nobs")` trials that could be matched to a pupil recording (`r v_int("m5_n_participants")` participants), of which `r v_int("m3_nobs")` passed the task-evoked gate. `r v_int("n_no_tepr")` of the `r v_int("m1_n_participants")` participants contributed no trials to the task-evoked models, because no recording existed or fewer than 20 trials passed the checks (@tbl-pupil-flow).
+Pupil analyses use a subset of the same trials. A trial entered the pupil file only when a recording existed and the sample count and within-trial time step met the checks under Pupil measures (@sec-pupillometry). The grip-window model uses `r v_int("m2_nobs")` trials (`r v_int("m2_n_participants")` participants). The task-evoked models use `r v_int("m3_nobs")` trials (`r v_int("m3_n_participants")` participants; `r v_int("m3_n_adt")` auditory, `r v_int("m3_n_vdt")` visual). The missingness model uses the `r v_int("m5_nobs")` trials that could be matched to a pupil recording (`r v_int("m5_n_participants")` participants), of which `r v_int("m3_nobs")` passed the task-evoked gate. Of the `r v_int("m1_n_participants")` participants, `r v_int("n_no_tepr")` contributed no trials to the task-evoked models, because no recording existed or fewer than 20 trials passed the checks (@tbl-pupil-flow).
 
 ## Task {#sec-task-paradigm}
 
@@ -236,7 +294,7 @@ Models were estimated in R [@R]. The chapter was rendered with Quarto [@quarto].
 
 ```{r}
 #| label: fig-p-diff
-#| fig-cap: "Observed proportion of different responses by offset and effort. Catch is the zero-offset trial. Levels 1–4 are the four increasing offsets (auditory: 8, 16, 32, and 64 Hz; visual: 0.06, 0.12, 0.24, and 0.48)."
+#| fig-cap: "Proportion of \"different\" responses by offset and effort. Points are means of participant proportions, error bars are ±1 within-participant SE, and lines are the behavioral model's fixed-effect predictions. Catch is the zero-offset trial; the four nonzero offsets are 8, 16, 32, and 64 Hz (auditory) and 0.06, 0.12, 0.24, and 0.48 contrast (visual)."
 #| fig-width: 7.2
 #| fig-height: 3.6
 #| out-width: "100%"
@@ -296,15 +354,15 @@ kable_page(show, c(
 
 Older adults holding a strong grip reported a difference less often at every stimulus difference, in both modalities, including on catch trials, on which the two stimuli were identical. The additional change on catch trials was close to zero, so false alarms fell along with responses at the other offsets, and the slope of the psychometric function did not become shallower. This is the pattern a shift of the criterion toward "same" predicts, not the pattern a loss of sensitivity predicts [@macmillan2005detection]. Three analyses of these participants now agree. Per-participant psychometric functions showed higher thresholds and unchanged slopes [@sun2026handgrip], the trial-level model reported here showed the criterion pattern directly, and the diffusion models of Chapter 3 placed the effect in the drift criterion rather than in evidence quality. The trial-level model also addresses a limitation of the per-participant fits: with 75 trials per grip level, individual slopes are estimated imprecisely [@sun2026handgrip], whereas a model that pools all trials estimates the change in slope across participants, and it still showed no shallowing. The offset-by-effort interaction was positive, but the effort difference was smallest at the largest offset, where responding was near ceiling, and a probit model without a lapse rate can express a difference that shrinks near ceiling as a steeper slope. The positive term is therefore not read as a gain in sensitivity.
 
-Why effort would move the criterion rather than sensitivity can be framed by four accounts. A resource account, in which the grip competes with perception for limited capacity, predicts noisier evidence and a shallower function [@azer2023]. That was not observed here, as @sun2026handgrip also concluded. A second account treats the shift as caution: under a concurrent physical demand, observers may require more evidence before reporting a change. In the same cohort, high grip also improved metacognitive efficiency, an effect that appeared to be driven by lower confidence on errors at the easiest auditory offset [@sun2026handgrip]. A decision state that is both more conservative and better at registering its own errors fits caution better than degraded input, although the two grip effects did not covary across participants [@sun2026handgrip], so they may not share one mechanism. A third account is that arousal acts on bias directly. Pupil-linked phasic arousal has been associated with a reduction of choice bias [@deGee2020pupil], but here the task-evoked response did not predict the rate of "different" responses, so trial-wise phasic arousal did not carry the effort effect in this sample. A fourth account places the shift at the response rather than the decision. "Different" was always reported with the right index finger and "same" with the right middle finger, and a left-hand grip could bias right-hand responding toward one finger. Neither the psychometric analysis nor the diffusion model can separate a decision criterion from a bias in response mapping. A design that counterbalances the mapping could.
+Why physical effort would move the criterion rather than sensitivity can be framed by four accounts. A shared-resource account, in which the grip and the judgment draw on one limited pool [@kahneman1973], predicts a cost concentrated on the hardest judgments and therefore a shallower function [@azer2023]. That was not observed here, as @sun2026handgrip also concluded, and it parallels Chapter 1, in which physical effort and task difficulty did not interact in younger adults. A second account treats the shift as selective caution: under a concurrent physical demand, observers may require more evidence before reporting a change specifically. This is not caution in the general sense of a wider decision boundary, which Chapter 3 found changed negligibly under high effort; it is a bias against one response, which Chapter 3 located in the drift criterion. In the same cohort, high grip also improved metacognitive efficiency, an effect that appeared to be driven by lower confidence on errors at the easiest auditory offset [@sun2026handgrip]. A decision state that is both more conservative and better at registering its own errors fits caution better than degraded input, although the two grip effects did not covary across participants [@sun2026handgrip], so they may not share one mechanism. A third account is that physical effort acts on the decision through arousal. Pupil-linked phasic arousal has been associated with a reduction of choice bias [@deGee2020pupil], but here the task-evoked response did not predict the rate of "different" responses, so trial-wise changes in the pupil did not carry the effort effect in this sample. A fourth account places the shift at the response rather than the decision. "Different" was always reported with the right index finger and "same" with the right middle finger, and a left-hand grip could bias right-hand responding toward one finger. Chapter 3 placed the effort effect in the drift criterion rather than in the starting point, which argues against a simple bias in preparing one response before the evidence arrives. A bias that operates on the evidence for one response, however, cannot be separated from the response mapping in this design. A design that counterbalances the mapping could separate them.
 
-The pupil measures responded to effort less than expected. Pupil size during the grip did not differ significantly between grip levels, whereas in younger adults Chapter 1 found that high effort increased the pupil response in every task. The two measures are not directly comparable: Chapter 1 summarized the pupil from trial onset to the response window, including the response to the probe, and recorded it in a quiet, dimly lit laboratory rather than in a scanner. Several features of this sample could contribute. Older adults have smaller pupils and a reduced range for dilation [@winn1994; @piquado2010]. In the time course, the two effort levels separated only in the second half of the grip, and the separation persisted into the pre-probe window (@fig-pupil-timecourse), so a window that begins 1 s after squeeze onset also averages over a period in which they did not differ. The effect of effort varied considerably across participants, and only `r v_int("m2_n_participants")` of the `r v_int("m1_n_participants")` participants contributed to that model. Without a younger group measured in the same way, these data cannot show that the weaker effect reflects age. The TEPR was smaller under high effort, but grip release, the release cue, and the button press fall inside its window, and releasing a strong grip differs from releasing a light one. The TEPR is also measured relative to the pre-probe pupil, and evoked responses tend to be smaller when baseline pupil size is larger [@gilzenrat2010]. In the time course, the pupil under high effort was larger before the probe, and the two effort levels converged after it (@fig-pupil-timecourse). The effort difference in the TEPR therefore cannot be attributed to processing of the probe.
+The pupil responded to physical effort less than expected and did not respond to difficulty. Pupil size during the grip did not differ significantly between grip levels, whereas in younger adults Chapter 1 found that high effort increased the pupil response in every task. The two measures are not directly comparable: Chapter 1 summarized the pupil from trial onset to the response window, including the response to the probe, and recorded it in a quiet, dimly lit laboratory rather than in a scanner. Several features of this sample could contribute. Older adults have smaller pupils and a reduced range for dilation [@winn1994; @piquado2010]. In the time course, the two effort levels separated only in the second half of the grip, and the separation persisted into the pre-probe window (@fig-pupil-timecourse), so a window that begins 1 s after squeeze onset also averages over a period in which they did not differ. The effect of effort varied considerably across participants, and only `r v_int("m2_n_participants")` of the `r v_int("m1_n_participants")` participants contributed to that model. Without a younger group measured in the same way, these data cannot show that the weaker effect reflects age. The TEPR was smaller under high effort, but grip release, the release cue, and the button press fall inside its window, and releasing a strong grip differs from releasing a light one. The TEPR is also measured relative to the pre-probe pupil, and evoked responses tend to be smaller when baseline pupil size is larger [@gilzenrat2010]. In the time course, the pupil under high effort was larger before the probe, and the two effort levels converged after it (@fig-pupil-timecourse). The effort difference in the TEPR therefore cannot be attributed to processing of the probe. The TEPR also did not differ with the size of the stimulus difference or on catch trials, just as task difficulty did not change the whole-trial pupil response in Chapter 1.
 
-On trials when the pupil before the probe was larger than the participant's mean, the psychometric slope was shallower. That direction fits adaptive gain theory, in which higher tonic arousal accompanies a less task-focused control state [@astonjones2005; @gilzenrat2010], and the finding that performance declines at large baseline pupil sizes [@murphy2011]. The evidence is weak. The interval reaches zero, and the pre-probe window follows the standard and so contains the early response to it. The association is a hypothesis for a study with a clean pre-stimulus baseline rather than a finding this chapter rests on. The TEPR, summarized as a mean or as an area, was associated with neither the slope nor the rate of "different" responses. In this sample, the pupil did not carry the effect of effort on the judgment.
+On trials when the pupil before the probe was larger than the participant's mean, the psychometric slope was shallower. The evidence is weak: the interval reaches zero, and the pre-probe window follows the standard and so contains the early response to it. One interpretation comes from adaptive gain theory, which links pupil size to the activity of the locus coeruleus–noradrenergic (LC–NE) system [@astonjones2005; @joshi2016]. In that theory, a larger baseline pupil accompanies a less task-focused state [@gilzenrat2010], and performance is best at intermediate baseline pupil sizes [@murphy2011]. Isometric handgrip engages the noradrenergic system [@mather2020isometric], and the locus coeruleus is among the brain structures most vulnerable to aging [@mather2016], so a route from physical effort to perception through the LC–NE system is plausible in older adults. This study, however, neither manipulated nor measured the locus coeruleus, and pupil size also covaries with activity outside it [@joshi2016]. The association is therefore a hypothesis for a study with a clean pre-stimulus baseline rather than a finding this chapter rests on. The TEPR, summarized as a mean or as an area, was associated with neither the slope nor the rate of "different" responses. In this sample, the pupil did not carry the effect of physical effort on the judgment.
 
-Several features of the design limit these conclusions. Grip release, its visual cue, and the button press all fall inside the task-evoked window, and the pre-probe window contains the early response to the standard. The response mapping was not counterbalanced. With two effort levels, the data cannot describe a dose–response relation or test an inverted-U relation between arousal and performance. This chapter has no younger group, so no effect can be attributed to age. Data were collected in an MRI scanner, which constrains luminance, posture, and noise. Pupil data were missing or unusable for `r v_int("n_no_tepr")` of the `r v_int("m1_n_participants")` participants, and high-effort trials were slightly more likely to be usable, although every pupil model included effort. Pupil size was recorded in arbitrary units. The behavioral model had no lapse rate, which bears on the reading of the slope interaction.
+Several features of the design limit these conclusions. Grip release, its visual cue, and the button press all fall inside the task-evoked window, and the pre-probe window contains the early response to the standard. The response mapping was not counterbalanced. With two effort levels, the data cannot describe a dose–response relation or test an inverted-U relation between effort and performance. This chapter has no younger group, so no effect can be attributed to age. Locus coeruleus activity was not measured, so any role for the LC–NE system is an inference. Data were collected in an MRI scanner, which constrains luminance, posture, and noise. Pupil data were missing or unusable for `r v_int("n_no_tepr")` of the `r v_int("m1_n_participants")` participants, and high-effort trials were slightly more likely to be usable, although every pupil model included effort. Pupil size was recorded in arbitrary units. The behavioral model had no lapse rate, which bears on the reading of the slope interaction.
 
-For older adults, holding a physical effort appears to change how readily a change is reported rather than how well it is perceived. That distinction matters wherever older adults must notice a change while exerting themselves: a more conservative criterion predicts more missed changes when the evidence is weak, without implying that perception itself is impaired. A study that counterbalances the response mapping, uses more than two effort levels, measures a pre-stimulus baseline free of other stimuli, and models confidence alongside choice could separate the caution and response-mapping accounts and test whether tonic arousal predicts discrimination. In this chapter, physical effort shifted older adults' criterion toward "same", and pupil-linked arousal did not account for that shift.
+For older adults, holding a physical effort appears to change how readily a change is reported rather than how well it is perceived, and this did not depend on a shared limit with the difficulty of the judgment. That distinction matters wherever older adults must notice a change while exerting themselves: a more conservative criterion predicts more missed changes when the evidence is weak, without implying that perception itself is impaired. A study that counterbalances the response mapping, uses more than two effort levels, measures a pre-stimulus baseline free of other stimuli, and models confidence alongside choice could separate the caution and response-mapping accounts and test whether pupil size before a stimulus predicts discrimination. In this chapter, physical effort shifted older adults' criterion toward "same", and the pupil did not account for that shift.
 
 # Supplement
 
@@ -330,7 +388,7 @@ fixed <- read_export("coefficients.csv")
 fixed <- fixed[!fixed$ID %in% c("S1", "S2"), , drop = FALSE]
 stopifnot(nrow(fixed) > 0L)
 stopifnot(!any(fixed$ID %in% c("S1", "S2")))
-kable_page(fixed_for_page(fixed), fixed_widths)
+kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengths)
 ```
 
 :::
@@ -344,7 +402,7 @@ kable_page(fixed_for_page(fixed), fixed_widths)
 fixed <- read_export("coefficients.csv")
 stopifnot(nrow(fixed) > 0L)
 stopifnot(all(c("S1", "S2") %in% fixed$ID))
-kable_page(fixed_for_page(fixed), fixed_widths)
+kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengths)
 ```
 
 :::

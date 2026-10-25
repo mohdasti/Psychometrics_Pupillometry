@@ -40,6 +40,32 @@ fmt_int <- function(x) {
 
 v_int <- function(key) fmt_int(as.numeric(v(key)))
 
+.words_0_19 <- c(
+  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+  "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+  "seventeen", "eighteen", "nineteen"
+)
+.words_tens <- c("twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety")
+
+# English words for an integer from 0 to 99. Errors outside that range.
+v_words <- function(key, capitalize = FALSE) {
+  x <- as.numeric(v(key))
+  if (length(x) != 1L || is.na(x) || abs(x - round(x)) > 1e-8 || x < 0 || x > 99) {
+    .stop_value("v_words expects an integer from 0 to 99: ", key)
+  }
+  n <- as.integer(round(x))
+  if (n < 20L) {
+    word <- .words_0_19[n + 1L]
+  } else {
+    word <- .words_tens[n %/% 10L - 1L]
+    if (n %% 10L != 0L) word <- paste0(word, "-", .words_0_19[n %% 10L + 1L])
+  }
+  if (isTRUE(capitalize)) {
+    word <- paste0(toupper(substr(word, 1L, 1L)), substr(word, 2L, nchar(word)))
+  }
+  word
+}
+
 v_num <- function(key) {
   val <- v(key)
   if (is.character(val)) return(val)

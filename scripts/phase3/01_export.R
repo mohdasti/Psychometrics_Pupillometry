@@ -169,8 +169,14 @@ for (id in ids) {
     }
   }
 }
-add_key("lme4_version", as.character(packageVersion("lme4")), "lme4 version", "session", "packageVersion")
-add_key("lmerTest_version", as.character(packageVersion("lmerTest")), "lmerTest version", "session", "packageVersion")
+m1_meta <- fromJSON(file.path(MODELS, "M1_meta.json"))
+add_key("lme4_version", m1_meta$lme4_version, "lme4 version that fitted the models", "M1_meta.json", "lme4_version")
+add_key("lmerTest_version", m1_meta$lmerTest_version, "lmerTest version that fitted the models", "M1_meta.json", "lmerTest_version")
+log_line(
+  "fit lme4 ", m1_meta$lme4_version, " lmerTest ", m1_meta$lmerTest_version,
+  " | session lme4 ", as.character(packageVersion("lme4")),
+  " lmerTest ", as.character(packageVersion("lmerTest"))
+)
 add_key("run_id", RUN, "fit run id", "path", RUN)
 n_no_tepr <- iv_store$m1_n_participants - iv_store$m3_n_participants
 if (n_no_tepr != 17L) stop("n_no_tepr is not 17", call. = FALSE)
@@ -299,10 +305,19 @@ demo[, age := as.numeric(get("AGE AT BAP SESSION 1"))]
 demo[, sex := trimws(as.character(SEX))]
 demo[, edu := as.numeric(get("EDU (years)"))]
 demo <- unique(demo[, .(subject, age, sex, edu)], by = "subject")
+neuro_path <- file.path(CH2, "data/raw/behavioral", "LC Aging Subject Data master spreadsheet - neuropsych.csv")
+neuro <- fread(neuro_path, skip = 1)
+moca_col <- grep("^MoCA \\(phone screen", names(neuro), value = TRUE)
+if (length(moca_col) != 1L) stop("T-MoCA column not found in the neuropsych file", call. = FALSE)
+neuro[, subject := trimws(get("SUBJECT NUMBER"))]
+neuro[, tmoca := as.numeric(get(moca_col))]
+neuro <- unique(neuro[, .(subject, tmoca)], by = "subject")
+demo <- merge(demo, neuro, by = "subject", all.x = TRUE)
 summ_people <- function(ids, label) {
   dd <- demo[subject %in% ids]
   ages <- dd$age[is.finite(dd$age)]
   edus <- dd$edu[is.finite(dd$edu)]
+  tmocas <- dd$tmoca[is.finite(dd$tmoca)]
   nf <- sum(dd$sex == "Female", na.rm = TRUE)
   data.table(
     Group = label,
@@ -314,7 +329,10 @@ summ_people <- function(ids, label) {
     `Female %` = fmt_num(100 * nf / length(ids), 1),
     `Education M` = fmt_num(mean(edus), 1),
     `Education SD` = fmt_num(stats::sd(edus), 1),
-    `Education n` = length(edus)
+    `Education n` = length(edus),
+    `T-MoCA M` = fmt_num(mean(tmocas), 1),
+    `T-MoCA SD` = fmt_num(stats::sd(tmocas), 1),
+    `T-MoCA n` = length(tmocas)
   )
 }
 adt_ids <- who[task == "ADT", subject]
