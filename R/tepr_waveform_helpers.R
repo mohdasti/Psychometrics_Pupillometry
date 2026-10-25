@@ -1,6 +1,6 @@
 # Helpers for TEPR subject-level waveform extraction and plotting.
-# Shared with modeling-pupil-DDM (keep in sync).
 
+#' Interpolate a single trial onto the analysis grid without extrapolation.
 interpolate_trial_to_grid <- function(t, y, time_grid) {
   ok <- is.finite(t) & is.finite(y)
   t <- t[ok]
@@ -28,6 +28,7 @@ interpolate_trial_to_grid <- function(t, y, time_grid) {
   )
 }
 
+#' Winsorize subject-level means within each task x time sample.
 winsorize_subject_waveforms <- function(df,
                                         value_col = "mean_pupil_full",
                                         probs = c(0.01, 0.99),
@@ -46,6 +47,7 @@ winsorize_subject_waveforms <- function(df,
     dplyr::select(-.lo, -.hi)
 }
 
+#' Collapse to one row per subject x task x condition x time.
 collapse_subject_condition_time <- function(df,
                                           value_col = "mean_pupil_full",
                                           out_col = "mean_pupil_isolated") {
@@ -66,6 +68,7 @@ collapse_subject_condition_time <- function(df,
     {if (out_col != "mean_pupil_isolated") dplyr::rename(., !!out_col := mean_pupil_isolated) else .}
 }
 
+#' LCYA-style summary: mean and SE across subjects at each time sample.
 aggregate_condition_time_means <- function(subject_df, value_col = "mean_pupil_isolated") {
   subject_df %>%
     dplyr::group_by(task, condition, t_rel) %>%
@@ -77,6 +80,7 @@ aggregate_condition_time_means <- function(subject_df, value_col = "mean_pupil_i
     )
 }
 
+#' Subject-level squeeze anchor so each subject x condition trace is 0 at t = 0.
 normalize_subject_tepr <- function(subject_df,
                                    value_col = "mean_pupil_isolated") {
   squeeze_at_zero <- function(x, t) {
@@ -94,6 +98,7 @@ normalize_subject_tepr <- function(subject_df,
     dplyr::select(-squeeze_val)
 }
 
+#' Collapse pre-squeeze condition means to a single shared trajectory for display.
 overlap_pre_squeeze_conditions <- function(condition_df,
                                            value_col = "mean_pupil_isolated",
                                            se_col = "se_pupil_isolated") {
@@ -114,6 +119,26 @@ overlap_pre_squeeze_conditions <- function(condition_df,
     dplyr::ungroup()
 }
 
+#' Display normalization on already-aggregated condition means (legacy fallback).
+finalize_tepr_display <- function(condition_df,
+                                  value_col = "mean_pupil_isolated",
+                                  b0_win = c(-0.5, 0)) {
+  squeeze_at_zero <- function(x, t) {
+    idx <- which(abs(t) < 1e-8)
+    if (length(idx)) x[idx[1]] else x[which.min(abs(t))]
+  }
+
+  condition_df %>%
+    dplyr::group_by(task, condition) %>%
+    dplyr::mutate(
+      squeeze_level = squeeze_at_zero(.data[[value_col]], t_rel),
+      "{value_col}" := .data[[value_col]] - squeeze_level
+    ) %>%
+    dplyr::ungroup() %>%
+    overlap_pre_squeeze_conditions(value_col = value_col)
+}
+
+#' Prepare plotting data: cleaned subject rows + display-normalized condition-time means.
 prepare_tepr_plot_data <- function(df,
                                    value_col = "mean_pupil_full",
                                    winsorize = TRUE) {
@@ -133,6 +158,7 @@ prepare_tepr_plot_data <- function(df,
   list(subject = subject_df, condition = condition_df)
 }
 
+#' Display grid for GAM plotting (~200 time samples by default).
 tepr_display_time_grid <- function(x_range = c(-0.5, 7.7), n_timepoints = 200L) {
   grid <- seq(x_range[1], x_range[2], length.out = n_timepoints)
   if (x_range[1] < 0 && x_range[2] > 0) {
@@ -141,6 +167,7 @@ tepr_display_time_grid <- function(x_range = c(-0.5, 7.7), n_timepoints = 200L) 
   sort(unique(grid))
 }
 
+#' Bin subject-level traces onto a coarser grid for smoother GAM fits.
 downsample_subject_condition_time <- function(subject_df,
                                               grid,
                                               value_col = "mean_pupil_isolated") {
@@ -166,6 +193,7 @@ downsample_subject_condition_time <- function(subject_df,
     )
 }
 
+#' Coarser condition-time means for GAM display (default ~200 samples).
 prepare_tepr_gam_plot_data <- function(plot_prep,
                                        x_range = c(-0.5, 7.7),
                                        n_timepoints = 200L,
@@ -181,6 +209,7 @@ prepare_tepr_gam_plot_data <- function(plot_prep,
     overlap_pre_squeeze_conditions(value_col = value_col)
 }
 
+#' Fit GAM display curves and re-anchor each smooth to pass through zero at t = 0.
 fit_tepr_gam_curves <- function(condition_df,
                                 value_col = "mean_pupil_isolated",
                                 gam_k = 10L,
@@ -231,12 +260,31 @@ fit_tepr_gam_curves <- function(condition_df,
     )
 }
 
+#' Y-axis limits from squeeze-anchored GAM curves.
 tepr_gam_curves_ylimits <- function(gam_curves,
                                     x_range = c(-0.5, 7.65),
                                     padding = c(0.08, 0.12)) {
   in_range <- gam_curves$t_rel >= x_range[1] & gam_curves$t_rel <= x_range[2]
   y_lower <- stats::quantile(gam_curves$fit_lo[in_range], 0.01, na.rm = TRUE)
   y_upper <- stats::quantile(gam_curves$fit_hi[in_range], 0.99, na.rm = TRUE)
+  if (!all(is.finite(c(y_lower, y_upper))) || y_upper <= y_lower) {
+    return(c(-0.5, 1.5))
+  }
+  span <- y_upper - y_lower
+  c(y_lower - span * padding[1], y_upper + span * padding[2])
+}
+
+#' Y-axis limits from pointwise subject SEM ribbons.
+tepr_plot_ylimits <- function(condition_df,
+                                x_range = c(-0.5, 7.65),
+                                value_col = "mean_pupil_isolated",
+                                se_col = "se_pupil_isolated",
+                                padding = c(0.08, 0.12)) {
+  in_range <- condition_df$t_rel >= x_range[1] & condition_df$t_rel <= x_range[2]
+  y_lo <- condition_df[[value_col]] - 1.96 * condition_df[[se_col]]
+  y_hi <- condition_df[[value_col]] + 1.96 * condition_df[[se_col]]
+  y_lower <- stats::quantile(y_lo[in_range], 0.01, na.rm = TRUE)
+  y_upper <- stats::quantile(y_hi[in_range], 0.99, na.rm = TRUE)
   if (!all(is.finite(c(y_lower, y_upper))) || y_upper <= y_lower) {
     return(c(-0.5, 1.5))
   }

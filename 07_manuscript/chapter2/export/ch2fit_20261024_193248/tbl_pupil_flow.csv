@@ -1,0 +1,13 @@
+Task,Stage,Participants,Trials
+ADT,v2 trials,66,9050
+ADT,Pupil file present,53,6319
+ADT,Axis accepted,53,6319
+ADT,B1 gate,47,3290
+ADT,Window gate,43,2893
+ADT,At least 20 trials,36,2832
+VDT,v2 trials,66,9216
+VDT,Pupil file present,56,6311
+VDT,Axis accepted,56,6307
+VDT,B1 gate,55,3971
+VDT,Window gate,50,3541
+VDT,At least 20 trials,41,3467

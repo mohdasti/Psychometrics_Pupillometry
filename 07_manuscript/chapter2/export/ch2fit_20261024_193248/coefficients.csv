@@ -1,80 +1,80 @@
-model,accepted,term,est_fmt,se_fmt,stat_fmt,df_fmt,ci_fmt,p_fmt,key_term
-M1,TRUE,(Intercept),0.434,0.074,5.86,"","[0.289, 0.579]",< .001,FALSE
-M1,TRUE,catch,−1.945,0.108,−18.10,"","[−2.156, −1.735]",< .001,FALSE
-M1,TRUE,x_c,1.136,0.048,23.65,"","[1.042, 1.230]",< .001,FALSE
-M1,TRUE,effort_c,−0.096,0.028,−3.39,"","[−0.152, −0.041]",< .001,TRUE
-M1,TRUE,task_c,0.322,0.094,3.43,"","[0.138, 0.506]",< .001,FALSE
-M1,TRUE,catch:effort_c,−0.017,0.068,−0.25,"","[−0.151, 0.117]",= .802,TRUE
-M1,TRUE,x_c:effort_c,0.058,0.029,2.02,"","[0.002, 0.115]",= .044,TRUE
-M1,TRUE,catch:task_c,−0.674,0.072,−9.35,"","[−0.815, −0.533]",< .001,FALSE
-M1,TRUE,x_c:task_c,0.218,0.031,6.95,"","[0.157, 0.279]",< .001,FALSE
-M1,TRUE,effort_c:task_c,0.050,0.056,0.89,"","[−0.060, 0.160]",= .374,FALSE
-M1,TRUE,catch:effort_c:task_c,0.097,0.137,0.71,"","[−0.171, 0.365]",= .477,FALSE
-M1,TRUE,x_c:effort_c:task_c,0.082,0.058,1.42,"","[−0.031, 0.195]",= .157,FALSE
-M2,TRUE,(Intercept),−0.356,0.114,−3.13,42.5,"[−0.578, −0.133]",= .003,FALSE
-M2,TRUE,effort_c,0.138,0.109,1.27,25.2,"[−0.075, 0.352]",= .216,TRUE
-M2,TRUE,task_c,0.036,0.063,0.57,4498,"[−0.088, 0.161]",= .567,FALSE
-M2,TRUE,effort_c:task_c,−0.120,0.119,−1.01,1143,"[−0.354, 0.114]",= .315,FALSE
-M3,TRUE,(Intercept),0.918,0.115,7.96,50.7,"[0.692, 1.145]",< .001,FALSE
-M3,TRUE,effort_c,−0.276,0.071,−3.91,33.0,"[−0.414, −0.137]",< .001,TRUE
-M3,TRUE,task_c,−0.200,0.050,−4.03,6028,"[−0.297, −0.103]",< .001,FALSE
-M3,TRUE,catch,0.067,0.052,1.31,6144,"[−0.034, 0.168]",= .192,TRUE
-M3,TRUE,x_c,−0.028,0.037,−0.76,26.1,"[−0.101, 0.044]",= .452,TRUE
-M3,TRUE,effort_c:task_c,0.132,0.089,1.47,1397,"[−0.044, 0.307]",= .141,FALSE
-M4a,TRUE,(Intercept),0.444,0.096,4.62,"","[0.256, 0.633]",< .001,FALSE
-M4a,TRUE,catch,−2.129,0.181,−11.76,"","[−2.484, −1.774]",< .001,FALSE
-M4a,TRUE,x_c,1.073,0.051,20.92,"","[0.972, 1.173]",< .001,FALSE
-M4a,TRUE,b1_state,−0.029,0.023,−1.26,"","[−0.073, 0.016]",= .209,TRUE
-M4a,TRUE,effort_c,−0.073,0.049,−1.51,"","[−0.168, 0.022]",= .132,FALSE
-M4a,TRUE,task_c,0.368,0.058,6.38,"","[0.255, 0.481]",< .001,FALSE
-M4a,TRUE,b1_trait,0.009,0.068,0.14,"","[−0.124, 0.143]",= .891,FALSE
-M4a,TRUE,catch:b1_state,0.068,0.060,1.13,"","[−0.050, 0.186]",= .257,TRUE
-M4a,TRUE,catch:effort_c,−0.199,0.127,−1.56,"","[−0.449, 0.051]",= .119,FALSE
-M4a,TRUE,catch:task_c,−0.756,0.156,−4.85,"","[−1.062, −0.451]",< .001,FALSE
-M4a,TRUE,x_c:b1_state,−0.044,0.022,−1.97,"","[−0.088, −0.0001]",= .049,TRUE
-M4a,TRUE,x_c:effort_c,0.090,0.050,1.82,"","[−0.007, 0.188]",= .069,FALSE
-M4a,TRUE,x_c:task_c,0.219,0.057,3.84,"","[0.107, 0.331]",< .001,FALSE
-M4b,TRUE,(Intercept),0.447,0.094,4.74,"","[0.262, 0.632]",< .001,FALSE
-M4b,TRUE,catch,−2.125,0.182,−11.70,"","[−2.482, −1.769]",< .001,FALSE
-M4b,TRUE,x_c,1.070,0.051,20.99,"","[0.970, 1.170]",< .001,FALSE
-M4b,TRUE,tepr_state,0.0004,0.025,0.02,"","[−0.048, 0.049]",= .987,TRUE
-M4b,TRUE,effort_c,−0.078,0.049,−1.61,"","[−0.174, 0.017]",= .108,FALSE
-M4b,TRUE,task_c,0.400,0.058,6.83,"","[0.285, 0.514]",< .001,FALSE
-M4b,TRUE,tepr_trait,0.151,0.051,2.99,"","[0.052, 0.251]",= .003,FALSE
-M4b,TRUE,catch:tepr_state,−0.012,0.067,−0.19,"","[−0.144, 0.119]",= .853,TRUE
-M4b,TRUE,catch:effort_c,−0.190,0.128,−1.49,"","[−0.441, 0.061]",= .137,FALSE
-M4b,TRUE,catch:task_c,−0.764,0.156,−4.89,"","[−1.070, −0.458]",< .001,FALSE
-M4b,TRUE,x_c:tepr_state,0.012,0.023,0.51,"","[−0.033, 0.056]",= .613,TRUE
-M4b,TRUE,x_c:effort_c,0.086,0.050,1.72,"","[−0.012, 0.184]",= .085,FALSE
-M4b,TRUE,x_c:task_c,0.212,0.057,3.72,"","[0.100, 0.324]",< .001,FALSE
-M5,TRUE,(Intercept),−0.408,0.421,−0.97,"","[−1.232, 0.417]",= .333,FALSE
-M5,TRUE,effort_c,0.130,0.048,2.73,"","[0.037, 0.224]",= .006,TRUE
-M5,TRUE,task_c,0.649,0.051,12.62,"","[0.548, 0.750]",< .001,FALSE
-M5,TRUE,catch,0.033,0.059,0.56,"","[−0.083, 0.149]",= .577,FALSE
-M5,TRUE,x_c,0.045,0.024,1.87,"","[−0.002, 0.092]",= .062,FALSE
-M5,TRUE,effort_c:task_c,−0.052,0.095,−0.54,"","[−0.239, 0.135]",= .589,FALSE
-S1,TRUE,(Intercept),0.429,0.094,4.55,"","[0.244, 0.613]",< .001,FALSE
-S1,TRUE,catch,−2.096,0.176,−11.93,"","[−2.441, −1.752]",< .001,FALSE
-S1,TRUE,x_c,1.040,0.026,39.49,"","[0.989, 1.092]",< .001,FALSE
-S1,TRUE,teprauc_state,0.002,0.024,0.08,"","[−0.044, 0.048]",= .934,TRUE
-S1,TRUE,effort_c,−0.079,0.048,−1.65,"","[−0.173, 0.015]",= .099,FALSE
-S1,TRUE,task_c,0.399,0.057,7.01,"","[0.287, 0.510]",< .001,FALSE
-S1,TRUE,teprauc_trait,0.153,0.051,3.02,"","[0.054, 0.252]",= .003,FALSE
-S1,TRUE,catch:teprauc_state,−0.005,0.065,−0.08,"","[−0.132, 0.122]",= .936,TRUE
-S1,TRUE,catch:effort_c,−0.187,0.128,−1.46,"","[−0.437, 0.064]",= .144,FALSE
-S1,TRUE,catch:task_c,−0.768,0.155,−4.95,"","[−1.072, −0.464]",< .001,FALSE
-S1,TRUE,x_c:teprauc_state,0.017,0.022,0.79,"","[−0.026, 0.060]",= .432,TRUE
-S1,TRUE,x_c:effort_c,0.079,0.049,1.63,"","[−0.016, 0.174]",= .103,FALSE
-S1,TRUE,x_c:task_c,0.255,0.050,5.07,"","[0.156, 0.353]",< .001,FALSE
-S2,FALSE,(Intercept),0.466,0.090,5.18,"","[0.290, 0.642]",< .001,FALSE
-S2,FALSE,catch,−2.014,0.126,−15.94,"","[−2.262, −1.766]",< .001,FALSE
-S2,FALSE,x_c,1.145,0.054,21.32,"","[1.039, 1.250]",< .001,FALSE
-S2,FALSE,effort_c,−0.094,0.033,−2.81,"","[−0.159, −0.028]",= .005,TRUE
-S2,FALSE,task_c,0.352,0.097,3.61,"","[0.161, 0.542]",< .001,FALSE
-S2,FALSE,catch:effort_c,0.0006,0.081,0.01,"","[−0.157, 0.159]",= .994,TRUE
-S2,FALSE,x_c:effort_c,0.079,0.034,2.36,"","[0.013, 0.145]",= .018,TRUE
-S2,FALSE,catch:task_c,−0.736,0.085,−8.64,"","[−0.904, −0.569]",< .001,FALSE
-S2,FALSE,x_c:task_c,0.239,0.037,6.52,"","[0.167, 0.311]",< .001,FALSE
-S2,FALSE,effort_c:task_c,0.052,0.066,0.79,"","[−0.077, 0.180]",= .432,FALSE
-S2,FALSE,catch:effort_c:task_c,−0.007,0.161,−0.04,"","[−0.323, 0.309]",= .965,FALSE
-S2,FALSE,x_c:effort_c:task_c,0.066,0.067,0.99,"","[−0.065, 0.198]",= .323,FALSE
+Model,ID,Accepted,Term,Estimate,SE,Statistic,95% CI,p
+Behavior,M1,TRUE,Intercept,0.43,0.07,z = 5.86,"[0.29, 0.58]",< .001
+Behavior,M1,TRUE,Catch,−1.95,0.11,z = −18.10,"[−2.16, −1.73]",< .001
+Behavior,M1,TRUE,Offset,1.14,0.05,z = 23.65,"[1.04, 1.23]",< .001
+Behavior,M1,TRUE,Effort,−0.10,0.03,z = −3.39,"[−0.15, −0.04]",< .001
+Behavior,M1,TRUE,Task,0.32,0.09,z = 3.43,"[0.14, 0.51]",< .001
+Behavior,M1,TRUE,Catch × Effort,−0.02,0.07,z = −0.25,"[−0.15, 0.12]",= .802
+Behavior,M1,TRUE,Offset × Effort,0.06,0.03,z = 2.02,"[0.002, 0.11]",= .044
+Behavior,M1,TRUE,Catch × Task,−0.67,0.07,z = −9.35,"[−0.82, −0.53]",< .001
+Behavior,M1,TRUE,Offset × Task,0.22,0.03,z = 6.95,"[0.16, 0.28]",< .001
+Behavior,M1,TRUE,Effort × Task,0.05,0.06,z = 0.89,"[−0.06, 0.16]",= .374
+Behavior,M1,TRUE,Catch × Effort × Task,0.10,0.14,z = 0.71,"[−0.17, 0.36]",= .477
+Behavior,M1,TRUE,Offset × Effort × Task,0.08,0.06,z = 1.42,"[−0.03, 0.19]",= .157
+Grip-window pupil,M2,TRUE,Intercept,−0.36,0.11,t(42.5) = −3.13,"[−0.58, −0.13]",= .003
+Grip-window pupil,M2,TRUE,Effort,0.14,0.11,t(25.2) = 1.27,"[−0.08, 0.35]",= .216
+Grip-window pupil,M2,TRUE,Task,0.04,0.06,t(4498) = 0.57,"[−0.09, 0.16]",= .567
+Grip-window pupil,M2,TRUE,Effort × Task,−0.12,0.12,t(1143) = −1.01,"[−0.35, 0.11]",= .315
+Task-evoked pupil,M3,TRUE,Intercept,0.92,0.12,t(50.7) = 7.96,"[0.69, 1.14]",< .001
+Task-evoked pupil,M3,TRUE,Effort,−0.28,0.07,t(33.0) = −3.91,"[−0.41, −0.14]",< .001
+Task-evoked pupil,M3,TRUE,Task,−0.20,0.05,t(6028) = −4.03,"[−0.30, −0.10]",< .001
+Task-evoked pupil,M3,TRUE,Catch,0.07,0.05,t(6144) = 1.31,"[−0.03, 0.17]",= .192
+Task-evoked pupil,M3,TRUE,Offset,−0.03,0.04,t(26.1) = −0.76,"[−0.10, 0.04]",= .452
+Task-evoked pupil,M3,TRUE,Effort × Task,0.13,0.09,t(1397) = 1.47,"[−0.04, 0.31]",= .141
+Pre-probe pupil,M4a,TRUE,Intercept,0.44,0.10,z = 4.62,"[0.26, 0.63]",< .001
+Pre-probe pupil,M4a,TRUE,Catch,−2.13,0.18,z = −11.76,"[−2.48, −1.77]",< .001
+Pre-probe pupil,M4a,TRUE,Offset,1.07,0.05,z = 20.92,"[0.97, 1.17]",< .001
+Pre-probe pupil,M4a,TRUE,Pre-probe state,−0.03,0.02,z = −1.26,"[−0.07, 0.02]",= .209
+Pre-probe pupil,M4a,TRUE,Effort,−0.07,0.05,z = −1.51,"[−0.17, 0.02]",= .132
+Pre-probe pupil,M4a,TRUE,Task,0.37,0.06,z = 6.38,"[0.26, 0.48]",< .001
+Pre-probe pupil,M4a,TRUE,Pre-probe trait,0.009,0.07,z = 0.14,"[−0.12, 0.14]",= .891
+Pre-probe pupil,M4a,TRUE,Catch × Pre-probe state,0.07,0.06,z = 1.13,"[−0.05, 0.19]",= .257
+Pre-probe pupil,M4a,TRUE,Catch × Effort,−0.20,0.13,z = −1.56,"[−0.45, 0.05]",= .119
+Pre-probe pupil,M4a,TRUE,Catch × Task,−0.76,0.16,z = −4.85,"[−1.06, −0.45]",< .001
+Pre-probe pupil,M4a,TRUE,Offset × Pre-probe state,−0.04,0.02,z = −1.97,"[−0.09, 0.000]",= .049
+Pre-probe pupil,M4a,TRUE,Offset × Effort,0.09,0.05,z = 1.82,"[−0.007, 0.19]",= .069
+Pre-probe pupil,M4a,TRUE,Offset × Task,0.22,0.06,z = 3.84,"[0.11, 0.33]",< .001
+TEPR pupil,M4b,TRUE,Intercept,0.45,0.09,z = 4.74,"[0.26, 0.63]",< .001
+TEPR pupil,M4b,TRUE,Catch,−2.13,0.18,z = −11.70,"[−2.48, −1.77]",< .001
+TEPR pupil,M4b,TRUE,Offset,1.07,0.05,z = 20.99,"[0.97, 1.17]",< .001
+TEPR pupil,M4b,TRUE,TEPR state,0.000,0.02,z = 0.02,"[−0.05, 0.05]",= .987
+TEPR pupil,M4b,TRUE,Effort,−0.08,0.05,z = −1.61,"[−0.17, 0.02]",= .108
+TEPR pupil,M4b,TRUE,Task,0.40,0.06,z = 6.83,"[0.28, 0.51]",< .001
+TEPR pupil,M4b,TRUE,TEPR trait,0.15,0.05,z = 2.99,"[0.05, 0.25]",= .003
+TEPR pupil,M4b,TRUE,Catch × TEPR state,−0.01,0.07,z = −0.19,"[−0.14, 0.12]",= .853
+TEPR pupil,M4b,TRUE,Catch × Effort,−0.19,0.13,z = −1.49,"[−0.44, 0.06]",= .137
+TEPR pupil,M4b,TRUE,Catch × Task,−0.76,0.16,z = −4.89,"[−1.07, −0.46]",< .001
+TEPR pupil,M4b,TRUE,Offset × TEPR state,0.01,0.02,z = 0.51,"[−0.03, 0.06]",= .613
+TEPR pupil,M4b,TRUE,Offset × Effort,0.09,0.05,z = 1.72,"[−0.01, 0.18]",= .085
+TEPR pupil,M4b,TRUE,Offset × Task,0.21,0.06,z = 3.72,"[0.10, 0.32]",< .001
+Missingness,M5,TRUE,Intercept,−0.41,0.42,z = −0.97,"[−1.23, 0.42]",= .333
+Missingness,M5,TRUE,Effort,0.13,0.05,z = 2.73,"[0.04, 0.22]",= .006
+Missingness,M5,TRUE,Task,0.65,0.05,z = 12.62,"[0.55, 0.75]",< .001
+Missingness,M5,TRUE,Catch,0.03,0.06,z = 0.56,"[−0.08, 0.15]",= .577
+Missingness,M5,TRUE,Offset,0.04,0.02,z = 1.87,"[−0.002, 0.09]",= .062
+Missingness,M5,TRUE,Effort × Task,−0.05,0.10,z = −0.54,"[−0.24, 0.14]",= .589
+AUC supplement,S1,TRUE,Intercept,0.43,0.09,z = 4.55,"[0.24, 0.61]",< .001
+AUC supplement,S1,TRUE,Catch,−2.10,0.18,z = −11.93,"[−2.44, −1.75]",< .001
+AUC supplement,S1,TRUE,Offset,1.04,0.03,z = 39.49,"[0.99, 1.09]",< .001
+AUC supplement,S1,TRUE,AUC state,0.002,0.02,z = 0.08,"[−0.04, 0.05]",= .934
+AUC supplement,S1,TRUE,Effort,−0.08,0.05,z = −1.65,"[−0.17, 0.01]",= .099
+AUC supplement,S1,TRUE,Task,0.40,0.06,z = 7.01,"[0.29, 0.51]",< .001
+AUC supplement,S1,TRUE,AUC trait,0.15,0.05,z = 3.02,"[0.05, 0.25]",= .003
+AUC supplement,S1,TRUE,Catch × AUC state,−0.005,0.06,z = −0.08,"[−0.13, 0.12]",= .936
+AUC supplement,S1,TRUE,Catch × Effort,−0.19,0.13,z = −1.46,"[−0.44, 0.06]",= .144
+AUC supplement,S1,TRUE,Catch × Task,−0.77,0.16,z = −4.95,"[−1.07, −0.46]",< .001
+AUC supplement,S1,TRUE,Offset × AUC state,0.02,0.02,z = 0.79,"[−0.03, 0.06]",= .432
+AUC supplement,S1,TRUE,Offset × Effort,0.08,0.05,z = 1.63,"[−0.02, 0.17]",= .103
+AUC supplement,S1,TRUE,Offset × Task,0.25,0.05,z = 5.07,"[0.16, 0.35]",< .001
+Pupil-subsample behavior,S2,FALSE,Intercept,0.47,0.09,z = 5.18,"[0.29, 0.64]",< .001
+Pupil-subsample behavior,S2,FALSE,Catch,−2.01,0.13,z = −15.94,"[−2.26, −1.77]",< .001
+Pupil-subsample behavior,S2,FALSE,Offset,1.14,0.05,z = 21.32,"[1.04, 1.25]",< .001
+Pupil-subsample behavior,S2,FALSE,Effort,−0.09,0.03,z = −2.81,"[−0.16, −0.03]",= .005
+Pupil-subsample behavior,S2,FALSE,Task,0.35,0.10,z = 3.61,"[0.16, 0.54]",< .001
+Pupil-subsample behavior,S2,FALSE,Catch × Effort,0.001,0.08,z = 0.01,"[−0.16, 0.16]",= .994
+Pupil-subsample behavior,S2,FALSE,Offset × Effort,0.08,0.03,z = 2.36,"[0.01, 0.15]",= .018
+Pupil-subsample behavior,S2,FALSE,Catch × Task,−0.74,0.09,z = −8.64,"[−0.90, −0.57]",< .001
+Pupil-subsample behavior,S2,FALSE,Offset × Task,0.24,0.04,z = 6.52,"[0.17, 0.31]",< .001
+Pupil-subsample behavior,S2,FALSE,Effort × Task,0.05,0.07,z = 0.79,"[−0.08, 0.18]",= .432
+Pupil-subsample behavior,S2,FALSE,Catch × Effort × Task,−0.007,0.16,z = −0.04,"[−0.32, 0.31]",= .965
+Pupil-subsample behavior,S2,FALSE,Offset × Effort × Task,0.07,0.07,z = 0.99,"[−0.07, 0.20]",= .323

@@ -1,0 +1,13 @@
+Model,Step,Random effects,Singular,Convergence,Accepted
+M1,1_maximal,(1 + catch + x_c + effort_c + task_c | subject),FALSE,NULL,TRUE
+M2,1_maximal,(1 + effort_c | subject),FALSE,NULL,TRUE
+M3,1_maximal,(1 + effort_c + x_c | subject),FALSE,NULL,TRUE
+M4a,1_maximal,(1 + catch + x_c + b1_state | subject),TRUE,NULL,FALSE
+M4a,2_uncorrelated,(1 + catch + x_c + b1_state || subject),TRUE,boundary (singular) fit: see help('isSingular'),FALSE
+M4a,3_drop_b1_state,(1 + catch + x_c || subject),FALSE,NULL,TRUE
+M4b,1_maximal,(1 + catch + x_c + tepr_state | subject),TRUE,NULL,FALSE
+M4b,2_uncorrelated,(1 + catch + x_c + tepr_state || subject),TRUE,boundary (singular) fit: see help('isSingular'),FALSE
+M4b,3_drop_tepr_state,(1 + catch + x_c || subject),FALSE,NULL,TRUE
+M5,specified_intercept,(1 | subject),FALSE,NULL,TRUE
+S1,same_as_M4b_3_drop_tepr_state,(1 + catch + x_c || subject),FALSE,"Model failed to converge with max|grad| = 0.0694887 (tol = 0.002, component 1)   See ?lme4::convergence and ?lme4::troubleshooting. | Mod...",FALSE
+S1,D-S1_drop_x_c,(1 + catch || subject),FALSE,NULL,TRUE

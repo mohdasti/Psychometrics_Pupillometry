@@ -1,0 +1,4 @@
+Test,n,Implied step,Note
+T1 within-trial step,14586,0.0040,fraction of trials with median step 0.004 = 1
+T2 phase labels,156,0.0040,squeeze-gauge duration 3 s; median length 750 samples
+T3 December 21 vs 25,12,1.0000,median index scale b = 1.000; median r at b = 1 = 0.995

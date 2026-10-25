@@ -2,6 +2,19 @@
 title: "Physical Effort Shifts the Criterion for a Different Judgment in Older Adults"
 bibliography: references.bib
 csl: apa-7th-edition.csl
+dissertation: true
+crossref:
+  custom:
+    - kind: float
+      reference-prefix: "Figure S"
+      key: suppfig
+      latex-env: suppfig
+      space-before-numbering: false
+    - kind: float
+      reference-prefix: "Table S"
+      key: supptbl
+      latex-env: supptbl
+      space-before-numbering: false
 format:
   html:
     toc: true
@@ -13,6 +26,11 @@ format:
     toc-depth: 3
     number-sections: true
     documentclass: article
+    pdf-engine: xelatex
+    mainfont: "STIX Two Text"
+    header-includes:
+      - \usepackage{placeins}
+      - \newcounter{ch2maintable}
     geometry:
       - margin=1in
     fontsize: 11pt
@@ -39,82 +57,43 @@ proj_root <- if (requireNamespace("here", quietly = TRUE)) {
 } else {
   normalizePath(file.path(getwd(), "..", "..", ".."))
 }
+source(file.path(proj_root, "R/ch2_report_helpers.R"))
 
-run_id <- "ch2fit_20261024_193248"
-export_dir <- file.path(proj_root, "07_manuscript", "chapter2", "export", run_id)
-vals_path <- file.path(export_dir, "values.json")
-coef_path <- file.path(export_dir, "coefficients.csv")
-fig_p_diff <- file.path(export_dir, "fig_p_diff.png")
-stopifnot(file.exists(vals_path), file.exists(coef_path), file.exists(fig_p_diff))
-
-v <- jsonlite::fromJSON(vals_path, simplifyVector = FALSE)
-coef <- utils::read.csv(coef_path, stringsAsFactors = FALSE)
-
-key <- function(model, term) v$models[[model]]$keys[[term]]
-n_fmt <- function(x) format(as.integer(x), big.mark = ",", scientific = FALSE, trim = TRUE)
-
-M1 <- v$models$M1
-M2 <- v$models$M2
-M3 <- v$models$M3
-M4a <- v$models$M4a
-M4b <- v$models$M4b
-M5 <- v$models$M5
-S1 <- v$models$S1
-S2 <- v$models$S2
-
-M1_effort <- key("M1", "effort_c")
-M1_catch <- key("M1", "catch:effort_c")
-M1_slope <- key("M1", "x_c:effort_c")
-M2_effort <- key("M2", "effort_c")
-M3_effort <- key("M3", "effort_c")
-M3_x <- key("M3", "x_c")
-M3_catch <- key("M3", "catch")
-M4a_slope <- key("M4a", "x_c:b1_state")
-M4a_state <- key("M4a", "b1_state")
-M4a_catch <- key("M4a", "catch:b1_state")
-M4b_slope <- key("M4b", "x_c:tepr_state")
-M4b_state <- key("M4b", "tepr_state")
-M4b_catch <- key("M4b", "catch:tepr_state")
-M5_effort <- key("M5", "effort_c")
-S1_slope <- key("S1", "x_c:teprauc_state")
-S1_state <- key("S1", "teprauc_state")
-S1_catch <- key("S1", "catch:teprauc_state")
-S2_effort <- key("S2", "effort_c")
-S2_catch <- key("S2", "catch:effort_c")
-S2_slope <- key("S2", "x_c:effort_c")
-
-term_label <- c(
-  "effort_c" = "Effort",
-  "catch:effort_c" = "Catch x effort",
-  "x_c:effort_c" = "Offset x effort",
-  "x_c" = "Offset",
-  "catch" = "Catch",
-  "x_c:b1_state" = "Offset x pre-probe state",
-  "b1_state" = "Pre-probe state",
-  "catch:b1_state" = "Catch x pre-probe state",
-  "x_c:tepr_state" = "Offset x TEPR state",
-  "tepr_state" = "TEPR state",
-  "catch:tepr_state" = "Catch x TEPR state",
-  "x_c:teprauc_state" = "Offset x AUC state",
-  "teprauc_state" = "AUC state",
-  "catch:teprauc_state" = "Catch x AUC state"
+export_dir <- file.path(proj_root, "07_manuscript", "chapter2", "export", "ch2fit_20261024_193248")
+needed <- c(
+  "values.json", "coefficients.csv", "tbl_key_terms.csv", "tbl_demographics.csv",
+  "tbl_reduction.csv", "tbl_pupil_flow.csv", "tbl_axis.csv", "tbl_m5.csv",
+  "fig_p_diff.png", "fig_pupil_timecourse.png"
 )
-
-key_rows <- function(model, terms) {
-  rows <- lapply(terms, function(tm) {
-    hit <- coef[coef$model == model & coef$term == tm, ]
-    stopifnot(nrow(hit) == 1L)
-    data.frame(
-      Model = model,
-      Term = unname(term_label[[tm]]),
-      Estimate = hit$est_fmt,
-      SE = hit$se_fmt,
-      CI = hit$ci_fmt,
-      p = hit$p_fmt,
-      stringsAsFactors = FALSE
-    )
-  })
-  do.call(rbind, rows)
+stopifnot(all(file.exists(file.path(export_dir, needed))))
+iv <- jsonlite::fromJSON(file.path(export_dir, "values.json"), simplifyVector = FALSE)$iv
+run_id <- v("run_id")
+M1_effort <- list(p_fmt = v("m1_effort_c_p"))
+M1_catch <- list(p_fmt = v("m1_catch_effort_c_p"))
+M1_slope <- list(p_fmt = v("m1_x_c_effort_c_p"))
+M2_effort <- list(p_fmt = v("m2_effort_c_p"))
+M3_effort <- list(p_fmt = v("m3_effort_c_p"))
+M3_x <- list(p_fmt = v("m3_x_c_p"))
+M3_catch <- list(p_fmt = v("m3_catch_p"))
+M4a_slope <- list(p_fmt = v("m4a_x_c_b1_state_p"))
+M4a_state <- list(p_fmt = v("m4a_b1_state_p"))
+M4a_catch <- list(p_fmt = v("m4a_catch_b1_state_p"))
+M4b_slope <- list(p_fmt = v("m4b_x_c_tepr_state_p"))
+M4b_state <- list(p_fmt = v("m4b_tepr_state_p"))
+M4b_catch <- list(p_fmt = v("m4b_catch_tepr_state_p"))
+M5_effort <- list(p_fmt = v("m5_effort_c_p"))
+S1_slope <- list(p_fmt = v("s1_x_c_teprauc_state_p"))
+S1_state <- list(p_fmt = v("s1_teprauc_state_p"))
+S1_catch <- list(p_fmt = v("s1_catch_teprauc_state_p"))
+S2_effort <- list(p_fmt = v("s2_effort_c_p"))
+S2_catch <- list(p_fmt = v("s2_catch_effort_c_p"))
+S2_slope <- list(p_fmt = v("s2_x_c_effort_c_p"))
+fig_p_diff <- file.path(export_dir, "fig_p_diff.png")
+fig_pupil <- file.path(export_dir, "fig_pupil_timecourse.png")
+read_export <- function(name) {
+  path <- file.path(export_dir, name)
+  stopifnot(file.exists(path))
+  utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
 }
 ```
 
@@ -132,9 +111,18 @@ The behavioral result in this cohort has already been reported with per-particip
 
 ## Participants and trials {#sec-participants}
 
-Recruitment, exclusions, and demographics are those of @sun2026handgrip. The behavioral analysis uses that paper's cleaned trial file: `r n_fmt(M1$nobs)` trials from `r M1$n_participants` participants (`r M1$p_adt` auditory, `r M1$p_vdt` visual). Two participants completed only one task.
+Recruitment, exclusions, and demographics are those of @sun2026handgrip. The behavioral analysis uses that paper's cleaned trial file: `r v_int("m1_nobs")` trials from `r v_int("m1_n_participants")` participants (`r v_int("m1_n_adt")` auditory, `r v_int("m1_n_vdt")` visual). `r v_int("n_one_task")` participants completed only one task.
 
-Pupil analyses use a subset of the same trials. A trial entered the pupil file only when a December 21 recording existed and the sample count and within-trial time step met the checks below. The grip-window model uses `r n_fmt(M2$nobs)` trials (`r M2$n_participants` participants). The task-evoked models use `r n_fmt(M3$nobs)` trials (`r M3$n_participants` participants; `r M3$p_adt` auditory, `r M3$p_vdt` visual). The missingness model uses the `r n_fmt(M5$nobs)` trials that could be matched to a pupil recording (`r M5$n_participants` participants), of which `r n_fmt(M3$nobs)` passed the task-evoked gate.
+```{r}
+#| label: tbl-demographics
+#| tbl-cap: "Age, sex, and education for the behavioral sample, by task, and for the participants in the task-evoked pupil sample. Education n counts participants with a numeric year value. Cells coded as less than 12 years, and blank cells, are not in the education mean. T-MoCA is not in the demographics file or the subject-by-task file supplied with the preprint share, so it is not in this table."
+
+demo_tab <- read_export("tbl_demographics.csv")
+stopifnot(nrow(demo_tab) == 4L)
+knitr::kable(demo_tab)
+```
+
+Pupil analyses use a subset of the same trials. A trial entered the pupil file only when a December 21 recording existed and the sample count and within-trial time step met the checks below. The grip-window model uses `r v_int("m2_nobs")` trials (`r v_int("m2_n_participants")` participants). The task-evoked models use `r v_int("m3_nobs")` trials (`r v_int("m3_n_participants")` participants; `r v_int("m3_n_adt")` auditory, `r v_int("m3_n_vdt")` visual). The missingness model uses the `r v_int("m5_nobs")` trials that could be matched to a pupil recording (`r v_int("m5_n_participants")` participants), of which `r v_int("m3_nobs")` passed the task-evoked gate.
 
 ## Task {#sec-task-paradigm}
 
@@ -142,19 +130,18 @@ Participants completed an auditory and a visual same–different task in the sca
 
 ```{r}
 #| label: fig-paradigm
-#| fig-cap: "Trial sequence for the auditory and visual same–different tasks. The inter-trial interval is 1.5–4.5 s. Times after squeeze onset follow the schematic. Low effort is 5% MVC and high effort is 40% MVC."
+#| fig-cap: "Trial sequence for the auditory and visual same–different tasks. The inter-trial interval is 1.5–4.5 s. Times after squeeze onset follow the schematic. Low effort is 5% and high effort is 40% of maximum voluntary contraction (MVC)."
 #| fig-width: 10
 #| fig-height: 7
 #| out-width: "75%"
 #| fig-align: center
 
 paradigm_path <- file.path(proj_root, "07_manuscript", "chapter2", "output", "figures", "Paradigm.png")
-if (file.exists(paradigm_path)) {
-  knitr::include_graphics(paradigm_path)
-}
+stopifnot(file.exists(paradigm_path))
+knitr::include_graphics(paradigm_path)
 ```
 
-Auditory probes were 1000 Hz or 1000 Hz plus 8, 16, 32, or 64 Hz. Visual probes matched a standard Gabor or raised its contrast by 0.06, 0.12, 0.24, or 0.48. The zero-offset trials are catch trials: the standard and the probe were the same.
+Auditory probes were 1,000 Hz or 1,000 Hz plus 8, 16, 32, or 64 Hz. Visual probes matched a standard Gabor or raised its contrast by 0.06, 0.12, 0.24, or 0.48. The zero-offset trials are catch trials: the standard and the probe were the same.
 
 Stimuli were presented with Psychtoolbox 3.0.18 in MATLAB R2022b [@brainard1997] on a PROPixx projector (480 Hz, 1920 × 1080) viewed through a head-coil mirror at 12 cm. Auditory stimuli used MRI-safe earbuds. Grip force was recorded with a Current Designs dynamometer at 100 Hz. The eye tracker was a binocular TRACKPixx sampling at 2,000 Hz; the files analyzed here are the 250 Hz recordings. Maximum voluntary contraction was the mean of three squeezes, measured in Session 1 and again in the scanner.
 
@@ -174,17 +161,17 @@ State and trait were computed inside each model's sample. State is the trial val
 
 The behavioral outcome is the binary "different" response. Catch is an indicator for the zero-offset trial. On the four nonzero offsets, the offset index is 0, 1, 2, or 3 and the centered offset $x_c$ is that index minus 1.5, so the values are −1.5, −0.5, 0.5, and 1.5. On catch trials $x_c$ is set to 0. Effort is sum-coded, high = +0.5 and low = −0.5. Task is sum-coded, visual = +0.5 and auditory = −0.5. A coefficient on effort is the high-minus-low difference on the model's link scale.
 
-Five models were fit with lme4 `r v$lme4` and lmerTest `r v$lmerTest` [@bates2015; @kuznetsova2017lmerTest], using bobyqa with a maximum of 200,000 function evaluations. A fit was accepted only when it was not singular and the optimizer returned no convergence message. If a maximal model failed that rule, the random-effects ladder was correlated slopes, then uncorrelated slopes, then dropping the smallest random slope, then a random intercept only. Wald 95% intervals are reported. For the linear models the degrees of freedom are Satterthwaite approximations. No equivalence bound was set, and no correction was applied across models. Each model answers a different question. A null result is the estimate and its interval.
+Five models were fit with lme4 `r v("lme4_version")` and lmerTest `r v("lmerTest_version")` [@bates2015; @kuznetsova2017lmerTest], using bobyqa with a maximum of 200,000 function evaluations. A fit was accepted only when it was not singular and the optimizer returned no convergence message. If a maximal model failed that rule, the random-effects ladder was correlated slopes, then uncorrelated slopes, then dropping the smallest random slope, then a random intercept only. Wald 95% intervals are reported. For the linear models the degrees of freedom are Satterthwaite approximations. No equivalence bound was set, and no correction was applied across models. Each model answers a different question. A null result is the estimate and its interval.
 
-**Behavior (M1).** All `r n_fmt(M1$nobs)` trials. Probit regression of "different" on catch, centered offset, effort, and task, with all interactions, and a by-participant random slope for each of those four terms. The criterion terms are the effort coefficient and its interaction with catch. The sensitivity term is the offset-by-effort interaction.
+**Behavior (M1).** All `r v_int("m1_nobs")` trials. Probit regression of "different" on catch, centered offset, effort, and task, with all interactions, and a by-participant random slope for each of those four terms. The criterion terms are the effort coefficient and its interaction with catch. The sensitivity term is the offset-by-effort interaction.
 
 **Grip-window pupil (M2).** Linear model of the grip-window mean on effort and task, with a by-participant random slope for effort. This is a physiological check on whether the grip changed pupil diameter during the hold. The published manipulation check is grip force, not pupil [@sun2026handgrip].
 
 **Task-evoked pupil (M3).** Linear model of the TEPR mean on effort, task, catch, and centered offset, with by-participant random slopes for effort and offset.
 
-**Pupil and sensitivity (M4).** Probit models on the same `r n_fmt(M4a$nobs)` trials as M3. The primary predictor is pre-probe pupil (M4a). The secondary predictor is the TEPR mean (M4b). Both include state and trait, and both keep effort and task so the pupil coefficients are estimated within effort and task. The sensitivity term is the offset-by-state interaction. The state random slope was dropped in both models because its variance was zero at the previous step of the ladder. The standard errors without that slope are as large as, or slightly larger than, the standard errors with it.
+**Pupil and sensitivity (M4).** Probit models on the same `r v_int("m4a_nobs")` trials as M3. The primary predictor is pre-probe pupil (M4a). The secondary predictor is the TEPR mean (M4b). Both include state and trait, and both keep effort and task so the pupil coefficients are estimated within effort and task. The sensitivity term is the offset-by-state interaction. The state random slope was dropped in both models because its variance was zero at the previous step of the ladder. The standard errors without that slope are as large as, or slightly larger than, the standard errors with it.
 
-**Missing pupil data (M5).** Logistic model of whether a matched trial passed the TEPR gate, with effort, task, catch, centered offset, and a by-participant intercept. High-effort trials were slightly more likely to have usable pupil data (`r M5_effort$est_fmt`, 95% CI `r M5_effort$ci_fmt`, *p* `r M5_effort$p_fmt`). M3 and M4 include effort, so this association is a property of the sample rather than an unadjusted comparison.
+**Missing pupil data (M5).** Logistic model of whether a matched trial passed the TEPR gate, with effort, task, catch, centered offset, and a by-participant intercept. High-effort trials were slightly more likely to have usable pupil data (`r v("m5_effort_c_est")`, 95% CI `r v("m5_effort_c_ci")`, *p* `r M5_effort$p_fmt`). M3 and M4 include effort, so this association is a property of the sample rather than an unadjusted comparison.
 
 Per-participant thresholds and slopes are not re-estimated here. In the psychometric fits that @sun2026handgrip reports, threshold is the log Weibull parameter at the effective midpoint. Slope in those fits was evaluated where the probability of "different" is .50 in absolute terms, not at the effective midpoint. That distinction does not change the decision to cite the paper rather than refit it.
 
@@ -196,7 +183,7 @@ Models were estimated in R [@R]. The chapter was rendered with Quarto [@quarto].
 
 ## Effort shifts the criterion {#sec-behavior}
 
-@fig-p-diff shows the proportion of "different" responses at each offset. High effort is below low effort in all 10 task-by-offset cells. The functions are near ceiling at the largest offset: the proportion is `r v$descriptives$top$ADT$p_fmt` in the auditory task (`r n_fmt(v$descriptives$top$ADT$n)` trials) and `r v$descriptives$top$VDT$p_fmt` in the visual task (`r n_fmt(v$descriptives$top$VDT$n)` trials). At that offset the high-minus-low difference is `r v$descriptives$level4$ADT$diff_fmt` (auditory) and `r v$descriptives$level4$VDT$diff_fmt` (visual). On catch trials the proportion of "different" responses, pooling effort, is `r v$descriptives$catch$ADT$p_fmt` (auditory) and `r v$descriptives$catch$VDT$p_fmt` (visual).
+@fig-p-diff shows the proportion of "different" responses at each offset. High effort is below low effort in all 10 task-by-offset cells. The functions are near ceiling at the largest offset: the proportion is `r v("top_adt_p")` in the auditory task (`r v_int("top_adt_n")` trials) and `r v("top_vdt_p")` in the visual task (`r v_int("top_vdt_n")` trials). At that offset the high-minus-low difference is `r v("level4_adt_diff_prop")` (auditory) and `r v("level4_vdt_diff_prop")` (visual). On catch trials the proportion of "different" responses, pooling effort, is `r v("catch_adt_p")` (auditory) and `r v("catch_vdt_p")` (visual).
 
 ```{r}
 #| label: fig-p-diff
@@ -205,38 +192,44 @@ Models were estimated in R [@R]. The chapter was rendered with Quarto [@quarto].
 #| fig-height: 3.6
 #| out-width: "100%"
 
+stopifnot(file.exists(fig_p_diff))
 knitr::include_graphics(fig_p_diff)
 ```
 
-M1 was accepted with the full random-effects structure (`r n_fmt(M1$nobs)` trials, `r M1$n_participants` participants). On the probit scale, high effort lowered the rate of "different" responses, `r M1_effort$est_fmt` (SE `r M1_effort$se_fmt`), 95% CI `r M1_effort$ci_fmt`, *p* `r M1_effort$p_fmt`. The catch-by-effort interaction was `r M1_catch$est_fmt` (SE `r M1_catch$se_fmt`), 95% CI `r M1_catch$ci_fmt`, *p* `r M1_catch$p_fmt`. False alarms on catch trials moved with the other offsets rather than by an extra amount. That combination, a lower "different" rate at every offset and no extra catch effect, is the pattern of a criterion shift toward "same." It is the same direction as the threshold result in @sun2026handgrip and as the behavioral result in Chapter 3.
+M1 was accepted with the full random-effects structure (`r v_int("m1_nobs")` trials, `r v_int("m1_n_participants")` participants). On the probit scale, high effort lowered the rate of "different" responses, `r v("m1_effort_c_est")` (SE `r v("m1_effort_c_se")`), 95% CI `r v("m1_effort_c_ci")`, *p* `r M1_effort$p_fmt`. The catch-by-effort interaction was `r v("m1_catch_effort_c_est")` (SE `r v("m1_catch_effort_c_se")`), 95% CI `r v("m1_catch_effort_c_ci")`, *p* `r M1_catch$p_fmt`. False alarms on catch trials moved with the other offsets rather than by an extra amount. That combination, a lower "different" rate at every offset and no extra catch effect, is the pattern of a criterion shift toward "same." It is the same direction as the threshold result in @sun2026handgrip and as the behavioral result in Chapter 3.
 
-The offset-by-effort interaction was positive, `r M1_slope$est_fmt` (SE `r M1_slope$se_fmt`), 95% CI `r M1_slope$ci_fmt`, *p* `r M1_slope$p_fmt`. The slope was not shallower under high effort. A positive interaction is what a probit model without a lapse term produces when the effort difference shrinks near ceiling, and the top offset is near ceiling in both tasks. That reading was not tested by refitting the model without the top offset. The interaction should not be read as a gain in sensitivity.
+The offset-by-effort interaction was positive, `r v("m1_x_c_effort_c_est")` (SE `r v("m1_x_c_effort_c_se")`), 95% CI `r v("m1_x_c_effort_c_ci")`, *p* `r M1_slope$p_fmt`. The slope was not shallower under high effort. A positive interaction is what a probit model without a lapse term produces when the effort difference shrinks near ceiling, and the top offset is near ceiling in both tasks. That reading was not tested by refitting the model without the top offset. The interaction should not be read as a gain in sensitivity.
 
 ## The pupil checks {#sec-pupil-checks}
 
-During the grip, pupil diameter was higher under high effort in the point estimate, but the interval included zero: `r M2_effort$est_fmt` (SE `r M2_effort$se_fmt`), 95% CI `r M2_effort$ci_fmt`, *t*(`r M2_effort$df_fmt`) = `r M2_effort$stat_fmt`, *p* `r M2_effort$p_fmt`, on `r n_fmt(M2$nobs)` trials from `r M2$n_participants` participants. Participants differed in that slope. The by-participant variance of the effort coefficient was `r v$m2_effort_slope_variance_fmt`. The grip-force check in @sun2026handgrip is the manipulation check this design was built on. The pupil result does not replace it.
+During the grip, pupil diameter was higher under high effort in the point estimate, but the interval included zero: `r v("m2_effort_c_est")` (SE `r v("m2_effort_c_se")`), 95% CI `r v("m2_effort_c_ci")`, *t*(`r v("m2_effort_c_df")`) = `r v("m2_effort_c_stat")`, *p* `r M2_effort$p_fmt`, on `r v_int("m2_nobs")` trials from `r v_int("m2_n_participants")` participants. Participants differed in that slope. The by-participant variance of the effort coefficient was `r v("m2_effort_slope_variance")`. The grip-force check in @sun2026handgrip is the manipulation check this design was built on. The pupil result does not replace it.
 
-The TEPR mean was smaller under high effort: `r M3_effort$est_fmt` (SE `r M3_effort$se_fmt`), 95% CI `r M3_effort$ci_fmt`, *t*(`r M3_effort$df_fmt`) = `r M3_effort$stat_fmt`, *p* `r M3_effort$p_fmt`. Offset and catch were `r M3_x$est_fmt`, *p* `r M3_x$p_fmt`, and `r M3_catch$est_fmt`, *p* `r M3_catch$p_fmt`. Because grip release falls inside the TEPR window, this coefficient is not a clean effect on the task-evoked response.
+```{r}
+#| label: fig-pupil-timecourse
+#| fig-cap: "Participant-equal mean change in pupil diameter from the pre-squeeze baseline, for participants in the task-evoked sample. The line is a GAM smooth (k = 10) and the band is its 95% interval. Shaded regions, in order, are the pre-squeeze baseline, the grip window, the pre-probe window, and the task-evoked window. Vertical lines mark squeeze onset, gauge offset, the standard, the probe, grip release, and the response screen. The vertical unit is arbitrary."
+#| fig-width: 8.2
+#| fig-height: 4.2
+#| out-width: "100%"
+
+stopifnot(file.exists(fig_pupil))
+knitr::include_graphics(fig_pupil)
+```
+
+The TEPR mean was smaller under high effort: `r v("m3_effort_c_est")` (SE `r v("m3_effort_c_se")`), 95% CI `r v("m3_effort_c_ci")`, *t*(`r v("m3_effort_c_df")`) = `r v("m3_effort_c_stat")`, *p* `r M3_effort$p_fmt`. Offset and catch were `r v("m3_x_c_est")`, *p* `r M3_x$p_fmt`, and `r v("m3_catch_est")`, *p* `r M3_catch$p_fmt`. Because grip release falls inside the TEPR window, this coefficient is not a clean effect on the task-evoked response.
 
 ## Pupil and the slope {#sec-coupling}
 
-On the same `r n_fmt(M4a$nobs)` trials, a larger pre-probe pupil was associated with a shallower slope: `r M4a_slope$est_fmt` (SE `r M4a_slope$se_fmt`), 95% CI `r M4a_slope$ci_fmt`, *p* `r M4a_slope$p_fmt`. The upper end of the interval is at zero for any reporting precision coarser than four decimals. The state main effect was `r M4a_state$est_fmt`, *p* `r M4a_state$p_fmt`, and the catch-by-state term was `r M4a_catch$est_fmt`, *p* `r M4a_catch$p_fmt`. This is one test named in the locked plan. It is weak evidence, and the chapter does not rest on it.
+On the same `r v_int("m4a_nobs")` trials, a larger pre-probe pupil was associated with a shallower slope: `r v("m4a_x_c_b1_state_est")` (SE `r v("m4a_x_c_b1_state_se")`), 95% CI `r v("m4a_x_c_b1_state_ci")`, *p* `r M4a_slope$p_fmt`. The upper end of the interval is at zero for any reporting precision coarser than four decimals. The state main effect was `r v("m4a_b1_state_est")`, *p* `r M4a_state$p_fmt`, and the catch-by-state term was `r v("m4a_catch_b1_state_est")`, *p* `r M4a_catch$p_fmt`. This is one test named in the locked plan. It is weak evidence, and the chapter does not rest on it.
 
-The TEPR state predicted neither the slope nor the level of "different" responses. The offset-by-state term was `r M4b_slope$est_fmt`, 95% CI `r M4b_slope$ci_fmt`, *p* `r M4b_slope$p_fmt`. The state term was `r M4b_state$est_fmt`, *p* `r M4b_state$p_fmt`, and the catch-by-state term was `r M4b_catch$est_fmt`, *p* `r M4b_catch$p_fmt`.
+The TEPR state predicted neither the slope nor the level of "different" responses. The offset-by-state term was `r v("m4b_x_c_tepr_state_est")`, 95% CI `r v("m4b_x_c_tepr_state_ci")`, *p* `r M4b_slope$p_fmt`. The state term was `r v("m4b_tepr_state_est")`, *p* `r M4b_state$p_fmt`, and the catch-by-state term was `r v("m4b_catch_tepr_state_est")`, *p* `r M4b_catch$p_fmt`.
 
 ```{r}
 #| label: tbl-key-terms
 #| tbl-cap: "Key terms from the accepted models. Estimates are on the probit scale for M1 and M4 and on the measured scale for M2 and M3. M5 is a log-odds coefficient. Intervals are Wald intervals."
 
-tab <- rbind(
-  key_rows("M1", c("effort_c", "catch:effort_c", "x_c:effort_c")),
-  key_rows("M2", "effort_c"),
-  key_rows("M3", c("effort_c", "x_c", "catch")),
-  key_rows("M4a", c("x_c:b1_state", "b1_state", "catch:b1_state")),
-  key_rows("M4b", c("x_c:tepr_state", "tepr_state", "catch:tepr_state")),
-  key_rows("M5", "effort_c")
-)
-knitr::kable(tab, align = c("l", "l", "r", "r", "l", "r"))
+tab <- read_export("tbl_key_terms.csv")
+stopifnot(nrow(tab) > 0L)
+knitr::kable(tab[, c("Model", "ID", "Term", "Estimate", "SE", "Statistic", "95% CI", "p")])
 ```
 
 # Discussion
@@ -251,25 +244,102 @@ Two further checks were considered after these fits and were not run. One would 
 
 # Supplement
 
+```{=latex}
+\FloatBarrier
+```
+
+## Fixed effects
+
+```{=latex}
+\setcounter{ch2maintable}{\value{table}}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{table}{0}
+```
+
+```{r}
+#| label: fixed-effects-table
+#| tbl-cap: "Fixed effects for every fitted model. Terms are labelled. S2 was not accepted."
+
+fixed <- read_export("coefficients.csv")
+stopifnot(nrow(fixed) > 0L)
+knitr::kable(fixed[, c("Model", "ID", "Accepted", "Term", "Estimate", "SE", "Statistic", "95% CI", "p")])
+```
+
+```{=latex}
+\FloatBarrier
+```
+
+## Random-effects reduction
+
+```{r}
+#| label: reduction-table
+#| tbl-cap: "Random-effects steps for each model. A step is accepted when the fit is not singular and the optimizer returns no convergence message."
+
+red <- read_export("tbl_reduction.csv")
+stopifnot(nrow(red) > 0L)
+knitr::kable(red)
+```
+
+```{=latex}
+\renewcommand{\thetable}{\arabic{table}}
+\setcounter{table}{\value{ch2maintable}}
+```
+
+::: {.content-visible when-meta="dissertation"}
+
+```{=latex}
+\FloatBarrier
+```
+
 ## Area under the curve {#sec-s1}
 
-S1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted random-effects structure did not converge for that outcome (maximum absolute gradient 0.0695 against a tolerance of 0.002). The ladder was continued from that structure by dropping the offset random slope. That step was accepted (`r n_fmt(S1$nobs)` trials). The offset-by-state term was `r S1_slope$est_fmt` (SE `r S1_slope$se_fmt`), 95% CI `r S1_slope$ci_fmt`, *p* `r S1_slope$p_fmt`. The state term was `r S1_state$est_fmt`, *p* `r S1_state$p_fmt`, and the catch-by-state term was `r S1_catch$est_fmt`, *p* `r S1_catch$p_fmt`. The area version agrees with M4b in the sense that none of these intervals excludes zero. M4b itself was not changed.
+S1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted random-effects structure did not converge for that outcome (maximum absolute gradient `r v_num("s1_max_abs_grad")` against lme4's default tolerance of 0.002). The ladder was continued from that structure by dropping the offset random slope. That step was accepted (`r v_int("s1_nobs")` trials). The offset-by-state term was `r v("s1_x_c_teprauc_state_est")` (SE `r v("s1_x_c_teprauc_state_se")`), 95% CI `r v("s1_x_c_teprauc_state_ci")`, *p* `r S1_slope$p_fmt`. The state term was `r v("s1_teprauc_state_est")`, *p* `r S1_state$p_fmt`, and the catch-by-state term was `r v("s1_catch_teprauc_state_est")`, *p* `r S1_catch$p_fmt`. The area version agrees with M4b in the sense that none of these intervals excludes zero. M4b itself was not changed.
 
 ## Behavior in the pupil subsample {#sec-s2}
 
-S2 fits M1's formula to the `r n_fmt(S2$nobs)` trials from the `r S2$n_participants` participants who contributed to the TEPR sample. The maximal model was singular, so it was not accepted. The point estimates were `r S2_effort$est_fmt` for effort (*p* `r S2_effort$p_fmt`), `r S2_catch$est_fmt` for catch-by-effort (*p* `r S2_catch$p_fmt`), and `r S2_slope$est_fmt` for offset-by-effort (*p* `r S2_slope$p_fmt`). They are reported only to show the direction in this subset. They are not a second accepted test.
+S2 fits M1's formula to the `r v_int("s2_nobs")` trials from the `r v_int("s2_n_participants")` participants who contributed to the TEPR sample. The maximal model was singular, so it was not accepted. The point estimates were `r v("s2_effort_c_est")` for effort (*p* `r S2_effort$p_fmt`), `r v("s2_catch_effort_c_est")` for catch-by-effort (*p* `r S2_catch$p_fmt`), and `r v("s2_x_c_effort_c_est")` for offset-by-effort (*p* `r S2_slope$p_fmt`). They are reported only to show the direction in this subset. They are not a second accepted test.
 
 ## Optimizer check {#sec-allfit}
 
-M1, M4a, and M4b were re-estimated with the optimizers that ship with lme4 (`r v$allfit$optimizers`). No key-term estimate from a converged optimizer differed from the accepted bobyqa estimate by more than 0.01. The largest absolute key-term deviation in that set was `r v$allfit$max_abs_dev_fmt`.
+M1, M4a, and M4b were re-estimated with the optimizers that ship with lme4 (`r v("allfit_optimizers")`). No key-term estimate from a converged optimizer differed from the accepted bobyqa estimate by more than 0.01. The largest absolute key-term deviation in that set was `r v("allfit_max_abs_dev")`.
+
+```{=latex}
+\FloatBarrier
+```
+
+## Pupil participant flow
 
 ```{r}
-#| label: tbl-all-coefficients
-#| tbl-cap: "Fixed effects for every fitted model. S2 is included and was not accepted."
+#| label: tbl-pupil-flow
+#| tbl-cap: "How many participants and trials remain at each pupil gate, by task."
 
-show <- coef[, c("model", "accepted", "term", "est_fmt", "se_fmt", "stat_fmt", "df_fmt", "ci_fmt", "p_fmt")]
-names(show) <- c("Model", "Accepted", "Term", "Estimate", "SE", "Statistic", "df", "CI", "p")
-knitr::kable(show, align = "llrrrrllr")
+flow <- read_export("tbl_pupil_flow.csv")
+stopifnot(nrow(flow) > 0L)
+knitr::kable(flow)
 ```
+
+## Time axis
+
+```{r}
+#| label: tbl-axis
+#| tbl-cap: "Checks that the December 21 recordings are on a 250 Hz axis."
+
+axis_tab <- read_export("tbl_axis.csv")
+stopifnot(nrow(axis_tab) > 0L)
+knitr::kable(axis_tab)
+```
+
+## Missingness model
+
+```{r}
+#| label: tbl-m5
+#| tbl-cap: "Fixed effects from the missingness model."
+
+m5tab <- read_export("tbl_m5.csv")
+stopifnot(nrow(m5tab) > 0L)
+knitr::kable(m5tab[, c("Term", "Estimate", "SE", "Statistic", "95% CI", "p")])
+```
+
+:::
 
 # References
