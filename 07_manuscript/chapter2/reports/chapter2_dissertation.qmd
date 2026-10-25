@@ -386,6 +386,10 @@ Several features of the design limit these conclusions. Grip release, its visual
 
 For older adults, holding a physical effort appears to change how readily a change is reported rather than how well it is perceived, and this did not depend on a shared limit with the difficulty of the judgment. That distinction matters wherever older adults must notice a change while exerting themselves: a more conservative criterion predicts more missed changes when the evidence is weak, without implying that perception itself is impaired. A study that counterbalances the response mapping, uses more than two effort levels, measures a pre-stimulus baseline free of other stimuli, and models confidence alongside choice could separate the caution and response-mapping accounts and test whether pupil size before a stimulus predicts discrimination. In this chapter, physical effort shifted older adults' criterion toward "same," and the pupil did not account for that shift.
 
+```{=latex}
+\clearpage
+```
+
 # Supplement
 
 ```{=latex}
@@ -538,6 +542,8 @@ stage_lab <- c(
 )
 stopifnot(setequal(unique(flow$Stage), names(stage_lab)))
 flow$Stage <- unname(stage_lab[flow$Stage])
+flow$Participants <- format(flow$Participants, big.mark = ",", trim = TRUE, scientific = FALSE)
+flow$Trials <- format(flow$Trials, big.mark = ",", trim = TRUE, scientific = FALSE)
 knitr::kable(flow, escape = FALSE)
 ```
 
@@ -594,7 +600,7 @@ axis_show <- data.frame(
     "Squeeze-gauge duration",
     "Agreement with December 25 processing"
   ),
-  n = axis_tab$n,
+  n = format(axis_tab$n, big.mark = ",", trim = TRUE, scientific = FALSE),
   "Implied step (s)" = {
     step <- as.numeric(axis_tab[["Implied step"]])
     stopifnot(isTRUE(all.equal(step[1], 0.004)), isTRUE(all.equal(step[2], 0.004)))
