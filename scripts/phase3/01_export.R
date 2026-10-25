@@ -20,13 +20,10 @@ suppressPackageStartupMessages({
   library(data.table)
   library(jsonlite)
   library(ggplot2)
-  library(dplyr)
   library(lme4)
   library(lmerTest)
-  library(mgcv)
 })
 source(file.path(CH2, "R/ch2_report_helpers.R"))
-source(file.path(CH2, "R/tepr_waveform_helpers.R"))
 source(file.path(DDM, "R/colors_manuscript.R"))
 
 dir.create(EXPORT, recursive = TRUE, showWarnings = FALSE)
@@ -175,6 +172,9 @@ for (id in ids) {
 add_key("lme4_version", as.character(packageVersion("lme4")), "lme4 version", "session", "packageVersion")
 add_key("lmerTest_version", as.character(packageVersion("lmerTest")), "lmerTest version", "session", "packageVersion")
 add_key("run_id", RUN, "fit run id", "path", RUN)
+n_no_tepr <- iv_store$m1_n_participants - iv_store$m3_n_participants
+if (n_no_tepr != 17L) stop("n_no_tepr is not 17", call. = FALSE)
+add_key("n_no_tepr", n_no_tepr, "behavioral participants with no task-evoked trials", "M1_meta.json minus M3_meta.json", "m1_n_participants - m3_n_participants")
 
 m2var <- as.data.frame(VarCorr(fits$M2))
 m2_vc <- m2var$vcov[m2var$grp == "subject" & m2var$var1 == "effort_c" & (is.na(m2var$var2) | m2var$var2 == "")]
@@ -244,6 +244,16 @@ add_key("n_cells_high_lower_trial", sum(trial_wide$diff_prop < 0),
         "cells where the trial-mean high-effort proportion is lower", "analysis_data_m1.csv", "trial mean")
 add_key("n_cells_high_lower_participant", sum(wide$diff_prop < 0),
         "cells where the participant-mean high-effort proportion is lower", "analysis_data_m1.csv", "mean of participant proportions")
+add_key("n_low_gt_high_pooled", sum(trial_wide$diff_prop < 0),
+        "task-by-offset cells with a lower trial-pooled proportion under high effort", "analysis_data_m1.csv", "trial mean diff_prop < 0")
+add_key("n_low_gt_high_pmean", sum(wide$diff_prop < 0),
+        "task-by-offset cells with a lower participant-mean proportion under high effort", "analysis_data_m1.csv", "participant mean diff_prop < 0")
+exc <- wide[diff_prop >= 0]
+if (nrow(exc) != 1L || exc$task[1] != "VDT" || exc$stim_level_index[1] != 3L) {
+  stop("participant-mean exception is not the visual 0.24 cell", call. = FALSE)
+}
+add_key("pmean_exception", "visual, level 3 (0.24)",
+        "the cell where the participant-mean proportion is not lower under high effort", "analysis_data_m1.csv", "diff_prop >= 0")
 for (tk in c("ADT", "VDT")) {
   top <- obs[task == tk & stim_level_index == 4]
   add_key(paste0("top_", tolower(tk), "_p"), fmt_num(mean(m1[task == tk & stim_level_index == 4, diff]), 2),
@@ -473,78 +483,98 @@ fig_dt <- merge(
 )
 fig_dt[, x_lab := factor(offset_label, levels = unique(offset_label))]
 fig_dt[, task_label := fifelse(task == "ADT", "Auditory", "Visual")]
-beh_colors <- c(Low = "#6B7280", High = unname(effort_colors[["High"]]))
+fig_dt[, effort := factor(effort, levels = c("Low", "High"))]
+# Same effort colors and theme as Chapter 3 (R/colors_manuscript.R; theme_ms in F_figures.R).
+theme_ms <- function() {
+  theme_classic(base_size = 11) +
+    theme(
+      panel.grid = element_blank(),
+      strip.background = element_blank(),
+      strip.text = element_text(face = "bold"),
+      legend.position = "bottom"
+    )
+}
 p_beh <- ggplot(fig_dt, aes(x = x_lab, y = p_bar, color = effort, group = effort)) +
   geom_line(aes(y = p_hat), linewidth = 0.6) +
   geom_errorbar(aes(ymin = p_bar - se, ymax = p_bar + se), width = 0.15, linewidth = 0.3) +
   geom_point(size = 2) +
   facet_wrap(~ task_label, scales = "free_x") +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
-  scale_color_manual(values = beh_colors, name = "Effort") +
+  scale_color_manual(values = effort_colors, name = "Effort") +
   labs(x = "Offset (log\u2082 spacing; catch at the left)", y = "P(\"different\")") +
-  theme_bw(base_size = 11) +
-  theme(legend.position = "top", panel.grid.minor = element_blank())
+  theme_ms()
 ggsave(file.path(EXPORT, "fig_p_diff.png"), p_beh, width = 7.2, height = 3.6, dpi = 300)
 
 # --- pupil time course ------------------------------------------------------
+# Same display as Chapter 3's waveform (F_figures.R): mean of the
+# within-participant means, Morey SE with effort repeated inside task,
+# grip band, task-evoked band, probe line, response-cue line.
+# Values stay on the pre-squeeze baseline already stored in the waveforms.
+# They are not re-anchored to zero at squeeze onset.
 tepr_pairs <- unique(pupil[g_tepr_final %in% TRUE, .(subject_id, task)])
 wave <- fread(WAVE)
-wave <- wave[t >= -0.5 & t <= 7.7]
+wave <- wave[t >= -0.5 & t <= 8]
 wave <- tepr_pairs[wave, on = c("subject_id", "task"), nomatch = NULL]
+stopifnot(all(wave$effort %in% c("Low", "High")))
+wave[, t_rel := round(t * 50) / 50]
 subj_wave <- wave[, .(
-  mean_pupil_full = mean(mean_b0, na.rm = TRUE)
-), by = .(subject_id, task, condition = effort, t_rel = t)]
-subj_wave <- as.data.frame(subj_wave)
-subj_wave <- winsorize_subject_waveforms(subj_wave, value_col = "mean_pupil_full")
-setDT(subj_wave)
-agg <- subj_wave[, .(
-  y = mean(mean_pupil_full, na.rm = TRUE),
+  pupil = mean(mean_b0, na.rm = TRUE)
+), by = .(subject_id, task, effort, t_rel)]
+subj_wave <- subj_wave[is.finite(pupil)]
+means <- subj_wave[, .(
+  mean_pupil = mean(pupil),
   n_subjects = uniqueN(subject_id)
-), by = .(task, condition, t_rel)]
-x_range <- c(-0.5, 7.7)
-eval_grid <- seq(x_range[1], x_range[2], length.out = 300)
-gam_curves <- rbindlist(lapply(split(agg, list(agg$task, agg$condition)), function(dat) {
-  dat <- dat[is.finite(y) & is.finite(t_rel)]
-  if (nrow(dat) < 10L) stop("GAM group has too few rows", call. = FALSE)
-  fit_obj <- mgcv::gam(y ~ s(t_rel, k = 10), data = dat, method = "REML")
-  pred <- stats::predict(fit_obj, newdata = data.frame(t_rel = eval_grid), se.fit = TRUE)
-  data.table(
-    task = dat$task[1], condition = dat$condition[1],
-    t_rel = eval_grid,
-    fit = as.numeric(pred$fit),
-    se = as.numeric(pred$se.fit)
+), by = .(task, effort, t_rel)]
+wide <- dcast(subj_wave, subject_id + task + t_rel ~ effort, value.var = "pupil")
+stopifnot(all(c("Low", "High") %in% names(wide)))
+se_tbl <- wide[is.finite(Low) & is.finite(High), {
+  subj_m <- (Low + High) / 2
+  grand <- mean(subj_m)
+  low_c <- Low - subj_m + grand
+  high_c <- High - subj_m + grand
+  n <- .N
+  morey <- sqrt(2)
+  if (n < 2L) stop("Morey SE needs two participants", call. = FALSE)
+  .(
+    se_Low = stats::sd(low_c) / sqrt(n) * morey,
+    se_High = stats::sd(high_c) / sqrt(n) * morey,
+    n_both = n
   )
-}))
-gam_curves[, fit_lo := fit - 1.96 * se]
-gam_curves[, fit_hi := fit + 1.96 * se]
-gam_curves[, task_label := fifelse(task == "ADT", "Auditory", "Visual")]
-bands <- data.table(
-  xmin = c(-0.5, 1.0, 3.85, 4.65),
-  xmax = c(0, 4.35, 4.35, 7.65),
-  window = c("B0", "Grip", "Pre-probe", "TEPR"),
-  col = c("#E5E7EB", "#DBEAFE", "#FDE68A", "#FBCFE8")
+}, by = .(task, t_rel)]
+se_long <- melt(
+  se_tbl,
+  id.vars = c("task", "t_rel", "n_both"),
+  measure.vars = c("se_Low", "se_High"),
+  variable.name = "effort",
+  value.name = "se"
 )
-events <- c(0, 3.00, 3.75, 4.35, 4.45, 4.70)
-p_wave <- ggplot(gam_curves, aes(x = t_rel, y = fit, color = condition)) +
-  geom_rect(
-    data = bands, inherit.aes = FALSE,
-    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = col),
-    alpha = 0.55
-  ) +
-  geom_vline(xintercept = events, linewidth = 0.25, color = "#6B7280") +
-  geom_ribbon(aes(ymin = fit_lo, ymax = fit_hi, group = condition), fill = "#9CA3AF", alpha = 0.18, color = NA) +
+se_long[, effort := fifelse(effort == "se_Low", "Low", "High")]
+plot_tepr <- merge(means, se_long, by = c("task", "effort", "t_rel"), all.x = TRUE)
+stopifnot(!anyNA(plot_tepr$se))
+setorder(plot_tepr, task, effort, t_rel)
+plot_tepr[, effort := factor(effort, levels = c("Low", "High"))]
+plot_tepr[, task_label := factor(
+  fifelse(task == "ADT", "Auditory", "Visual"),
+  levels = c("Auditory", "Visual")
+)]
+p_wave <- ggplot(plot_tepr, aes(x = t_rel, y = mean_pupil, color = effort, fill = effort)) +
+  annotate("rect", xmin = 1.0, xmax = 4.35, ymin = -Inf, ymax = Inf, fill = "#E5E7EB", alpha = 0.85) +
+  annotate("rect", xmin = 4.65, xmax = 7.65, ymin = -Inf, ymax = Inf, fill = "#DBEAFE", alpha = 0.55) +
+  annotate("rect", xmin = 3.85, xmax = 4.35, ymin = -Inf, ymax = Inf, fill = "#F6C945", alpha = 0.45) +
+  geom_vline(xintercept = c(0, 3.75, 4.35, 4.70), linewidth = 0.35, color = "#111827") +
+  geom_ribbon(aes(ymin = mean_pupil - se, ymax = mean_pupil + se), alpha = 0.22, color = NA) +
   geom_line(linewidth = 0.6) +
-  facet_wrap(~ task_label) +
-  scale_color_manual(values = beh_colors, name = "Effort") +
-  scale_fill_identity() +
+  facet_wrap(~ task_label, ncol = 1) +
+  scale_color_manual(values = effort_colors, name = "Effort") +
+  scale_fill_manual(values = effort_colors, name = "Effort") +
+  scale_x_continuous(breaks = seq(0, 8, by = 1), limits = c(-0.5, 8)) +
   labs(
     x = "Time from squeeze onset (s)",
-    y = "Pupil diameter change from pre-squeeze baseline (a.u.)"
+    y = "Pupil change from pre-squeeze baseline (a.u.)"
   ) +
-  theme_bw(base_size = 11) +
-  theme(legend.position = "top", panel.grid.minor = element_blank())
-p_wave <- p_wave + theme(plot.margin = ggplot2::margin(6, 10, 6, 22))
-ggsave(file.path(EXPORT, "fig_pupil_timecourse.png"), p_wave, width = 8.2, height = 4.2, dpi = 300)
+  theme_ms() +
+  theme(plot.margin = ggplot2::margin(6, 12, 8, 12))
+ggsave(file.path(EXPORT, "fig_pupil_timecourse.png"), p_wave, width = 8.2, height = 7.5, dpi = 300)
 
 n_wave <- pupil[g_tepr_final %in% TRUE, .(
   n_trials = .N,
@@ -552,7 +582,7 @@ n_wave <- pupil[g_tepr_final %in% TRUE, .(
 ), by = .(task, effort)]
 n_wave <- merge(
   n_wave,
-  subj_wave[, .(n_waveform_subjects = uniqueN(subject_id)), by = .(task, effort = condition)],
+  subj_wave[, .(n_waveform_subjects = uniqueN(subject_id)), by = .(task, effort)],
   by = c("task", "effort")
 )
 fwrite(n_wave, file.path(EXPORT, "B3_timecourse_n.csv"))
