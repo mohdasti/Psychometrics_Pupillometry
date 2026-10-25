@@ -1,80 +1,80 @@
-Model,ID,Accepted,Term,Estimate,SE,Statistic,95% CI,p
-Behavior,M1,TRUE,Intercept,0.43,0.07,z = 5.86,"[0.29, 0.58]",< .001
-Behavior,M1,TRUE,Catch,−1.95,0.11,z = −18.10,"[−2.16, −1.73]",< .001
-Behavior,M1,TRUE,Offset,1.14,0.05,z = 23.65,"[1.04, 1.23]",< .001
-Behavior,M1,TRUE,Effort,−0.10,0.03,z = −3.39,"[−0.15, −0.04]",< .001
-Behavior,M1,TRUE,Task,0.32,0.09,z = 3.43,"[0.14, 0.51]",< .001
-Behavior,M1,TRUE,Catch × Effort,−0.02,0.07,z = −0.25,"[−0.15, 0.12]",= .802
-Behavior,M1,TRUE,Offset × Effort,0.06,0.03,z = 2.02,"[0.002, 0.11]",= .044
-Behavior,M1,TRUE,Catch × Task,−0.67,0.07,z = −9.35,"[−0.82, −0.53]",< .001
-Behavior,M1,TRUE,Offset × Task,0.22,0.03,z = 6.95,"[0.16, 0.28]",< .001
-Behavior,M1,TRUE,Effort × Task,0.05,0.06,z = 0.89,"[−0.06, 0.16]",= .374
-Behavior,M1,TRUE,Catch × Effort × Task,0.10,0.14,z = 0.71,"[−0.17, 0.36]",= .477
-Behavior,M1,TRUE,Offset × Effort × Task,0.08,0.06,z = 1.42,"[−0.03, 0.19]",= .157
-Grip-window pupil,M2,TRUE,Intercept,−0.36,0.11,t(42.5) = −3.13,"[−0.58, −0.13]",= .003
-Grip-window pupil,M2,TRUE,Effort,0.14,0.11,t(25.2) = 1.27,"[−0.08, 0.35]",= .216
-Grip-window pupil,M2,TRUE,Task,0.04,0.06,t(4498) = 0.57,"[−0.09, 0.16]",= .567
-Grip-window pupil,M2,TRUE,Effort × Task,−0.12,0.12,t(1143) = −1.01,"[−0.35, 0.11]",= .315
-Task-evoked pupil,M3,TRUE,Intercept,0.92,0.12,t(50.7) = 7.96,"[0.69, 1.14]",< .001
-Task-evoked pupil,M3,TRUE,Effort,−0.28,0.07,t(33.0) = −3.91,"[−0.41, −0.14]",< .001
-Task-evoked pupil,M3,TRUE,Task,−0.20,0.05,t(6028) = −4.03,"[−0.30, −0.10]",< .001
-Task-evoked pupil,M3,TRUE,Catch,0.07,0.05,t(6144) = 1.31,"[−0.03, 0.17]",= .192
-Task-evoked pupil,M3,TRUE,Offset,−0.03,0.04,t(26.1) = −0.76,"[−0.10, 0.04]",= .452
-Task-evoked pupil,M3,TRUE,Effort × Task,0.13,0.09,t(1397) = 1.47,"[−0.04, 0.31]",= .141
-Pre-probe pupil,M4a,TRUE,Intercept,0.44,0.10,z = 4.62,"[0.26, 0.63]",< .001
-Pre-probe pupil,M4a,TRUE,Catch,−2.13,0.18,z = −11.76,"[−2.48, −1.77]",< .001
-Pre-probe pupil,M4a,TRUE,Offset,1.07,0.05,z = 20.92,"[0.97, 1.17]",< .001
-Pre-probe pupil,M4a,TRUE,Pre-probe state,−0.03,0.02,z = −1.26,"[−0.07, 0.02]",= .209
-Pre-probe pupil,M4a,TRUE,Effort,−0.07,0.05,z = −1.51,"[−0.17, 0.02]",= .132
-Pre-probe pupil,M4a,TRUE,Task,0.37,0.06,z = 6.38,"[0.26, 0.48]",< .001
-Pre-probe pupil,M4a,TRUE,Pre-probe trait,0.009,0.07,z = 0.14,"[−0.12, 0.14]",= .891
-Pre-probe pupil,M4a,TRUE,Catch × Pre-probe state,0.07,0.06,z = 1.13,"[−0.05, 0.19]",= .257
-Pre-probe pupil,M4a,TRUE,Catch × Effort,−0.20,0.13,z = −1.56,"[−0.45, 0.05]",= .119
-Pre-probe pupil,M4a,TRUE,Catch × Task,−0.76,0.16,z = −4.85,"[−1.06, −0.45]",< .001
-Pre-probe pupil,M4a,TRUE,Offset × Pre-probe state,−0.04,0.02,z = −1.97,"[−0.09, 0.000]",= .049
-Pre-probe pupil,M4a,TRUE,Offset × Effort,0.09,0.05,z = 1.82,"[−0.007, 0.19]",= .069
-Pre-probe pupil,M4a,TRUE,Offset × Task,0.22,0.06,z = 3.84,"[0.11, 0.33]",< .001
-TEPR pupil,M4b,TRUE,Intercept,0.45,0.09,z = 4.74,"[0.26, 0.63]",< .001
-TEPR pupil,M4b,TRUE,Catch,−2.13,0.18,z = −11.70,"[−2.48, −1.77]",< .001
-TEPR pupil,M4b,TRUE,Offset,1.07,0.05,z = 20.99,"[0.97, 1.17]",< .001
-TEPR pupil,M4b,TRUE,TEPR state,0.000,0.02,z = 0.02,"[−0.05, 0.05]",= .987
-TEPR pupil,M4b,TRUE,Effort,−0.08,0.05,z = −1.61,"[−0.17, 0.02]",= .108
-TEPR pupil,M4b,TRUE,Task,0.40,0.06,z = 6.83,"[0.28, 0.51]",< .001
-TEPR pupil,M4b,TRUE,TEPR trait,0.15,0.05,z = 2.99,"[0.05, 0.25]",= .003
-TEPR pupil,M4b,TRUE,Catch × TEPR state,−0.01,0.07,z = −0.19,"[−0.14, 0.12]",= .853
-TEPR pupil,M4b,TRUE,Catch × Effort,−0.19,0.13,z = −1.49,"[−0.44, 0.06]",= .137
-TEPR pupil,M4b,TRUE,Catch × Task,−0.76,0.16,z = −4.89,"[−1.07, −0.46]",< .001
-TEPR pupil,M4b,TRUE,Offset × TEPR state,0.01,0.02,z = 0.51,"[−0.03, 0.06]",= .613
-TEPR pupil,M4b,TRUE,Offset × Effort,0.09,0.05,z = 1.72,"[−0.01, 0.18]",= .085
-TEPR pupil,M4b,TRUE,Offset × Task,0.21,0.06,z = 3.72,"[0.10, 0.32]",< .001
-Missingness,M5,TRUE,Intercept,−0.41,0.42,z = −0.97,"[−1.23, 0.42]",= .333
-Missingness,M5,TRUE,Effort,0.13,0.05,z = 2.73,"[0.04, 0.22]",= .006
-Missingness,M5,TRUE,Task,0.65,0.05,z = 12.62,"[0.55, 0.75]",< .001
-Missingness,M5,TRUE,Catch,0.03,0.06,z = 0.56,"[−0.08, 0.15]",= .577
-Missingness,M5,TRUE,Offset,0.04,0.02,z = 1.87,"[−0.002, 0.09]",= .062
-Missingness,M5,TRUE,Effort × Task,−0.05,0.10,z = −0.54,"[−0.24, 0.14]",= .589
-AUC supplement,S1,TRUE,Intercept,0.43,0.09,z = 4.55,"[0.24, 0.61]",< .001
-AUC supplement,S1,TRUE,Catch,−2.10,0.18,z = −11.93,"[−2.44, −1.75]",< .001
-AUC supplement,S1,TRUE,Offset,1.04,0.03,z = 39.49,"[0.99, 1.09]",< .001
-AUC supplement,S1,TRUE,AUC state,0.002,0.02,z = 0.08,"[−0.04, 0.05]",= .934
-AUC supplement,S1,TRUE,Effort,−0.08,0.05,z = −1.65,"[−0.17, 0.01]",= .099
-AUC supplement,S1,TRUE,Task,0.40,0.06,z = 7.01,"[0.29, 0.51]",< .001
-AUC supplement,S1,TRUE,AUC trait,0.15,0.05,z = 3.02,"[0.05, 0.25]",= .003
-AUC supplement,S1,TRUE,Catch × AUC state,−0.005,0.06,z = −0.08,"[−0.13, 0.12]",= .936
-AUC supplement,S1,TRUE,Catch × Effort,−0.19,0.13,z = −1.46,"[−0.44, 0.06]",= .144
-AUC supplement,S1,TRUE,Catch × Task,−0.77,0.16,z = −4.95,"[−1.07, −0.46]",< .001
-AUC supplement,S1,TRUE,Offset × AUC state,0.02,0.02,z = 0.79,"[−0.03, 0.06]",= .432
-AUC supplement,S1,TRUE,Offset × Effort,0.08,0.05,z = 1.63,"[−0.02, 0.17]",= .103
-AUC supplement,S1,TRUE,Offset × Task,0.25,0.05,z = 5.07,"[0.16, 0.35]",< .001
-Pupil-subsample behavior,S2,FALSE,Intercept,0.47,0.09,z = 5.18,"[0.29, 0.64]",< .001
-Pupil-subsample behavior,S2,FALSE,Catch,−2.01,0.13,z = −15.94,"[−2.26, −1.77]",< .001
-Pupil-subsample behavior,S2,FALSE,Offset,1.14,0.05,z = 21.32,"[1.04, 1.25]",< .001
-Pupil-subsample behavior,S2,FALSE,Effort,−0.09,0.03,z = −2.81,"[−0.16, −0.03]",= .005
-Pupil-subsample behavior,S2,FALSE,Task,0.35,0.10,z = 3.61,"[0.16, 0.54]",< .001
-Pupil-subsample behavior,S2,FALSE,Catch × Effort,0.001,0.08,z = 0.01,"[−0.16, 0.16]",= .994
-Pupil-subsample behavior,S2,FALSE,Offset × Effort,0.08,0.03,z = 2.36,"[0.01, 0.15]",= .018
-Pupil-subsample behavior,S2,FALSE,Catch × Task,−0.74,0.09,z = −8.64,"[−0.90, −0.57]",< .001
-Pupil-subsample behavior,S2,FALSE,Offset × Task,0.24,0.04,z = 6.52,"[0.17, 0.31]",< .001
-Pupil-subsample behavior,S2,FALSE,Effort × Task,0.05,0.07,z = 0.79,"[−0.08, 0.18]",= .432
-Pupil-subsample behavior,S2,FALSE,Catch × Effort × Task,−0.007,0.16,z = −0.04,"[−0.32, 0.31]",= .965
-Pupil-subsample behavior,S2,FALSE,Offset × Effort × Task,0.07,0.07,z = 0.99,"[−0.07, 0.20]",= .323
+Model,ID,Accepted,Term,Estimate,SE,Statistic,95% CI,p,p_tab
+Behavior,M1,TRUE,Intercept,0.43,0.07,z = 5.86,"[0.29, 0.58]",< .001,< .001
+Behavior,M1,TRUE,Catch,−1.95,0.11,z = −18.10,"[−2.16, −1.73]",< .001,< .001
+Behavior,M1,TRUE,Offset,1.14,0.05,z = 23.65,"[1.04, 1.23]",< .001,< .001
+Behavior,M1,TRUE,Effort,−0.10,0.03,z = −3.39,"[−0.15, −0.04]",< .001,< .001
+Behavior,M1,TRUE,Task,0.32,0.09,z = 3.43,"[0.14, 0.51]",< .001,< .001
+Behavior,M1,TRUE,Catch × Effort,−0.02,0.07,z = −0.25,"[−0.15, 0.12]",= .802,.802
+Behavior,M1,TRUE,Offset × Effort,0.06,0.03,z = 2.02,"[0.002, 0.11]",= .044,.044
+Behavior,M1,TRUE,Catch × Task,−0.67,0.07,z = −9.35,"[−0.82, −0.53]",< .001,< .001
+Behavior,M1,TRUE,Offset × Task,0.22,0.03,z = 6.95,"[0.16, 0.28]",< .001,< .001
+Behavior,M1,TRUE,Effort × Task,0.05,0.06,z = 0.89,"[−0.06, 0.16]",= .374,.374
+Behavior,M1,TRUE,Catch × Effort × Task,0.10,0.14,z = 0.71,"[−0.17, 0.36]",= .477,.477
+Behavior,M1,TRUE,Offset × Effort × Task,0.08,0.06,z = 1.42,"[−0.03, 0.19]",= .157,.157
+Grip-window pupil,M2,TRUE,Intercept,−0.36,0.11,t(42.5) = −3.13,"[−0.58, −0.13]",= .003,.003
+Grip-window pupil,M2,TRUE,Effort,0.14,0.11,t(25.2) = 1.27,"[−0.08, 0.35]",= .216,.216
+Grip-window pupil,M2,TRUE,Task,0.04,0.06,t(4498) = 0.57,"[−0.09, 0.16]",= .567,.567
+Grip-window pupil,M2,TRUE,Effort × Task,−0.12,0.12,t(1143) = −1.01,"[−0.35, 0.11]",= .315,.315
+Task-evoked pupil,M3,TRUE,Intercept,0.92,0.12,t(50.7) = 7.96,"[0.69, 1.14]",< .001,< .001
+Task-evoked pupil,M3,TRUE,Effort,−0.28,0.07,t(33.0) = −3.91,"[−0.41, −0.14]",< .001,< .001
+Task-evoked pupil,M3,TRUE,Task,−0.20,0.05,t(6028) = −4.03,"[−0.30, −0.10]",< .001,< .001
+Task-evoked pupil,M3,TRUE,Catch,0.07,0.05,t(6144) = 1.31,"[−0.03, 0.17]",= .192,.192
+Task-evoked pupil,M3,TRUE,Offset,−0.03,0.04,t(26.1) = −0.76,"[−0.10, 0.04]",= .452,.452
+Task-evoked pupil,M3,TRUE,Effort × Task,0.13,0.09,t(1397) = 1.47,"[−0.04, 0.31]",= .141,.141
+Pre-probe pupil,M4a,TRUE,Intercept,0.44,0.10,z = 4.62,"[0.26, 0.63]",< .001,< .001
+Pre-probe pupil,M4a,TRUE,Catch,−2.13,0.18,z = −11.76,"[−2.48, −1.77]",< .001,< .001
+Pre-probe pupil,M4a,TRUE,Offset,1.07,0.05,z = 20.92,"[0.97, 1.17]",< .001,< .001
+Pre-probe pupil,M4a,TRUE,Pre-probe state,−0.03,0.02,z = −1.26,"[−0.07, 0.02]",= .209,.209
+Pre-probe pupil,M4a,TRUE,Effort,−0.07,0.05,z = −1.51,"[−0.17, 0.02]",= .132,.132
+Pre-probe pupil,M4a,TRUE,Task,0.37,0.06,z = 6.38,"[0.26, 0.48]",< .001,< .001
+Pre-probe pupil,M4a,TRUE,Pre-probe trait,0.009,0.07,z = 0.14,"[−0.12, 0.14]",= .891,.891
+Pre-probe pupil,M4a,TRUE,Catch × Pre-probe state,0.07,0.06,z = 1.13,"[−0.05, 0.19]",= .257,.257
+Pre-probe pupil,M4a,TRUE,Catch × Effort,−0.20,0.13,z = −1.56,"[−0.45, 0.05]",= .119,.119
+Pre-probe pupil,M4a,TRUE,Catch × Task,−0.76,0.16,z = −4.85,"[−1.06, −0.45]",< .001,< .001
+Pre-probe pupil,M4a,TRUE,Offset × Pre-probe state,−0.04,0.02,z = −1.97,"[−0.09, 0.000]",= .049,.049
+Pre-probe pupil,M4a,TRUE,Offset × Effort,0.09,0.05,z = 1.82,"[−0.007, 0.19]",= .069,.069
+Pre-probe pupil,M4a,TRUE,Offset × Task,0.22,0.06,z = 3.84,"[0.11, 0.33]",< .001,< .001
+TEPR pupil,M4b,TRUE,Intercept,0.45,0.09,z = 4.74,"[0.26, 0.63]",< .001,< .001
+TEPR pupil,M4b,TRUE,Catch,−2.13,0.18,z = −11.70,"[−2.48, −1.77]",< .001,< .001
+TEPR pupil,M4b,TRUE,Offset,1.07,0.05,z = 20.99,"[0.97, 1.17]",< .001,< .001
+TEPR pupil,M4b,TRUE,TEPR state,0.000,0.02,z = 0.02,"[−0.05, 0.05]",= .987,.987
+TEPR pupil,M4b,TRUE,Effort,−0.08,0.05,z = −1.61,"[−0.17, 0.02]",= .108,.108
+TEPR pupil,M4b,TRUE,Task,0.40,0.06,z = 6.83,"[0.28, 0.51]",< .001,< .001
+TEPR pupil,M4b,TRUE,TEPR trait,0.15,0.05,z = 2.99,"[0.05, 0.25]",= .003,.003
+TEPR pupil,M4b,TRUE,Catch × TEPR state,−0.01,0.07,z = −0.19,"[−0.14, 0.12]",= .853,.853
+TEPR pupil,M4b,TRUE,Catch × Effort,−0.19,0.13,z = −1.49,"[−0.44, 0.06]",= .137,.137
+TEPR pupil,M4b,TRUE,Catch × Task,−0.76,0.16,z = −4.89,"[−1.07, −0.46]",< .001,< .001
+TEPR pupil,M4b,TRUE,Offset × TEPR state,0.01,0.02,z = 0.51,"[−0.03, 0.06]",= .613,.613
+TEPR pupil,M4b,TRUE,Offset × Effort,0.09,0.05,z = 1.72,"[−0.01, 0.18]",= .085,.085
+TEPR pupil,M4b,TRUE,Offset × Task,0.21,0.06,z = 3.72,"[0.10, 0.32]",< .001,< .001
+Missingness,M5,TRUE,Intercept,−0.41,0.42,z = −0.97,"[−1.23, 0.42]",= .333,.333
+Missingness,M5,TRUE,Effort,0.13,0.05,z = 2.73,"[0.04, 0.22]",= .006,.006
+Missingness,M5,TRUE,Task,0.65,0.05,z = 12.62,"[0.55, 0.75]",< .001,< .001
+Missingness,M5,TRUE,Catch,0.03,0.06,z = 0.56,"[−0.08, 0.15]",= .577,.577
+Missingness,M5,TRUE,Offset,0.04,0.02,z = 1.87,"[−0.002, 0.09]",= .062,.062
+Missingness,M5,TRUE,Effort × Task,−0.05,0.10,z = −0.54,"[−0.24, 0.14]",= .589,.589
+AUC supplement,S1,TRUE,Intercept,0.43,0.09,z = 4.55,"[0.24, 0.61]",< .001,< .001
+AUC supplement,S1,TRUE,Catch,−2.10,0.18,z = −11.93,"[−2.44, −1.75]",< .001,< .001
+AUC supplement,S1,TRUE,Offset,1.04,0.03,z = 39.49,"[0.99, 1.09]",< .001,< .001
+AUC supplement,S1,TRUE,AUC state,0.002,0.02,z = 0.08,"[−0.04, 0.05]",= .934,.934
+AUC supplement,S1,TRUE,Effort,−0.08,0.05,z = −1.65,"[−0.17, 0.01]",= .099,.099
+AUC supplement,S1,TRUE,Task,0.40,0.06,z = 7.01,"[0.29, 0.51]",< .001,< .001
+AUC supplement,S1,TRUE,AUC trait,0.15,0.05,z = 3.02,"[0.05, 0.25]",= .003,.003
+AUC supplement,S1,TRUE,Catch × AUC state,−0.005,0.06,z = −0.08,"[−0.13, 0.12]",= .936,.936
+AUC supplement,S1,TRUE,Catch × Effort,−0.19,0.13,z = −1.46,"[−0.44, 0.06]",= .144,.144
+AUC supplement,S1,TRUE,Catch × Task,−0.77,0.16,z = −4.95,"[−1.07, −0.46]",< .001,< .001
+AUC supplement,S1,TRUE,Offset × AUC state,0.02,0.02,z = 0.79,"[−0.03, 0.06]",= .432,.432
+AUC supplement,S1,TRUE,Offset × Effort,0.08,0.05,z = 1.63,"[−0.02, 0.17]",= .103,.103
+AUC supplement,S1,TRUE,Offset × Task,0.25,0.05,z = 5.07,"[0.16, 0.35]",< .001,< .001
+Pupil-subsample behavior,S2,FALSE,Intercept,0.47,0.09,z = 5.18,"[0.29, 0.64]",< .001,< .001
+Pupil-subsample behavior,S2,FALSE,Catch,−2.01,0.13,z = −15.94,"[−2.26, −1.77]",< .001,< .001
+Pupil-subsample behavior,S2,FALSE,Offset,1.14,0.05,z = 21.32,"[1.04, 1.25]",< .001,< .001
+Pupil-subsample behavior,S2,FALSE,Effort,−0.09,0.03,z = −2.81,"[−0.16, −0.03]",= .005,.005
+Pupil-subsample behavior,S2,FALSE,Task,0.35,0.10,z = 3.61,"[0.16, 0.54]",< .001,< .001
+Pupil-subsample behavior,S2,FALSE,Catch × Effort,0.001,0.08,z = 0.01,"[−0.16, 0.16]",= .994,.994
+Pupil-subsample behavior,S2,FALSE,Offset × Effort,0.08,0.03,z = 2.36,"[0.01, 0.15]",= .018,.018
+Pupil-subsample behavior,S2,FALSE,Catch × Task,−0.74,0.09,z = −8.64,"[−0.90, −0.57]",< .001,< .001
+Pupil-subsample behavior,S2,FALSE,Offset × Task,0.24,0.04,z = 6.52,"[0.17, 0.31]",< .001,< .001
+Pupil-subsample behavior,S2,FALSE,Effort × Task,0.05,0.07,z = 0.79,"[−0.08, 0.18]",= .432,.432
+Pupil-subsample behavior,S2,FALSE,Catch × Effort × Task,−0.007,0.16,z = −0.04,"[−0.32, 0.31]",= .965,.965
+Pupil-subsample behavior,S2,FALSE,Offset × Effort × Task,0.07,0.07,z = 0.99,"[−0.07, 0.20]",= .323,.323

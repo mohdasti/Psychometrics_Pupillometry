@@ -256,14 +256,15 @@ add_key("pmean_exception", "visual, level 3 (0.24)",
         "the cell where the participant-mean proportion is not lower under high effort", "analysis_data_m1.csv", "diff_prop >= 0")
 for (tk in c("ADT", "VDT")) {
   top <- obs[task == tk & stim_level_index == 4]
-  add_key(paste0("top_", tolower(tk), "_p"), fmt_num(mean(m1[task == tk & stim_level_index == 4, diff]), 2),
+  add_key(paste0("top_", tolower(tk), "_p"), fmt_prop(mean(m1[task == tk & stim_level_index == 4, diff]), 2),
           paste(tk, "top-offset P(different), trial mean"), "analysis_data_m1.csv", "mean(diff)")
   add_key(paste0("top_", tolower(tk), "_n"), nrow(m1[task == tk & stim_level_index == 4]),
           paste(tk, "top-offset trials"), "analysis_data_m1.csv", "nrow")
-  add_key(paste0("catch_", tolower(tk), "_p"), fmt_num(mean(m1[task == tk & stim_level_index == 0, diff]), 3),
+  add_key(paste0("catch_", tolower(tk), "_p"), fmt_prop(mean(m1[task == tk & stim_level_index == 0, diff]), 3),
           paste(tk, "catch P(different)"), "analysis_data_m1.csv", "mean(diff)")
   dprop <- trial_wide[task == tk & stim_level_index == 4, diff_prop]
-  add_key(paste0("level4_", tolower(tk), "_diff_prop"), fmt_est(dprop),
+  dprop_digits <- if (abs(dprop) > 0 && abs(dprop) < 0.01) 3L else 2L
+  add_key(paste0("level4_", tolower(tk), "_diff_prop"), fmt_prop(dprop, dprop_digits),
           paste(tk, "top-offset high minus low, trial-mean proportion"), "analysis_data_m1.csv", "diff_prop trial mean")
   dpart <- wide[task == tk & stim_level_index == 4, diff_prop]
   add_key(paste0("level4_", tolower(tk), "_diff_prop_participant"), fmt_est(dpart),
@@ -424,6 +425,7 @@ stat_cell <- function(id, stat, df) {
 }
 coef_out <- rbindlist(lapply(seq_len(nrow(live)), function(i) {
   id <- live$model[i]
+  p_str <- fmt_p(live$p[i])
   data.table(
     Model = unname(model_name[[id]]),
     ID = id,
@@ -433,7 +435,8 @@ coef_out <- rbindlist(lapply(seq_len(nrow(live)), function(i) {
     SE = fmt_est(live$SE[i]),
     Statistic = stat_cell(id, live$statistic[i], live$df[i]),
     `95% CI` = fmt_ci(live$ci_low[i], live$ci_high[i]),
-    p = fmt_p(live$p[i])
+    p = p_str,
+    p_tab = sub("^= ", "", p_str)
   )
 }))
 fwrite(coef_out, file.path(EXPORT, "coefficients.csv"))
@@ -521,6 +524,31 @@ subj_wave <- wave[, .(
   pupil = mean(mean_b0, na.rm = TRUE)
 ), by = .(subject_id, task, effort, t_rel)]
 subj_wave <- subj_wave[is.finite(pupil)]
+source(file.path(CH2, "R/tepr_waveform_helpers.R"))
+suppressPackageStartupMessages(library(dplyr))
+pre_df <- as.data.frame(subj_wave)
+pre_df$mean_pupil_full <- pre_df$pupil
+win_df <- winsorize_subject_waveforms(pre_df, value_col = "mean_pupil_full")
+stopifnot(
+  nrow(win_df) == nrow(pre_df),
+  identical(as.character(win_df$subject_id), as.character(pre_df$subject_id)),
+  identical(as.character(win_df$task), as.character(pre_df$task)),
+  identical(as.character(win_df$effort), as.character(pre_df$effort)),
+  all(abs(win_df$t_rel - pre_df$t_rel) < 1e-8)
+)
+delta <- win_df$mean_pupil_full - pre_df$pupil
+win_sum <- data.table(
+  task = pre_df$task,
+  changed = abs(delta) > 1e-12,
+  abs_change = abs(delta)
+)[, .(
+  n_values = .N,
+  n_changed = sum(changed),
+  max_abs_change = if (any(changed)) max(abs_change[changed]) else 0
+), by = task]
+dir.create(file.path(CH2, "output/diagnostics/ch2_phase5b"), recursive = TRUE, showWarnings = FALSE)
+fwrite(win_sum, file.path(CH2, "output/diagnostics/ch2_phase5b/winsor_by_task.csv"))
+subj_wave[, pupil := win_df$mean_pupil_full]
 means <- subj_wave[, .(
   mean_pupil = mean(pupil),
   n_subjects = uniqueN(subject_id)

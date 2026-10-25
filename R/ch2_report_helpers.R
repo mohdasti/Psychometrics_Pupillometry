@@ -46,6 +46,14 @@ v_num <- function(key) {
   fmt_num(as.numeric(val), 7)
 }
 
+# APA proportion. No leading zero, because the value cannot exceed 1.
+# The minus sign is Unicode U+2212.
+fmt_prop <- function(x, d) {
+  if (length(x) != 1L || !is.numeric(x) || is.na(x)) .stop_value("fmt_prop expects one number")
+  if (abs(x) > 1) .stop_value("fmt_prop expects a value that cannot exceed 1")
+  sub("0.", ".", fmt_num(x, d), fixed = TRUE)
+}
+
 # APA p. The relation sign is part of the string: "= .044" or "< .001".
 fmt_p <- function(p) {
   if (length(p) != 1L || !is.numeric(p) || is.na(p)) .stop_value("fmt_p expects one probability")
