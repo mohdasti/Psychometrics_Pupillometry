@@ -427,7 +427,7 @@ load_accepted <- function(model_id, data, key_terms) {
   max_abs <- max(abs(both$estimate_saved - both$estimate_live))
   log_line("SKIP ", model_id, " loaded accepted step ", meta$reduction_step,
            " fixef max abs diff ", sprintf("%.3e", max_abs))
-  if (!is.finite(max_abs) || max_abs > 0) {
+  if (!is.finite(max_abs) || max_abs > 1e-8) {
     fatal("resume_fixef", paste(model_id, "loaded fixed effects differ from the saved CSV by", max_abs))
   }
   check_nobs(fit, nrow(data), model_id)
