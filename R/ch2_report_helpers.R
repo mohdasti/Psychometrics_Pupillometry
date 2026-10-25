@@ -97,3 +97,33 @@ fmt_est <- function(x) {
 fmt_ci <- function(lo, hi) {
   paste0("[", fmt_est(lo), ", ", fmt_est(hi), "]")
 }
+
+# Escape a table cell for XeLaTeX. Statistical letters are left for the caller.
+latex_escape <- function(x) {
+  x <- as.character(x)
+  x <- gsub("&", "\\&", x, fixed = TRUE)
+  x <- gsub("%", "\\%", x, fixed = TRUE)
+  x <- gsub("_", "\\_", x, fixed = TRUE)
+  x <- gsub("<", "$<$", x, fixed = TRUE)
+  x
+}
+
+# Italic z and t in a statistic cell, after escaping.
+style_stat_latex <- function(x) {
+  x <- latex_escape(x)
+  x <- sub("^z = ", "$z$ = ", x)
+  hit <- startsWith(x, "t(")
+  x[hit] <- paste0("$t$", substring(x[hit], 2L))
+  x
+}
+
+# Two significant figures by default. Does not read or write values.json.
+fmt_sig <- function(x, digits = 2L) {
+  if (length(x) != 1L || !is.numeric(x) || is.na(x)) .stop_value("fmt_sig expects one number")
+  digits <- as.integer(digits)
+  if (digits < 1L) .stop_value("fmt_sig digits must be at least 1")
+  y <- signif(x, digits)
+  if (y == 0) return(fmt_num(0, 0))
+  dec <- max(0L, digits - floor(log10(abs(y))) - 1L)
+  fmt_num(y, dec)
+}

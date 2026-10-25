@@ -33,6 +33,7 @@ format:
     mathfont: "STIX Two Math"
     header-includes:
       - \usepackage{placeins}
+      - \usepackage{needspace}
       - \newcounter{ch2maintable}
     geometry:
       - margin=1in
@@ -42,6 +43,9 @@ format:
   docx:
     toc: false
     number-sections: true
+    filters:
+      - at: post-render
+        path: ch2_docx_supptables.lua
 
 execute:
   echo: false
@@ -132,17 +136,28 @@ kable_page <- function(df, widths, block_rows = NULL, tabcolsep = "2.5pt", size 
     plain <- gsub("\\\\\\\\", " ", plain)
     plain <- gsub("\\}", "", plain)
     plain <- gsub("\\\\%", "%", plain)
+    if ("Statistic" %in% names(df)) {
+      df$Statistic <- sub("^z = ", "*z* = ", df$Statistic)
+      df$Statistic <- sub("^t\\(", "*t*(", df$Statistic)
+    }
+    plain <- ifelse(plain %in% c("p", "N", "M", "SD", "n"), paste0("*", plain, "*"), plain)
     names(df) <- plain
     return(knitr::kable(df))
   }
   stopifnot(length(widths) == ncol(df))
+  df[] <- lapply(df, style_stat_latex)
+  nms <- names(df)
+  nms <- latex_escape(nms)
+  nms[nms %in% c("p", "N", "M", "SD", "n")] <- paste0("$", nms[nms %in% c("p", "N", "M", "SD", "n")], "$")
+  names(df) <- nms
   tab <- knitr::kable(
     df,
     format = "latex",
     booktabs = TRUE,
     longtable = TRUE,
     align = widths,
-    escape = escape
+    escape = FALSE,
+    linesep = ""
   )
   tab <- sub(
     "\\begin{longtable}",
@@ -173,13 +188,13 @@ fixed_for_page <- function(fixed) {
   )
 }
 fixed_widths <- c(
-  ">{\\raggedright\\arraybackslash}p{1.15in}",
-  ">{\\raggedright\\arraybackslash}p{1.20in}",
-  ">{\\raggedright\\arraybackslash}p{0.62in}",
-  ">{\\raggedright\\arraybackslash}p{0.40in}",
-  ">{\\raggedright\\arraybackslash}p{1.00in}",
+  ">{\\raggedright\\arraybackslash}p{1.72in}",
+  ">{\\raggedright\\arraybackslash}p{1.70in}",
+  ">{\\raggedright\\arraybackslash}p{0.46in}",
+  ">{\\raggedright\\arraybackslash}p{0.32in}",
   ">{\\raggedright\\arraybackslash}p{0.90in}",
-  ">{\\raggedright\\arraybackslash}p{0.45in}"
+  ">{\\raggedright\\arraybackslash}p{0.82in}",
+  ">{\\raggedright\\arraybackslash}p{0.38in}"
 )
 ```
 
@@ -191,9 +206,9 @@ A same–different judgment can change in two ways. If the sensory evidence beco
 
 One influential account holds that concurrent demands draw on a shared, limited pool of resources [@kahneman1973]. If a difficult judgment and a strong grip draw on the same pool, the cost of a strong grip should be largest when the judgment is hardest, so physical effort and task difficulty should interact. In a psychometric function, difficulty is the size of the difference between the stimuli, and a cost concentrated on small differences flattens the function, which is the sensitivity account above. Chapter 1 tested the shared-resource account in younger adults performing a visual working-memory task and auditory and visual discrimination tasks. Harder trials were less accurate in every task, and high physical effort slowed responses in the visual discrimination task, but physical effort and task difficulty did not interact on any measure. Whether the same holds in older adults, for whom combining demands is more costly, has not been tested.
 
-Pupil diameter increases with the processing load of a cognitive task [@beatty1982; @vanderwel2018] and with physical exertion [@zenon2014], so it can register both demands. In Chapter 1, high physical effort enlarged the pupil response in all three tasks, task difficulty did not change the whole-trial response, and the two did not interact. Pupil size before a stimulus and the response the stimulus evokes carry different information. Pupil size just before the stimulus to be judged reflects the state in which the observer meets that stimulus, and baseline pupil size has been linked to how engaged observers are and how well they perform [@gilzenrat2010; @murphy2011]. The task-evoked response follows the stimulus and partly reflects the decision itself, so its association with the judgment is harder to interpret.
+Pupil diameter increases with the processing load of a cognitive task [@beatty1982; @vanderwel2018] and with physical exertion [@zenon2014], so it can register both demands. In older adults the pupil is smaller and its range of dilation is reduced [@winn1994; @piquado2010], so effects of either demand on pupil size may be harder to detect than in younger adults. In Chapter 1, high physical effort enlarged the pupil response in all three tasks, task difficulty did not change the whole-trial response, and the two did not interact. Pupil size before a stimulus and the response the stimulus evokes carry different information. Pupil size just before the stimulus to be judged reflects the state in which the observer meets that stimulus, and baseline pupil size has been linked to how engaged observers are and how well they perform [@gilzenrat2010; @murphy2011]. The task-evoked response follows the stimulus and partly reflects the decision itself, so its association with the judgment is harder to interpret.
 
-In the older adults studied here, per-participant psychometric functions showed that high grip raised thresholds without changing slopes, a pattern read as a more conservative criterion for "different" [@sun2026handgrip]. Chapter 3 fitted drift diffusion models to the same trials and found that high effort shifted the drift criterion toward "same" without reducing evidence quality. Neither analysis related these effects to the pupil, and @sun2026handgrip name that as the next step.
+In the older adults studied here, per-participant psychometric functions showed that high grip raised thresholds without changing slopes, a pattern read as a more conservative criterion for "different" [@sun2026handgrip]. Chapter 3 fitted drift diffusion models to the same trials and found that high effort shifted the drift criterion toward "same" without reducing evidence quality. Neither analysis related these effects to the pupil, and @sun2026handgrip name that as the next step. The per-participant fits also limit the sensitivity question. With 75 trials per grip level, an individual slope is estimated imprecisely [@sun2026handgrip], so an unchanged average slope is weak evidence that sensitivity was spared. A model of all trials, with participants as random effects, estimates the change in slope across participants directly, and it can relate pupil size on each trial to the judgment on that trial, which per-participant fits cannot.
 
 This chapter asks two questions. The first is whether a strong grip changes the criterion for reporting a difference, the sensitivity of the judgment, or both. A criterion account predicts fewer "different" responses at every stimulus difference, including when the two stimuli are identical, with no change in the slope of the psychometric function. A shared-resource account predicts a cost concentrated on the smallest differences, which would make the slope shallower under high effort. The second question is whether the pupil tracks these effects: whether pupil size during the grip differs between effort levels, whether the task-evoked response differs with effort and with difficulty, and whether pupil size just before the probe tracks the slope of the judgment from trial to trial. All analyses were specified before they were run; the study was not pre-registered.
 
@@ -218,9 +233,9 @@ if (knitr::is_latex_output()) {
     "\\footnotesize",
     "\\begin{longtable}{lrrrrrrrrrrrr}",
     "\\toprule",
-    "Group & N & \\multicolumn{3}{c}{Age} & \\multicolumn{2}{c}{Female} & \\multicolumn{3}{c}{Education} & \\multicolumn{3}{c}{T-MoCA} \\\\",
+    "Group & \\textit{N} & \\multicolumn{3}{c}{Age} & \\multicolumn{2}{c}{Female} & \\multicolumn{3}{c}{Education} & \\multicolumn{3}{c}{T-MoCA} \\\\",
     "\\cmidrule(lr){3-5}\\cmidrule(lr){6-7}\\cmidrule(lr){8-10}\\cmidrule(lr){11-13}",
-    "& & M & SD & range & n & \\%% & M & SD & n & M & SD & n \\\\",
+    "& & \\textit{M} & \\textit{SD} & range & \\textit{n} & \\%% & \\textit{M} & \\textit{SD} & \\textit{n} & \\textit{M} & \\textit{SD} & \\textit{n} \\\\",
     "\\midrule",
     "%s \\\\",
     "\\bottomrule",
@@ -229,7 +244,13 @@ if (knitr::is_latex_output()) {
     sep = "\n"
   ), body))
 } else {
-  knitr::kable(demo_tab)
+  demo_word <- demo_tab
+  names(demo_word) <- c(
+    "Group", "*N*", "Age *M*", "Age *SD*", "Age range", "Female *n*", "Female %",
+    "Education *M*", "Education *SD*", "Education *n*",
+    "T-MoCA *M*", "T-MoCA *SD*", "T-MoCA *n*"
+  )
+  knitr::kable(demo_word)
 }
 ```
 
@@ -288,7 +309,7 @@ Models were estimated in R [@R]. The chapter was rendered with Quarto [@quarto].
 
 # Results
 
-## High effort lowered "different" responses at every offset {#sec-behavior}
+## Effort and "different" responses {#sec-behavior}
 
 @fig-p-diff shows the proportion of "different" responses at each offset. Pooling trials, the proportion was lower under high effort at every offset in both tasks. Averaged over participants, as plotted, it was lower at every offset except the 0.24 contrast offset in the visual task. Responding was near ceiling at the largest offset, with proportions of `r v("top_adt_p")` in the auditory task and `r v("top_vdt_p")` in the visual task, and there the high-minus-low difference in proportion was `r v("level4_adt_diff_prop")` (auditory) and `r v("level4_vdt_diff_prop")` (visual). On catch trials, the proportion of "different" responses was `r v("catch_adt_p")` in the auditory task and `r v("catch_vdt_p")` in the visual task.
 
@@ -339,20 +360,20 @@ stopifnot(nrow(tab) > 0L)
 show <- tab[, c("Model", "ID", "Term", "Estimate", "SE", "Statistic", "95% CI", "p_tab")]
 names(show)[names(show) == "p_tab"] <- "p"
 kable_page(show, c(
-  ">{\\raggedright\\arraybackslash}p{1.05in}",
-  ">{\\raggedright\\arraybackslash}p{0.35in}",
-  ">{\\raggedright\\arraybackslash}p{1.35in}",
+  ">{\\raggedright\\arraybackslash}p{1.28in}",
+  ">{\\raggedright\\arraybackslash}p{0.28in}",
+  ">{\\raggedright\\arraybackslash}p{1.62in}",
   ">{\\raggedright\\arraybackslash}p{0.62in}",
-  ">{\\raggedright\\arraybackslash}p{0.45in}",
-  ">{\\raggedright\\arraybackslash}p{1.05in}",
-  ">{\\raggedright\\arraybackslash}p{1.15in}",
-  ">{\\raggedright\\arraybackslash}p{0.55in}"
-))
+  ">{\\raggedright\\arraybackslash}p{0.32in}",
+  ">{\\raggedright\\arraybackslash}p{0.95in}",
+  ">{\\raggedright\\arraybackslash}p{0.85in}",
+  ">{\\raggedright\\arraybackslash}p{0.34in}"
+), tabcolsep = "1pt", size = "\\footnotesize")
 ```
 
 # Discussion
 
-Older adults holding a strong grip reported a difference less often at every stimulus difference, in both modalities, including on catch trials, on which the two stimuli were identical. The additional change on catch trials was close to zero, so false alarms fell along with responses at the other offsets, and the slope of the psychometric function did not become shallower. This is the pattern a shift of the criterion toward "same" predicts, not the pattern a loss of sensitivity predicts [@macmillan2005detection]. Three analyses of these participants now agree. Per-participant psychometric functions showed higher thresholds and unchanged slopes [@sun2026handgrip], the trial-level model reported here showed the criterion pattern directly, and the diffusion models of Chapter 3 placed the effect in the drift criterion rather than in evidence quality. The trial-level model also addresses a limitation of the per-participant fits: with 75 trials per grip level, individual slopes are estimated imprecisely [@sun2026handgrip], whereas a model that pools all trials estimates the change in slope across participants, and it still showed no shallowing. The offset-by-effort interaction was positive, but the effort difference was smallest at the largest offset, where responding was near ceiling, and a probit model without a lapse rate can express a difference that shrinks near ceiling as a steeper slope. The positive term is therefore not read as a gain in sensitivity.
+Older adults holding a strong grip reported a difference less often in both modalities, including on catch trials, on which the two stimuli were identical. The additional change on catch trials was close to zero, so false alarms fell along with responses at the other offsets, and the slope of the psychometric function did not become shallower. This is the pattern a shift of the criterion toward "same" predicts, not the pattern a loss of sensitivity predicts [@macmillan2005detection]. Three analyses of these participants now agree. Per-participant psychometric functions showed higher thresholds and unchanged slopes [@sun2026handgrip], the trial-level model reported here showed the criterion pattern directly, and the diffusion models of Chapter 3 placed the effect in the drift criterion rather than in evidence quality. Estimated across all trials, the slope still showed no shallowing. The offset-by-effort interaction was positive, but the effort difference was smallest at the largest offset, where responding was near ceiling, and a probit model without a lapse rate can express a difference that shrinks near ceiling as a steeper slope. The positive term is therefore not read as a gain in sensitivity.
 
 Why physical effort would move the criterion rather than sensitivity can be framed by four accounts. A shared-resource account, in which the grip and the judgment draw on one limited pool [@kahneman1973], predicts a cost concentrated on the hardest judgments and therefore a shallower function [@azer2023]. That was not observed here, as @sun2026handgrip also concluded, and it parallels Chapter 1, in which physical effort and task difficulty did not interact in younger adults. A second account treats the shift as selective caution: under a concurrent physical demand, observers may require more evidence before reporting a change specifically. This is not caution in the general sense of a wider decision boundary, which Chapter 3 found changed negligibly under high effort; it is a bias against one response, which Chapter 3 located in the drift criterion. In the same cohort, high grip also improved metacognitive efficiency, an effect that appeared to be driven by lower confidence on errors at the easiest auditory offset [@sun2026handgrip]. A decision state that is both more conservative and better at registering its own errors fits caution better than degraded input, although the two grip effects did not covary across participants [@sun2026handgrip], so they may not share one mechanism. A third account is that physical effort acts on the decision through arousal. Pupil-linked phasic arousal has been associated with a reduction of choice bias [@deGee2020pupil], but here the task-evoked response did not predict the rate of "different" responses, so trial-wise changes in the pupil did not carry the effort effect in this sample. A fourth account places the shift at the response rather than the decision. "Different" was always reported with the right index finger and "same" with the right middle finger, and a left-hand grip could bias right-hand responding toward one finger. Chapter 3 placed the effort effect in the drift criterion rather than in the starting point, which argues against a simple bias in preparing one response before the evidence arrives. A bias that operates on the evidence for one response, however, cannot be separated from the response mapping in this design. A design that counterbalances the mapping could separate them.
 
@@ -362,7 +383,7 @@ On trials when the pupil before the probe was larger than the participant's mean
 
 Several features of the design limit these conclusions. Grip release, its visual cue, and the button press all fall inside the task-evoked window, and the pre-probe window contains the early response to the standard. The response mapping was not counterbalanced. With two effort levels, the data cannot describe a dose–response relation or test an inverted-U relation between effort and performance. This chapter has no younger group, so no effect can be attributed to age. Locus coeruleus activity was not measured, so any role for the LC–NE system is an inference. Data were collected in an MRI scanner, which constrains luminance, posture, and noise. Pupil data were missing or unusable for `r v_int("n_no_tepr")` of the `r v_int("m1_n_participants")` participants, and high-effort trials were slightly more likely to be usable, although every pupil model included effort. Pupil size was recorded in arbitrary units. The behavioral model had no lapse rate, which bears on the reading of the slope interaction.
 
-For older adults, holding a physical effort appears to change how readily a change is reported rather than how well it is perceived, and this did not depend on a shared limit with the difficulty of the judgment. That distinction matters wherever older adults must notice a change while exerting themselves: a more conservative criterion predicts more missed changes when the evidence is weak, without implying that perception itself is impaired. A study that counterbalances the response mapping, uses more than two effort levels, measures a pre-stimulus baseline free of other stimuli, and models confidence alongside choice could separate the caution and response-mapping accounts and test whether pupil size before a stimulus predicts discrimination. In this chapter, physical effort shifted older adults' criterion toward "same", and the pupil did not account for that shift.
+For older adults, holding a physical effort appears to change how readily a change is reported rather than how well it is perceived, and this did not depend on a shared limit with the difficulty of the judgment. That distinction matters wherever older adults must notice a change while exerting themselves: a more conservative criterion predicts more missed changes when the evidence is weak, without implying that perception itself is impaired. A study that counterbalances the response mapping, uses more than two effort levels, measures a pre-stimulus baseline free of other stimuli, and models confidence alongside choice could separate the caution and response-mapping accounts and test whether pupil size before a stimulus predicts discrimination. In this chapter, physical effort shifted older adults' criterion toward "same," and the pupil did not account for that shift.
 
 # Supplement
 
@@ -381,14 +402,14 @@ For older adults, holding a physical effort appears to change how readily a chan
 ::: {.content-hidden when-meta="dissertation"}
 
 ```{r}
-#| label: fixed-effects-table
+#| label: tbl-fixed-effects
 #| tbl-cap: "Fixed effects for the models in the main text. Terms are labelled."
 
 fixed <- read_export("coefficients.csv")
 fixed <- fixed[!fixed$ID %in% c("S1", "S2"), , drop = FALSE]
 stopifnot(nrow(fixed) > 0L)
 stopifnot(!any(fixed$ID %in% c("S1", "S2")))
-kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengths)
+kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengths, tabcolsep = "1pt", size = "\\footnotesize")
 ```
 
 :::
@@ -396,13 +417,13 @@ kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengt
 ::: {.content-visible when-meta="dissertation"}
 
 ```{r}
-#| label: fixed-effects-table-diss
+#| label: tbl-fixed-effects-diss
 #| tbl-cap: "Fixed effects for every fitted model. Terms are labelled. S2 was not accepted."
 
 fixed <- read_export("coefficients.csv")
 stopifnot(nrow(fixed) > 0L)
 stopifnot(all(c("S1", "S2") %in% fixed$ID))
-kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengths)
+kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengths, tabcolsep = "1pt", size = "\\footnotesize")
 ```
 
 :::
@@ -414,7 +435,7 @@ kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengt
 ## Random-effects reduction
 
 ```{r}
-#| label: reduction-table
+#| label: tbl-reduction
 #| tbl-cap: "Random-effects steps for each model. A step is accepted when the fit is not singular and the optimizer returns no convergence message."
 
 red <- read_export("tbl_reduction.csv")
@@ -465,21 +486,30 @@ display <- data.frame(
   stringsAsFactors = FALSE
 )
 if (knitr::is_latex_output()) {
+  display$Convergence <- ifelse(
+    display$Convergence == "Did not converge",
+    "\\mbox{Did not converge}",
+    display$Convergence
+  )
   knitr::kable(
     display,
     format = "latex",
     booktabs = TRUE,
     longtable = TRUE,
-    align = c("p{0.42in}", "p{1.15in}", "p{2.05in}", "p{0.62in}", "p{1.05in}", "p{0.62in}")
+    escape = FALSE,
+    linesep = "",
+    align = c(
+      ">{\\raggedright\\arraybackslash}p{0.48in}",
+      ">{\\raggedright\\arraybackslash}p{1.28in}",
+      ">{\\raggedright\\arraybackslash}p{2.05in}",
+      ">{\\centering\\arraybackslash}p{0.52in}",
+      ">{\\raggedright\\arraybackslash}p{1.22in}",
+      ">{\\centering\\arraybackslash}p{0.52in}"
+    )
   )
 } else {
   knitr::kable(display)
 }
-```
-
-```{=latex}
-\renewcommand{\thetable}{\arabic{table}}
-\setcounter{table}{\value{ch2maintable}}
 ```
 
 ## Pupil participant flow
@@ -503,31 +533,109 @@ knitr::kable(flow)
 
 Recordings are the December 21 processing of the same sessions. The December 25 processing added no participant who was absent from December 21, so it is not in these models.
 
+```{=latex}
+\Needspace{14\baselineskip}
+```
+
 ```{r}
 #| label: tbl-axis
 #| tbl-cap: "Checks that the December 21 recordings are on a 250 Hz axis."
 
 axis_tab <- read_export("tbl_axis.csv")
-stopifnot(nrow(axis_tab) > 0L)
-knitr::kable(axis_tab)
+stopifnot(identical(axis_tab$Test, c("T1 within-trial step", "T2 phase labels", "T3 December 21 vs 25")))
+axis_num <- function(note, pattern) {
+  hit <- regexec(pattern, note, perl = TRUE)
+  parts <- regmatches(note, hit)[[1]]
+  if (length(parts) < 2L) stop("axis note is missing an exported number", call. = FALSE)
+  as.numeric(parts[2])
+}
+t1 <- axis_num(axis_tab$Note[1], "= ([0-9.]+)\\s*$")
+t2_dur <- axis_num(axis_tab$Note[2], "duration ([0-9.]+) s")
+t2_len <- axis_num(axis_tab$Note[2], "length ([0-9.]+) samples")
+t3_b <- axis_num(axis_tab$Note[3], "b = ([0-9.]+)")
+t3_r <- axis_num(axis_tab$Note[3], "r at b = 1 = ([0-9.]+)")
+r_txt <- sub("^0", "", sprintf("%.3f", t3_r))
+if (knitr::is_latex_output()) {
+  note3 <- sprintf(
+    "Median index scale \\textit{b} = %.3f; median \\textit{r} at \\textit{b} = 1: %s",
+    t3_b, r_txt
+  )
+  n_name <- "\\textit{n}"
+} else {
+  note3 <- sprintf(
+    "Median index scale *b* = %.3f; median *r* at *b* = 1: %s",
+    t3_b, r_txt
+  )
+  n_name <- "*n*"
+}
+axis_show <- data.frame(
+  Test = c(
+    "Within-trial time step",
+    "Squeeze-gauge duration",
+    "Agreement with December 25 processing"
+  ),
+  n = axis_tab$n,
+  "Implied step (s)" = formatC(as.numeric(axis_tab[["Implied step"]]), format = "f", digits = 4),
+  Note = c(
+    sprintf("Proportion of trials whose median step is 0.004 s: %.2f", t1),
+    sprintf("%g s; median %g samples", t2_dur, t2_len),
+    note3
+  ),
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+names(axis_show)[names(axis_show) == "n"] <- n_name
+if (knitr::is_latex_output()) {
+  knitr::kable(
+    axis_show,
+    format = "latex",
+    booktabs = TRUE,
+    longtable = TRUE,
+    escape = FALSE,
+    align = c(
+      ">{\\raggedright\\arraybackslash}p{2.15in}",
+      ">{\\centering\\arraybackslash}p{0.45in}",
+      ">{\\centering\\arraybackslash}p{1.05in}",
+      ">{\\raggedright\\arraybackslash}p{2.45in}"
+    )
+  )
+} else {
+  knitr::kable(axis_show)
+}
+```
+
+```{=latex}
+\Needspace{16\baselineskip}
 ```
 
 ## Missing pupil data
 
 ```{r}
-#| label: tbl-m5
+#| label: tbl-missing
 #| tbl-cap: "Fixed effects from the missingness model."
 
 m5tab <- read_export("tbl_m5.csv")
 stopifnot(nrow(m5tab) > 0L)
 m5show <- m5tab[, c("Term", "Estimate", "SE", "Statistic", "95% CI", "p_tab")]
 names(m5show)[names(m5show) == "p_tab"] <- "p"
-knitr::kable(m5show)
+kable_page(
+  m5show,
+  c(
+    ">{\\raggedright\\arraybackslash}p{1.35in}",
+    ">{\\raggedright\\arraybackslash}p{0.70in}",
+    ">{\\raggedright\\arraybackslash}p{0.55in}",
+    ">{\\raggedright\\arraybackslash}p{1.15in}",
+    ">{\\raggedright\\arraybackslash}p{1.15in}",
+    ">{\\raggedright\\arraybackslash}p{0.55in}"
+  ),
+  tabcolsep = "2.5pt",
+  size = "\\small"
+)
 ```
 
 ## Area under the curve {#sec-s1}
 
-S1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted random-effects structure did not converge for that outcome (maximum absolute gradient `r v_num("s1_max_abs_grad")` against lme4's default tolerance of 0.002). The ladder was continued from that structure by dropping the offset random slope. That step was accepted (`r v_int("s1_nobs")` trials). The offset-by-state term was `r v("s1_x_c_teprauc_state_est")` (SE `r v("s1_x_c_teprauc_state_se")`), 95% CI `r v("s1_x_c_teprauc_state_ci")`, *p* `r S1_slope$p_fmt`. The state term was `r v("s1_teprauc_state_est")`, *p* `r S1_state$p_fmt`, and the catch-by-state term was `r v("s1_catch_teprauc_state_est")`, *p* `r S1_catch$p_fmt`. The area version agrees with M4b in the sense that none of these intervals excludes zero. M4b itself was not changed.
+S1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted random-effects structure did not converge for that outcome (maximum absolute gradient `r fmt_sig(as.numeric(v("s1_max_abs_grad")), 2)` against lme4's default tolerance of 0.002). The ladder was continued from that structure by dropping the offset random slope. That step was accepted (`r v_int("s1_nobs")` trials). The offset-by-state term was `r v("s1_x_c_teprauc_state_est")` (SE `r v("s1_x_c_teprauc_state_se")`), 95% CI `r v("s1_x_c_teprauc_state_ci")`, *p* `r S1_slope$p_fmt`. The state term was `r v("s1_teprauc_state_est")`, *p* `r S1_state$p_fmt`, and the catch-by-state term was `r v("s1_catch_teprauc_state_est")`, *p* `r S1_catch$p_fmt`. The area version agrees with M4b in the sense that none of these intervals excludes zero. M4b itself was not changed.
 
 ## Behavior in the pupil subsample {#sec-s2}
 
@@ -538,5 +646,10 @@ S2 fits M1's formula to the `r v_int("s2_nobs")` trials from the `r v_int("s2_n_
 M1, M4a, and M4b were re-estimated with the optimizers that ship with lme4 (`r v("allfit_optimizers")`). No key-term estimate from a converged optimizer differed from the accepted bobyqa estimate by more than 0.01. The largest absolute key-term deviation in that set was `r v("allfit_max_abs_dev")`.
 
 :::
+
+```{=latex}
+\renewcommand{\thetable}{\arabic{table}}
+\setcounter{table}{\value{ch2maintable}}
+```
 
 # References
