@@ -170,9 +170,16 @@ kable_page <- function(df, widths, block_rows = NULL, tabcolsep = "2.5pt", size 
   if (!is.null(block_rows)) tab <- insert_block_rules(tab, block_rows)
   knitr::asis_output(tab)
 }
+id_display <- function(id) {
+  out <- id
+  out[id == "S1"] <- "R1"
+  out[id == "S2"] <- "R2"
+  out
+}
 fixed_for_page <- function(fixed) {
-  id <- fixed$ID
+  id <- id_display(fixed$ID)
   model <- paste0(fixed$Model, " (", id, ")")
+  model[id == "R1"] <- "Task-evoked area (R1)"
   not_ok <- !as.logical(fixed$Accepted)
   model[not_ok] <- paste0(id[not_ok], " (not accepted)")
   model[duplicated(id)] <- ""
@@ -346,7 +353,7 @@ The TEPR was smaller under high effort, *b* = `r v("m3_effort_c_est")`, SE = `r 
 
 High-effort trials were more likely than low-effort trials to have usable pupil data, *b* = `r v("m5_effort_c_est")` (log-odds), SE = `r v("m5_effort_c_se")`, *z* = `r v("m5_effort_c_stat")`, 95% CI `r v("m5_effort_c_ci")`, *p* `r M5_effort$p_fmt`.
 
-## Pupil and the slope {#sec-coupling}
+## Pupil and sensitivity {#sec-coupling}
 
 In the pre-probe model (`r v_int("m4a_nobs")` trials), trials on which the pupil before the probe was larger than the participant's mean for that task had a shallower slope, *b* = `r v("m4a_x_c_b1_state_est")`, SE = `r v("m4a_x_c_b1_state_se")`, *z* = `r v("m4a_x_c_b1_state_stat")`, 95% CI `r v("m4a_x_c_b1_state_ci")`, *p* `r M4a_slope$p_fmt`. Pre-probe pupil was not associated with the rate of "different" responses, *b* = `r v("m4a_b1_state_est")`, SE = `r v("m4a_b1_state_se")`, *p* `r M4a_state$p_fmt`, or with "different" responses on catch trials, *b* = `r v("m4a_catch_b1_state_est")`, SE = `r v("m4a_catch_b1_state_se")`, *p* `r M4a_catch$p_fmt`.
 
@@ -397,13 +404,13 @@ For older adults, holding a physical effort appears to change how readily a chan
 \Needspace{12\baselineskip}
 ```
 
-## Fixed effects
-
 ```{=latex}
 \setcounter{ch2maintable}{\value{table}}
 \renewcommand{\thetable}{S\arabic{table}}
 \setcounter{table}{0}
 ```
+
+## Model estimation {#sec-supp-models}
 
 ::: {.content-hidden when-meta="dissertation"}
 
@@ -424,7 +431,7 @@ kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengt
 
 ```{r}
 #| label: tbl-fixed-effects-diss
-#| tbl-cap: "Fixed effects for every fitted model. S2 was not accepted."
+#| tbl-cap: "Fixed effects for every fitted model. R1 and R2 are robustness analyses; R2 was not accepted."
 
 fixed <- read_export("coefficients.csv")
 stopifnot(nrow(fixed) > 0L)
@@ -438,8 +445,6 @@ kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengt
 \FloatBarrier
 \Needspace{12\baselineskip}
 ```
-
-## Random-effects reduction
 
 ```{r}
 #| label: tbl-reduction
@@ -492,6 +497,7 @@ display <- data.frame(
   check.names = FALSE,
   stringsAsFactors = FALSE
 )
+display$Model <- id_display(display$Model)
 if (knitr::is_latex_output()) {
   display$Convergence <- ifelse(
     display$Convergence == "Did not converge",
@@ -519,11 +525,21 @@ if (knitr::is_latex_output()) {
 }
 ```
 
+::: {.content-visible when-meta="dissertation"}
+
 ```{=latex}
 \Needspace{12\baselineskip}
 ```
 
-## Pupil participant flow
+M1, M4a, and M4b were re-estimated with the optimizers that ship with lme4 (`r v("allfit_optimizers")`). No key-term estimate from a converged optimizer differed from the accepted bobyqa estimate by more than 0.01. The largest absolute key-term deviation in that set was `r v("allfit_max_abs_dev")`.
+
+:::
+
+```{=latex}
+\Needspace{12\baselineskip}
+```
+
+## Pupil data {#sec-supp-pupil}
 
 ```{r}
 #| label: tbl-pupil-flow
@@ -553,8 +569,6 @@ knitr::kable(flow, escape = FALSE)
 \FloatBarrier
 \Needspace{12\baselineskip}
 ```
-
-## Time axis
 
 Recordings are the December 21 processing of the same sessions. The December 25 processing added no participant who was absent from December 21, so it is not in these models.
 
@@ -638,8 +652,6 @@ if (knitr::is_latex_output()) {
 \Needspace{12\baselineskip}
 ```
 
-## Missing pupil data
-
 ```{r}
 #| label: tbl-missing
 #| tbl-cap: "Fixed effects from the missingness model."
@@ -667,25 +679,15 @@ kable_page(
 \Needspace{12\baselineskip}
 ```
 
-## Area under the curve {#sec-s1}
+## Robustness analyses {#sec-supp-robust}
 
-S1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted random-effects structure did not converge for that outcome (maximum absolute gradient `r fmt_sig(as.numeric(v("s1_max_abs_grad")), 2)` against lme4's default tolerance of 0.002). The ladder was continued from that structure by dropping the offset random slope. That step was accepted (`r v_int("s1_nobs")` trials). The offset-by-state term was `r v("s1_x_c_teprauc_state_est")` (SE `r v("s1_x_c_teprauc_state_se")`), 95% CI `r v("s1_x_c_teprauc_state_ci")`, *p* `r S1_slope$p_fmt`. The state term was `r v("s1_teprauc_state_est")`, *p* `r S1_state$p_fmt`, and the catch-by-state term was `r v("s1_catch_teprauc_state_est")`, *p* `r S1_catch$p_fmt`. The area version agrees with M4b in the sense that none of these intervals excludes zero. M4b itself was not changed.
-
-```{=latex}
-\Needspace{12\baselineskip}
-```
-
-## Behavior in the pupil subsample {#sec-s2}
-
-S2 fits M1's formula to the `r v_int("s2_nobs")` trials from the `r v_int("s2_n_participants")` participants who contributed to the TEPR sample. The maximal model was singular, so it was not accepted. The point estimates were `r v("s2_effort_c_est")` for effort (*p* `r S2_effort$p_fmt`), `r v("s2_catch_effort_c_est")` for catch-by-effort (*p* `r S2_catch$p_fmt`), and `r v("s2_x_c_effort_c_est")` for offset-by-effort (*p* `r S2_slope$p_fmt`). They are reported only to show the direction in this subset. They are not a second accepted test.
+R1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted random-effects structure did not converge for that outcome (maximum absolute gradient `r fmt_sig(as.numeric(v("s1_max_abs_grad")), 2)` against lme4's default tolerance of 0.002). The ladder was continued from that structure by dropping the offset random slope. That step was accepted (`r v_int("s1_nobs")` trials). The offset-by-state term was `r v("s1_x_c_teprauc_state_est")` (SE `r v("s1_x_c_teprauc_state_se")`), 95% CI `r v("s1_x_c_teprauc_state_ci")`, *p* `r S1_slope$p_fmt`. The state term was `r v("s1_teprauc_state_est")`, *p* `r S1_state$p_fmt`, and the catch-by-state term was `r v("s1_catch_teprauc_state_est")`, *p* `r S1_catch$p_fmt`. The area version agrees with M4b in the sense that none of these intervals excludes zero. M4b itself was not changed.
 
 ```{=latex}
 \Needspace{12\baselineskip}
 ```
 
-## Optimizer check {#sec-allfit}
-
-M1, M4a, and M4b were re-estimated with the optimizers that ship with lme4 (`r v("allfit_optimizers")`). No key-term estimate from a converged optimizer differed from the accepted bobyqa estimate by more than 0.01. The largest absolute key-term deviation in that set was `r v("allfit_max_abs_dev")`.
+R2 fits M1's formula to the `r v_int("s2_nobs")` trials from the `r v_int("s2_n_participants")` participants who contributed to the TEPR sample. The maximal model was singular, so it was not accepted. The point estimates were `r v("s2_effort_c_est")` for effort (*p* `r S2_effort$p_fmt`), `r v("s2_catch_effort_c_est")` for catch-by-effort (*p* `r S2_catch$p_fmt`), and `r v("s2_x_c_effort_c_est")` for offset-by-effort (*p* `r S2_slope$p_fmt`). They are reported only to show the direction in this subset. They are not a second accepted test.
 
 :::
 
