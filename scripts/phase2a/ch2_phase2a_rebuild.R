@@ -932,7 +932,7 @@ keys <- keys[!keys %in% c("")]
 keys <- keys[!grepl("^(fig|sec|tbl|eq|lst|thm|app)-", keys)]
 bib_paths <- c(
   a = file.path(CH2, "07_manuscript/chapter2/reports/references.bib"),
-  b = file.path(CH2, "chapter2_materials/reports/references.bib"),
+  b = file.path(CH2, "archive/earlier_analysis/chapter2_materials/reports/references.bib"),
   c = "/Users/mohdasti/Documents/GitHub/UCR_PhD_Dissertation/references.bib"
 )
 parse_bib <- function(path) {
@@ -1055,7 +1055,7 @@ if (length(title_hits)) {
     "No second copy was appended.",
     "No DOI was added.",
     "The dissertation master bib was not edited and still needs this entry if it is not already there.",
-    "chapter2_materials/reports/references.bib was not edited."
+    "archive/earlier_analysis/chapter2_materials/reports/references.bib was not edited."
   ), file.path(DIAG, "I5_preprint_bib_status.txt"))
 } else {
   bib_a <- bib_paths[["a"]]
@@ -1065,7 +1065,7 @@ if (length(title_hits)) {
     "Appended sun2026handgrip to 07_manuscript/chapter2/reports/references.bib.",
     "No DOI was added.",
     "The dissertation master bib was not edited and still needs this entry.",
-    "chapter2_materials/reports/references.bib was not edited."
+    "archive/earlier_analysis/chapter2_materials/reports/references.bib was not edited."
   ), file.path(DIAG, "I5_preprint_bib_status.txt"))
 }
 

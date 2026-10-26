@@ -75,6 +75,12 @@ Thumbs.db
 # Jupyter Notebook checkpoints (if used)
 .ipynb_checkpoints/
 
+# Local chapter builds, diagnostics, and draft backups
+/output/
+07_manuscript/chapter2/reports/*.html
+07_manuscript/chapter2/reports/*.docx
+07_manuscript/chapter2/reports/*_pre_phase*.qmd
+
 # Compiled documents (if building from source)
 *.aux
 *.bbl

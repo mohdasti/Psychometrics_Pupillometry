@@ -70,7 +70,7 @@ Accepted model objects from the locked run are written under `output/models/ch2_
 
 The rebuild and the fits read trial files under `data/` and, for the axis check, the processed pupil recordings. Those inputs are not all tracked. Paths inside the phase scripts point at this machine.
 
-`run_analysis.R` and the numbered folders `01_data_preparation` through `06_visualization` are the earlier analysis (quality tiers, equivalence tests, and subject-level correlations). They do not produce the chapter that is rendered from `ch2fit_20261024_193248`.
+`archive/earlier_analysis/` holds the earlier analysis (quality tiers, equivalence tests, and subject-level correlations), including `run_analysis.R` and the numbered folders `01_data_preparation` through `06_visualization`. Those scripts were written for the repository root. They do not produce the chapter that is rendered from `ch2fit_20261024_193248`.
 
 ---
 
@@ -96,13 +96,7 @@ Psychometrics_Pupillometry/
 │   ├── phase2b/
 │   └── phase3/
 ├── tests/test_ch2_coding.R
-├── 01_data_preparation/                 # earlier pipeline
-├── 02_pupil_quality_control/
-├── 03_effort_manipulation_check/
-├── 04_pupil_psychometric_coupling/
-├── 05_subject_level_analysis/
-├── 06_visualization/
-└── run_analysis.R
+└── archive/earlier_analysis/            # previous pipeline and working notes
 ```
 
 ---
