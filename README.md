@@ -123,7 +123,9 @@ install.packages(c(
 
 ## License
 
-[Specify license — e.g., MIT License is standard for academic code]
+Copyright (C) 2025–2026 Mohammad Dastgheib.
+
+This repository is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE).
 
 ---
 
