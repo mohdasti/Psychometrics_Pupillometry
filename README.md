@@ -66,6 +66,8 @@ The current chapter was built in this order. Each script takes a run id except t
 | Export | `scripts/phase3/01_export.R` | Writes the chapter export from the saved fits. The only model call is `predict()` on the saved M1 fit. |
 | Checks | `scripts/phase3/02_checks.R` | Checks the export, references, and render. Does not refit and does not edit the chapter. |
 
+`scripts/phase3/01_export_chapter_values.R` is an earlier exporter for the same run. The chapter reads the export written by `scripts/phase3/01_export.R`.
+
 Accepted model objects from the locked run are written under `output/models/ch2_phase2b/ch2fit_20261024_193248/`. Diagnostics are under `output/diagnostics/`. Those directories are local. Rendering the chapter uses the tracked export, not the model objects.
 
 The rebuild and the fits read trial files under `data/` and, for the axis check, the processed pupil recordings. Those inputs are not all tracked. Paths inside the phase scripts point at this machine.
@@ -82,9 +84,11 @@ Psychometrics_Pupillometry/
 │   ├── reports/
 │   │   ├── chapter2_dissertation.qmd
 │   │   ├── ch2_docx_supptables.lua
-│   │   └── references.bib
-│   └── export/ch2fit_20261024_193248/   # values, tables, and figures the chapter reads
-├── R/
+│   │   ├── references.bib
+│   │   └── apa-7th-edition.csl
+│   ├── export/ch2fit_20261024_193248/   # values, tables, and figures the chapter reads
+│   └── output/figures/Paradigm.png
+├── R/                                   # current helpers below; other files belong to the earlier analysis
 │   ├── ch2_report_helpers.R
 │   ├── tepr_waveform_helpers.R
 │   ├── trial_time_axis.R
