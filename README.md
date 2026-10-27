@@ -2,6 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21215384.svg)](https://doi.org/10.5281/zenodo.21215384)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/mohdasti/Psychometrics_Pupillometry)](https://github.com/mohdasti/Psychometrics_Pupillometry/commits/main)
 [![R](https://img.shields.io/badge/R-4.6.1-276DC3?logo=r&logoColor=white)](https://www.r-project.org/)
 [![Quarto](https://img.shields.io/badge/Quarto-1.9.38-0F4C75?logo=quarto&logoColor=white)](https://quarto.org/)
 [![lme4](https://img.shields.io/badge/lme4-2.0.1-276DC3?logo=r&logoColor=white)](https://cran.r-project.org/package=lme4)
