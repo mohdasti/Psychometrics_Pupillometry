@@ -1,6 +1,11 @@
 # Squeeze Harder, Say "Same": Physical Effort Shifts Older Adults' Perceptual Criterion Without Reducing Sensitivity
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21215384.svg)](https://doi.org/10.5281/zenodo.21215384) [![R](https://img.shields.io/badge/R-4.6.1-276DC3?logo=r&logoColor=white)](https://www.r-project.org/) [![Quarto](https://img.shields.io/badge/Quarto-1.9.38-0F4C75?logo=quarto&logoColor=white)](https://quarto.org/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21215384.svg)](https://doi.org/10.5281/zenodo.21215384)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![R](https://img.shields.io/badge/R-4.6.1-276DC3?logo=r&logoColor=white)](https://www.r-project.org/)
+[![Quarto](https://img.shields.io/badge/Quarto-1.9.38-0F4C75?logo=quarto&logoColor=white)](https://quarto.org/)
+[![lme4](https://img.shields.io/badge/lme4-2.0.1-276DC3?logo=r&logoColor=white)](https://cran.r-project.org/package=lme4)
+[![lmerTest](https://img.shields.io/badge/lmerTest-3.2.1-276DC3?logo=r&logoColor=white)](https://cran.r-project.org/package=lmerTest)
 
 Chapter 2 of the dissertation. Sixty-eight older adults judged whether two tones or two visual gratings were the same or different while holding a light or a strong handgrip, with pupil diameter recorded throughout. The chapter tests whether the strong grip changes the criterion for reporting a difference, the sensitivity of the judgment, or both, and whether pupil size during the grip or around the probe tracks those effects.
 
