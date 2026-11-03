@@ -521,7 +521,7 @@ p_beh <- ggplot(fig_dt, aes(x = x_lab, y = p_bar, color = effort, group = effort
   geom_point(size = 2) +
   facet_wrap(~ task_label, scales = "free_x") +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
-  scale_color_manual(values = effort_colors, name = "Effort") +
+  scale_color_manual(values = effort_colors, name = "Physical effort") +
   labs(x = "Offset (log\u2082 spacing; catch at the left)", y = "P(\"different\")") +
   theme_ms()
 ggsave(file.path(EXPORT, "fig_p_diff.png"), p_beh, width = 7.2, height = 3.6, dpi = 300)
@@ -704,8 +704,8 @@ p_wave <- ggplot(plot_tepr, aes(x = t_rel, y = mean_pupil, color = effort, fill 
   geom_ribbon(aes(ymin = mean_pupil - se, ymax = mean_pupil + se), alpha = 0.22, color = NA) +
   geom_line(linewidth = 0.6) +
   facet_wrap(~ task_label, ncol = 1) +
-  scale_color_manual(values = effort_colors, name = "Effort") +
-  scale_fill_manual(values = effort_colors, name = "Effort") +
+  scale_color_manual(values = effort_colors, name = "Physical effort") +
+  scale_fill_manual(values = effort_colors, name = "Physical effort") +
   scale_x_continuous(breaks = seq(0, 8, by = 1), limits = c(-0.5, 8)) +
   labs(
     x = "Time from squeeze onset (s)",

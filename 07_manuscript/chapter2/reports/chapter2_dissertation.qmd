@@ -1,7 +1,7 @@
 ---
 title: "Squeeze Harder, Say \"Same\": Physical Effort Shifts Older Adults' Perceptual Criterion"
 abstract: |
-  Perception in daily life often takes place while the body is working, and combining demands is more costly with age. Whether physical effort changes what older adults perceive or only how readily they report a change, and whether pupil size tracks that effect, is unknown. Sixty-eight older adults judged whether two tones or two visual gratings were the same or different while holding a handgrip at low (5%) or high (40%) physical effort, with pupil diameter recorded throughout, and all trials were analyzed with mixed-effects models. Under high physical effort, participants reported a difference less often, and the reduction was about as large when the two stimuli were identical, indicating a conservative shift in the criterion for reporting a difference. The reduction was slightly larger for the smallest differences, but sensitivity did not decline overall, in line with an earlier per-participant analysis of the same cohort. Pupil size during the grip differed little between physical effort levels. The pupil response after the second stimulus (the probe) was smaller under high physical effort, but the grip was released during that interval. A larger pupil just before the probe was weakly associated with lower sensitivity, and the response after it was not. In older adults, physical effort appears to change mainly how readily a difference is reported rather than how well it is perceived, and pupil size did not account for that change.
+  Perception in daily life often takes place while the body is working, and combining demands is more costly with age. Whether physical effort changes what older adults perceive or only how readily they report a change, and whether pupil size tracks that effect, is unknown. Sixty-eight older adults judged whether two tones or two visual gratings were the same or different while holding a handgrip at low (5%) or high (40%) physical effort, with pupil diameter recorded throughout, and all trials were analyzed with mixed-effects models. Under high physical effort, participants reported a difference less often, and the reduction on trials with identical stimuli was similar in size, although uncertain on its own, which is consistent with a conservative shift in the criterion for reporting a difference. The reduction was slightly larger for the smallest differences, but sensitivity did not decline overall, in line with an earlier per-participant analysis of the same cohort. Pupil size during the grip differed little between physical effort levels. The pupil response after the second stimulus (the probe) was smaller under high physical effort, but the grip was released during that interval. A larger pupil just before the probe was weakly associated with lower sensitivity, and the response after it was not. In older adults, physical effort appears to change mainly how readily a difference is reported rather than how well it is perceived, and pupil size did not account for that change.
 bibliography: references.bib
 csl: apa-7th-edition.csl
 dissertation: true
@@ -70,7 +70,8 @@ export_dir <- file.path(proj_root, "07_manuscript", "chapter2", "export", "ch2fi
 needed <- c(
   "values.json", "coefficients.csv", "tbl_key_terms.csv", "tbl_demographics.csv",
   "tbl_reduction.csv", "tbl_pupil_flow.csv", "tbl_axis.csv", "tbl_m5.csv",
-  "fig_p_diff.png", "fig_pupil_timecourse.png", "fig_effort_by_offset.png"
+  "fig_p_diff.png", "fig_pupil_timecourse.png", "fig_effort_by_offset.png",
+  "fig_effort_by_offset.csv"
 )
 stopifnot(all(file.exists(file.path(export_dir, needed))))
 iv <- jsonlite::fromJSON(file.path(export_dir, "values.json"), simplifyVector = FALSE)$iv
@@ -103,6 +104,11 @@ read_export <- function(name) {
   stopifnot(file.exists(path))
   utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
 }
+eff_tab <- read_export("fig_effort_by_offset.csv")
+catch_eff <- eff_tab[eff_tab$task == "all" & eff_tab$position == "catch", , drop = FALSE]
+stopifnot(nrow(catch_eff) == 1L)
+catch_z <- catch_eff$estimate / catch_eff$se
+catch_p <- 2 * stats::pnorm(-abs(catch_z))
 insert_block_rules <- function(tab, block_rows) {
   lines <- strsplit(as.character(tab), "\n", fixed = TRUE)[[1]]
   lastfoot <- which(grepl("\\\\endlastfoot$", lines))
@@ -195,6 +201,17 @@ term_prose <- function(x) {
   x <- gsub("^Effort\\b", "Physical effort", x, perl = TRUE)
   gsub("(?<!Physical )\\bEffort\\b", "physical effort", x, perl = TRUE)
 }
+sentence_case_term <- function(x) {
+  vapply(strsplit(x, " ", fixed = TRUE), function(w) {
+    if (length(w) > 1L) {
+      rest <- w[-1L]
+      keep <- grepl("^[A-Z0-9]{2,}$", rest)
+      rest[!keep] <- tolower(rest[!keep])
+      w[-1L] <- rest
+    }
+    paste(w, collapse = " ")
+  }, character(1))
+}
 fixed_for_page <- function(fixed) {
   id <- id_display(fixed$ID)
   base <- model_label(fixed$ID)
@@ -206,7 +223,7 @@ fixed_for_page <- function(fixed) {
   model[duplicated(id)] <- ""
   data.frame(
     Model = model,
-    Term = term_prose(fixed$Term),
+    Term = sentence_case_term(term_prose(fixed$Term)),
     Estimate = fixed$Estimate,
     SE = fixed$SE,
     Statistic = fixed$Statistic,
@@ -287,7 +304,7 @@ The pupil analyses use a subset of these trials: those with a recording that pas
 
 ## Task, stimuli, and apparatus {#sec-task-paradigm}
 
-Participants completed an auditory and a visual same–different task, adapted from the auditory and visual discrimination tasks of Chapter 1 with different offsets and timing, in the scanner, one task per session, in counterbalanced order. On each trial they held a left-hand grip at 5% (low physical effort) or 40% (high physical effort) of their maximum voluntary contraction (MVC), heard or saw a standard and then a comparison stimulus, the probe (the target in Chapter 1), judged whether the two were the same or different, and rated their confidence (@fig-paradigm). The inter-trial interval was 1.5–4.5 s. From squeeze onset, the standard began at 3.75 s and the probe at 4.35 s, each lasting 0.1 s. At probe offset (4.45 s), a change in border color cued participants to release the grip. The same–different response window ran from 4.70 to 7.70 s, and the confidence window followed. Each task had five blocks of 30 trials, in which the five probe levels and the two physical effort levels were crossed, three trials per combination, in pseudorandom order.
+Participants completed an auditory and a visual same–different task in the scanner, one task per session, in counterbalanced order. The tasks were adapted from the auditory and visual discrimination tasks of Chapter 1, with different offsets and timing. On each trial they held a left-hand grip at 5% (low physical effort) or 40% (high physical effort) of their maximum voluntary contraction (MVC), heard or saw a standard and then a comparison stimulus, the probe (the target in Chapter 1), judged whether the two were the same or different, and rated their confidence (@fig-paradigm). The inter-trial interval was 1.5–4.5 s. From squeeze onset, the standard began at 3.75 s and the probe at 4.35 s, each lasting 0.1 s. At probe offset (4.45 s), a change in border color cued participants to release the grip. The same–different response window ran from 4.70 to 7.70 s, and the confidence window followed. Each task had five blocks of 30 trials, in which the five probe levels and the two physical effort levels were crossed, three trials per combination, in pseudorandom order.
 
 ```{r}
 #| label: fig-paradigm
@@ -323,7 +340,7 @@ Models were fit in R [@R] with lme4 `r v("lme4_version")` and lmerTest `r v("lme
 
 **Behavior (M1).** All `r v_int("m1_nobs")` trials were analyzed with a probit regression of "different" responses on catch, centered offset, physical effort, and task, with all interactions and a by-participant random slope for each of those four terms. Because the centered offset is 0 both on catch trials and at the average nonzero offset, the physical effort coefficient is the effect of physical effort at the average offset, and the catch × physical effort interaction is how much the effect on catch trials differs from it. The criterion account predicts a negative physical effort coefficient and no catch × physical effort interaction. The sign of the offset × physical effort interaction separates the sensitivity account (negative) from the capacity account (positive).
 
-**Grip-period pupil (M2).** Linear model of the grip-period mean on physical effort and task, with a by-participant random slope for physical effort. It tests whether high physical effort enlarged the pupil during the grip. The published manipulation check is grip force, not pupil [@sun2026handgrip].
+**Grip-period pupil (M2).** Linear model of the grip-period mean on physical effort and task, with a by-participant random slope for physical effort. It tests whether high physical effort enlarged the pupil during the grip. The reported manipulation check is grip force, not pupil [@sun2026handgrip].
 
 **Task-evoked pupil (M3).** Linear model of the TEPR mean on physical effort, task, catch, and centered offset, with by-participant random slopes for physical effort and offset. It tests whether the TEPR differed with physical effort and with offset.
 
@@ -352,9 +369,7 @@ stopifnot(file.exists(fig_p_diff))
 knitr::include_graphics(fig_p_diff)
 ```
 
-In the behavioral model (M1; `r v_int("m1_nobs")` trials, `r v_int("m1_n_participants")` participants), high physical effort lowered the probit of a "different" response at the average offset, *b* = `r v("m1_effort_c_est")`, SE = `r v("m1_effort_c_se")`, *z* = `r v("m1_effort_c_stat")`, 95% CI `r v("m1_effort_c_ci")`, *p* `r M1_effort$p_fmt`. The catch × physical effort interaction was not significant, *b* = `r v("m1_catch_effort_c_est")`, SE = `r v("m1_catch_effort_c_se")`, *z* = `r v("m1_catch_effort_c_stat")`, 95% CI `r v("m1_catch_effort_c_ci")`, *p* `r M1_catch$p_fmt`, so the reduction on catch trials did not differ reliably from the reduction at the average offset. The offset × physical effort interaction was positive, *b* = `r v("m1_x_c_effort_c_est")`, SE = `r v("m1_x_c_effort_c_se")`, *z* = `r v("m1_x_c_effort_c_stat")`, 95% CI `r v("m1_x_c_effort_c_ci")`, *p* `r M1_slope$p_fmt`: the reduction was larger at smaller offsets.
-
-@fig-effort-by-offset (panel B) shows the estimated effect of high physical effort at each offset.
+In the behavioral model (M1; `r v_int("m1_nobs")` trials, `r v_int("m1_n_participants")` participants), high physical effort lowered the probit of a "different" response at the average offset, *b* = `r v("m1_effort_c_est")`, SE = `r v("m1_effort_c_se")`, *z* = `r v("m1_effort_c_stat")`, 95% CI `r v("m1_effort_c_ci")`, *p* `r M1_effort$p_fmt`. The catch × physical effort interaction was not significant, *b* = `r v("m1_catch_effort_c_est")`, SE = `r v("m1_catch_effort_c_se")`, *z* = `r v("m1_catch_effort_c_stat")`, 95% CI `r v("m1_catch_effort_c_ci")`, *p* `r M1_catch$p_fmt`, so the reduction on catch trials did not differ reliably from the reduction at the average offset. The offset × physical effort interaction was positive, *b* = `r v("m1_x_c_effort_c_est")`, SE = `r v("m1_x_c_effort_c_se")`, *z* = `r v("m1_x_c_effort_c_stat")`, 95% CI `r v("m1_x_c_effort_c_ci")`, *p* `r M1_slope$p_fmt`: the reduction was larger at smaller offsets. On catch trials, the effect of high physical effort, the sum of the physical effort term and the catch × physical effort interaction, was *b* = `r fmt_est(catch_eff$estimate)`, SE = `r fmt_est(catch_eff$se)`, *z* = `r fmt_num(catch_z, 2)`, 95% CI `r fmt_ci(catch_eff$lo, catch_eff$hi)`, *p* `r fmt_p(catch_p)`. @fig-effort-by-offset (panel B) shows the estimated effect of high physical effort at each offset.
 
 ```{r}
 #| label: fig-effort-by-offset
@@ -402,7 +417,7 @@ show <- show[show$ID != "M5", , drop = FALSE]
 stopifnot(nrow(show) > 0L)
 show$Model <- term_prose(show$Model)
 show$Model <- ifelse(is.na(model_label(show$ID)), show$Model, model_label(show$ID))
-show$Term <- term_prose(show$Term)
+show$Term <- sentence_case_term(term_prose(show$Term))
 names(show)[names(show) == "p_tab"] <- "p"
 kable_page(show, c(
   ">{\\raggedright\\arraybackslash}p{1.28in}",
@@ -418,13 +433,13 @@ kable_page(show, c(
 
 # Discussion
 
-We asked whether high physical effort changes older adults' perceptual judgments by lowering sensitivity or by shifting the criterion for reporting a difference, and whether pupil size tracks either effect. Under high physical effort, older adults reported a difference less often in both tasks, by about as much on catch trials as at the average offset, and the psychometric function did not become shallower. The reduction was slightly larger at the smallest offsets. Pupil size during the grip differed little between physical effort levels, the TEPR was smaller under high physical effort, and only pupil size before the probe was associated, weakly, with sensitivity.
+We asked whether high physical effort changes older adults' perceptual judgments by lowering sensitivity or by shifting the criterion for reporting a difference, and whether pupil size tracks either effect. Under high physical effort, older adults reported a difference less often in both tasks, by a similar amount on catch trials as at the average offset, although the catch-trial estimate was uncertain on its own, and the psychometric function did not become shallower. The reduction was slightly larger at the smallest offsets. Pupil size during the grip differed little between physical effort levels, the TEPR was smaller under high physical effort, and only pupil size before the probe was associated, weakly, with sensitivity.
 
 ## Criterion, not sensitivity {#sec-disc-criterion}
 
-The reduction on catch trials was, on the probit scale, about as large as the reduction at the average offset: the catch × physical effort interaction was close to zero. This is the pattern the criterion account predicts and the sensitivity account does not [@macmillan2005detection]. Taken alone, the reduction on catch trials had an interval that included zero (@fig-effort-by-offset, panel B), so the case for a criterion shift rests on that interaction, not on catch trials by themselves. The result agrees with the per-participant psychometric functions of @sun2026handgrip in the same cohort, which showed higher thresholds and unchanged slopes. Because the reduction did not differ between catch trials and the average offset, a capacity limit alone cannot account for it.
+The reduction on catch trials was similar in size to the reduction at the average offset, the pattern the criterion account predicts, and the function did not become shallower, contrary to the sensitivity account [@macmillan2005detection]. The catch trials, however, do not separate the criterion account from the capacity account. Taken alone, the reduction on catch trials had an interval that included zero (@fig-effort-by-offset, panel B), and the interval of the catch × physical effort interaction also includes the value the capacity account predicts, no reduction on catch trials. The criterion reading therefore rests on the direction and size of the catch-trial estimate together with converging evidence from the same cohort, in which per-participant psychometric functions showed higher thresholds and unchanged slopes [@sun2026handgrip].
 
-The effect of physical effort was largest at the smallest offsets and close to zero at the largest, a positive offset × physical effort interaction (@fig-effort-by-offset, panel B). That is the direction the capacity account predicts, but the cost was small and its interval nearly reached zero. The increase across offsets appears steeper in the visual task than in the auditory task, but the offset × physical effort × task interaction was not significant (@sec-supp-models). Two further cautions apply. The analysis plan specified this term as a test of a shallower function, and reading a positive term as support for the capacity account was added after the results were known. In addition, responding was near ceiling at the largest offset, where a probit model without a lapse rate can express a shrinking difference as a steeper slope. Physical effort therefore acted mainly on the criterion, with at most a small additional cost on the hardest judgments. Chapter 1 [@dastgheib_inpress_effects] found no interaction between task difficulty and physical effort in younger adults, but without a younger group these data cannot show whether the small cost reflects age.
+The effect of physical effort was largest at the smallest offsets and close to zero at the largest, a positive offset × physical effort interaction (@fig-effort-by-offset, panel B). That is the direction the capacity account predicts, but the cost was small and its interval nearly reached zero. The increase across offsets appears steeper in the visual task than in the auditory task, but the offset × physical effort × task interaction was not significant (@sec-supp-models). Two further cautions apply. The analysis plan specified this term as a test of a shallower function, and reading a positive term as support for the capacity account was added after the results were known. In addition, responding was near ceiling at the largest offset, where a probit model without a lapse rate can express a shrinking difference as a steeper slope. Taken together, the data favor a criterion shift over a loss of sensitivity, with at most a small additional cost on the hardest judgments. Chapter 1 [@dastgheib_inpress_effects] found no interaction between task difficulty and physical effort in younger adults, but without a younger group these data cannot show whether the small cost reflects age.
 
 ## Why the criterion shifts {#sec-disc-why}
 
@@ -434,7 +449,7 @@ Three explanations could account for the criterion shift. The first places it in
 
 Pupil size during the grip did not differ significantly between physical effort levels. In younger adults, by contrast, high physical effort enlarged the pupil response in every task (Chapter 1), although the measures are not directly comparable: Chapter 1 summarized the pupil from trial onset to the response window, including the response to the probe, and recorded it in a quiet, dimly lit laboratory rather than a scanner. Several features of this sample could weaken the effect. Older adults have smaller pupils and a narrower range of dilation [@winn1994; @piquado2010]. In the time course, the two physical effort levels separated only in the second half of the grip, and the separation persisted into the pre-probe window (@fig-pupil-timecourse), so a window that begins 1 s after squeeze onset also averages over a period in which they did not differ. The effect of physical effort also varied considerably across participants, and only `r v_int("m2_n_participants")` of the `r v_int("m1_n_participants")` participants contributed to that model.
 
-The TEPR was smaller under high physical effort, but this difference cannot be attributed to processing of the probe. Grip release, its cue, and the button press fall inside the TEPR window, and releasing a grip held at high physical effort differs from releasing one held at low physical effort. The TEPR is also measured from pre-probe pupil, which was larger under high physical effort, and evoked responses tend to be smaller when baseline pupil size is larger [@gilzenrat2010]; in the time course, the two physical effort levels converged after the probe (@fig-pupil-timecourse). The TEPR did not differ with offset or on catch trials, just as task difficulty did not change the whole-trial pupil response in Chapter 1.
+The TEPR was smaller under high physical effort, but this difference cannot be attributed to processing of the probe. Grip release, its cue, and the button press fall inside the TEPR window, and releasing a grip held at high physical effort differs from releasing one held at low physical effort. The TEPR is also measured from pre-probe pupil, which the time course shows was larger under high physical effort, and evoked responses tend to be smaller when baseline pupil size is larger [@gilzenrat2010]; in the time course, the two physical effort levels converged after the probe (@fig-pupil-timecourse). The TEPR did not differ with offset or on catch trials, just as task difficulty did not change the whole-trial pupil response in Chapter 1.
 
 ## Pre-probe pupil and sensitivity {#sec-disc-preprobe}
 
@@ -442,11 +457,11 @@ On trials on which pupil size before the probe was larger than the participant's
 
 ## Limitations {#sec-disc-limits}
 
-Several limitations qualify these conclusions. The pupil windows were constrained by the trial sequence: grip release, its cue, and the button press fall inside the task-evoked window, and the pre-probe window contains the early response to the standard. The response mapping was not counterbalanced, so a bias tied to one finger cannot be ruled out. With two physical effort levels, the data cannot describe a dose–response relation or test an inverted-U relation between physical effort and performance. The chapter has no younger group, so no effect can be attributed to age. Locus coeruleus activity was not measured. Data were collected in an MRI scanner, which constrains luminance, posture, and noise, and pupil size was recorded in arbitrary units. Pupil data were missing or unusable for `r v_int("n_no_tepr")` of the `r v_int("m1_n_participants")` participants, and trials at high physical effort were slightly more likely to be usable (@sec-supp-pupil), although every pupil model included physical effort. The behavioral model had no lapse rate, so the positive offset × physical effort interaction cannot be separated from a ceiling effect.
+Several limitations qualify these conclusions. The pupil windows were constrained by the trial sequence: grip release, its cue, and the button press fall inside the task-evoked window, and the pre-probe window contains the early response to the standard. The response mapping was not counterbalanced, so a bias tied to one finger cannot be ruled out. With two physical effort levels, the data cannot describe a dose–response relation or test an inverted-U relation between physical effort and performance. The chapter has no younger group, so no effect can be attributed to age. Locus coeruleus activity was not measured. Data were collected in an MRI scanner, which constrains luminance, posture, and noise, and pupil size was recorded in arbitrary units. Pupil data were missing or unusable for `r v_int("n_no_tepr")` of the `r v_int("m1_n_participants")` participants, and trials at high physical effort were slightly more likely to be usable (@sec-supp-pupil), although every pupil model included physical effort. In the models that related pupil size to the judgment (M4a and M4b), the physical effort terms had the same sign as in M1, but their intervals included zero (@sec-supp-models). The behavioral model had no lapse rate, so the positive offset × physical effort interaction cannot be separated from a ceiling effect.
 
 ## Conclusion {#sec-disc-conclusion}
 
-For older adults, high physical effort appears to change mainly how readily a difference is reported rather than how well it is perceived, and its cost depended little on task difficulty. That distinction matters wherever older adults must notice a change while exerting themselves: a more conservative criterion predicts more missed changes when the evidence is weak, without implying that perception itself is impaired. A study that counterbalances the response mapping, uses more than two physical effort levels, measures a pre-stimulus baseline free of other stimuli, and models confidence alongside choice could separate the decision and response explanations and test whether pupil size before a stimulus predicts discrimination. In this chapter, high physical effort shifted older adults' criterion toward "same," and pupil size did not account for that shift.
+For older adults, high physical effort appears to change mainly how readily a difference is reported rather than how well it is perceived, and its cost depended little on task difficulty. That distinction matters wherever older adults must notice a change while exerting themselves: a more conservative criterion predicts more missed changes when the evidence is weak, without implying that perception itself is impaired. A study that counterbalances the response mapping, uses more than two physical effort levels, measures a pre-stimulus baseline free of other stimuli, and models confidence alongside choice could separate the decision and response explanations and test whether pupil size before a stimulus predicts discrimination. In this chapter, high physical effort made older adults less likely to report a difference, in a pattern that favors a criterion shift toward "same," and pupil size did not account for that change.
 
 # References {.unnumbered}
 
@@ -491,6 +506,8 @@ stopifnot(setequal(unique(flow$Stage), names(stage_lab)))
 flow$Stage <- unname(stage_lab[flow$Stage])
 flow$Participants <- format(flow$Participants, big.mark = ",", trim = TRUE, scientific = FALSE)
 flow$Trials <- format(flow$Trials, big.mark = ",", trim = TRUE, scientific = FALSE)
+flow$Task <- ifelse(flow$Task == "ADT", "Auditory", ifelse(flow$Task == "VDT", "Visual", flow$Task))
+stopifnot(all(flow$Task %in% c("Auditory", "Visual")))
 knitr::kable(flow, escape = FALSE)
 ```
 
@@ -507,7 +524,7 @@ A logistic model (M5) tested whether usable pupil data depended on the condition
 m5tab <- read_export("tbl_m5.csv")
 stopifnot(nrow(m5tab) > 0L)
 m5show <- m5tab[, c("Term", "Estimate", "SE", "Statistic", "95% CI", "p_tab")]
-m5show$Term <- term_prose(m5show$Term)
+m5show$Term <- sentence_case_term(term_prose(m5show$Term))
 names(m5show)[names(m5show) == "p_tab"] <- "p"
 kable_page(
   m5show,
@@ -625,9 +642,10 @@ if (knitr::is_latex_output()) {
 
 ```{r}
 #| label: tbl-fixed-effects
-#| tbl-cap: "Fixed effects for M1–M5."
+#| tbl-cap: "Fixed effects for M1–M4. The missingness model (M5) is reported in @tbl-missing."
 
 fixed <- read_export("coefficients.csv")
+fixed <- fixed[fixed$ID != "M5", , drop = FALSE]
 fixed <- fixed[!fixed$ID %in% c("S1", "S2"), , drop = FALSE]
 stopifnot(nrow(fixed) > 0L)
 stopifnot(!any(fixed$ID %in% c("S1", "S2")))
@@ -640,9 +658,10 @@ kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengt
 
 ```{r}
 #| label: tbl-fixed-effects-diss
-#| tbl-cap: "Fixed effects for every fitted model. R1 and R2 are robustness analyses; R2 was not accepted."
+#| tbl-cap: "Fixed effects for every fitted model except the missingness model (M5), which is reported in @tbl-missing. R1 and R2 are robustness analyses; R2 was not accepted."
 
 fixed <- read_export("coefficients.csv")
+fixed <- fixed[fixed$ID != "M5", , drop = FALSE]
 stopifnot(nrow(fixed) > 0L)
 stopifnot(all(c("S1", "S2") %in% fixed$ID))
 kable_page(fixed_for_page(fixed), fixed_widths, block_rows = rle(fixed$ID)$lengths, tabcolsep = "1pt", size = "\\footnotesize")
@@ -667,7 +686,7 @@ R1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted ra
 \Needspace{12\baselineskip}
 ```
 
-## Additional estimation checks
+## Additional estimation checks (dissertation only)
 
 M1, M4a, and M4b were re-estimated with the optimizers that ship with lme4 (`r v("allfit_optimizers")`). No key-term estimate from a converged optimizer differed from the accepted bobyqa estimate by more than 0.01. The largest absolute key-term deviation in that set was `r v("allfit_max_abs_dev")`.
 
@@ -678,7 +697,7 @@ R2 fits M1's formula to the `r v_int("s2_nobs")` trials from the `r v_int("s2_n_
 \Needspace{12\baselineskip}
 ```
 
-## Analysis provenance
+## Analysis provenance (dissertation only)
 
 Recordings are the December 21 processing of the same sessions. The December 25 processing added no participant who was absent from December 21, so it is not in these models.
 
