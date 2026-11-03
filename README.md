@@ -1,4 +1,4 @@
-# Squeeze Harder, Say "Same": Physical Effort Shifts Older Adults' Perceptual Criterion Without Reducing Sensitivity
+# Squeeze Harder, Say "Same": Physical Effort Shifts Older Adults' Perceptual Criterion
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21215384.svg)](https://doi.org/10.5281/zenodo.21215384)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
@@ -8,7 +8,7 @@
 [![lme4](https://img.shields.io/badge/lme4-2.0.1-276DC3?logo=r&logoColor=white)](https://cran.r-project.org/package=lme4)
 [![lmerTest](https://img.shields.io/badge/lmerTest-3.2.1-276DC3?logo=r&logoColor=white)](https://cran.r-project.org/package=lmerTest)
 
-Chapter 2 of the dissertation. Sixty-eight older adults judged whether two tones or two visual gratings were the same or different while holding a light or a strong handgrip, with pupil diameter recorded throughout. The chapter tests whether the strong grip changes the criterion for reporting a difference, the sensitivity of the judgment, or both, and whether pupil size during the grip or around the probe tracks those effects.
+Chapter 2 of the dissertation. Sixty-eight older adults judged whether two tones or two visual gratings were the same or different while holding a handgrip at low (5%) or high (40%) physical effort, with pupil diameter recorded throughout. The chapter tests whether high physical effort changes the criterion for reporting a difference, the sensitivity of the judgment, or both, and whether pupil size during the grip or around the probe tracks those effects.
 
 The chapter source is [`07_manuscript/chapter2/reports/chapter2_dissertation.qmd`](07_manuscript/chapter2/reports/chapter2_dissertation.qmd). Every reported number is read from the export `07_manuscript/chapter2/export/ch2fit_20261024_193248/`. That export is the accepted run. It is not refit when the chapter is rendered.
 
@@ -25,12 +25,14 @@ quarto render chapter2_dissertation.qmd --to pdf
 quarto render chapter2_dissertation.qmd --to docx
 ```
 
-The YAML default is the dissertation, which includes the optimizer check, the time-axis and missingness tables, and the robustness section. The paper version omits those:
+The YAML default is the dissertation. Both versions end with References and then Supplementary Materials, which has two tiers. The manuscript tier, in both versions, holds the pupil sample and the missingness model (M5), model estimation with the time-axis rule and the random-effects steps, and the robustness analysis R1. The dissertation tier adds the optimizer check, R2, and the provenance of the pupil recordings with the time-axis table. The paper version omits the dissertation tier:
 
 ```bash
-quarto render chapter2_dissertation.qmd --to pdf -M dissertation:false
-quarto render chapter2_dissertation.qmd --to docx -M dissertation:false
+quarto render chapter2_dissertation.qmd --to pdf -M dissertation:false --output chapter2_manuscript.pdf
+quarto render chapter2_dissertation.qmd --to docx -M dissertation:false --output chapter2_manuscript.docx
 ```
+
+Render the paper version under its own filename so that it does not overwrite the dissertation output.
 
 PDF uses XeLaTeX with STIX Two Text and STIX Two Math. Word supplement numbers are applied by `ch2_docx_supptables.lua` after Quarto writes the file. Pass a bare filename to `--output` and put the directory in `--output-dir`.
 
@@ -40,16 +42,16 @@ The render reads `values.json`, the coefficient and table CSVs, and the two figu
 
 ## Models
 
-Fits use lme4 2.0.1 and lmerTest 3.2.1, with bobyqa and a maximum of 200,000 evaluations. A fit is accepted only when it is not singular and the optimizer returns no convergence message. Random effects are reduced in fixed steps when that rule fails. The steps are in the supplement.
+Fits use lme4 2.0.1 and lmerTest 3.2.1, with bobyqa and a maximum of 200,000 evaluations. A fit is accepted only when it is not singular and the optimizer returns no convergence message. Random effects are reduced in fixed steps when that rule fails. The steps are in the supplement. M1–M4 are in the main text; M5, R1, and the estimation details are in the supplement.
 
 | ID | Question |
 |----|----------|
-| M1 | Behavior. Probit model of "different" responses. Effort tests the criterion; offset-by-effort tests sensitivity. |
-| M2 | Grip-window pupil. Whether pupil diameter during the hold differs between grip levels. |
-| M3 | Task-evoked pupil. Whether the pupil response after the probe differs with effort and with difficulty. |
+| M1 | Behavior. Probit model of "different" responses. Physical effort and catch × physical effort test the criterion; the sign of offset × physical effort separates the sensitivity account from the capacity account. |
+| M2 | Grip-period pupil. Whether high physical effort enlarged the pupil during the grip. |
+| M3 | Task-evoked pupil. Whether the TEPR differs with physical effort and with offset. |
 | M4a | Pre-probe pupil and the slope of the judgment. |
 | M4b | Task-evoked pupil and the slope of the judgment. |
-| M5 | Whether a matched trial passed the task-evoked pupil gate. |
+| M5 | Missingness control, reported in the supplement. Whether a matched trial passed the task-evoked checks. |
 | R1 | Robustness. M4b with the task-evoked area in place of the mean. |
 | R2 | Robustness. M1's formula in the pupil subsample. This fit was not accepted. |
 
