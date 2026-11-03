@@ -430,7 +430,7 @@ pA <- add_windows(pA) +
   scale_x_wave() +
   labs(
     x = "Time from squeeze onset (s)",
-    y = "Pupil change from pre-squeeze baseline (a.u.)"
+    y = "Pupil size (a.u.)"
   ) +
   theme_ms() +
   theme(plot.margin = ggplot2::margin(4, 8, 2, 6))
@@ -464,8 +464,14 @@ tepr_plot[, x := eff_x[position] + fifelse(effort == "Low", -0.1, 0.1)]
 tepr_plot[, task_label := factor(fifelse(task == "auditory", "Auditory", "Visual"), levels = c("Auditory", "Visual"))]
 tepr_plot[, effort := factor(effort, levels = c("Low", "High"))]
 tepr_line <- tepr_plot[position != "catch"]
+tepr_catch <- tepr_plot[position == "catch"]
 pC <- ggplot(tepr_plot, aes(x = x, y = mean, color = effort, group = effort)) +
   geom_vline(xintercept = 1.75, linewidth = 0.2, color = "grey70") +
+  geom_segment(
+    data = tepr_catch,
+    aes(x = x - 0.15, xend = x + 0.15, y = pred, yend = pred),
+    linewidth = 0.6
+  ) +
   geom_line(data = tepr_line, aes(y = pred), linewidth = 0.6) +
   geom_errorbar(aes(ymin = mean - se_within, ymax = mean + se_within), width = 0.15, linewidth = 0.3) +
   geom_point(size = 2) +
@@ -487,9 +493,9 @@ pC <- ggplot(tepr_plot, aes(x = x, y = mean, color = effort, group = effort)) +
 pC <- hide_strips(pC)
 
 fig4 <- pA / pB / pC +
-  plot_layout(heights = c(1, 1, 1), guides = "collect") &
+  plot_layout(heights = c(1, 1, 0.9), guides = "collect") &
   theme(legend.position = "bottom")
-ggsave(file.path(EXPORT, "fig_pupil_dynamics.png"), fig4, width = 7.2, height = 8.4, dpi = 300, bg = "white")
+ggsave(file.path(EXPORT, "fig_pupil_dynamics.png"), fig4, width = 7.2, height = 7.6, dpi = 300, bg = "white")
 
 y_levels <- c(
   "Catch trials (catch \u00d7 state)",
