@@ -601,12 +601,12 @@ p_est <- ggplot() +
   geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.3) +
   geom_vline(xintercept = 1.75, linewidth = 0.2, color = "grey70") +
   geom_errorbar(data = task_dt, aes(x = x, ymin = lo, ymax = hi, color = task_label), width = 0, linewidth = 0.3) +
-  geom_point(data = task_dt, aes(x = x, y = estimate, color = task_label, shape = task_label), size = 1.6, fill = "white", stroke = 0.6) +
+  geom_point(data = task_dt, aes(x = x, y = estimate, color = task_label, shape = task_label), size = 1.8) +
   geom_line(data = avg_dt[position != "catch"], aes(x = x, y = estimate), color = high_col, linewidth = 0.6) +
   geom_errorbar(data = avg_dt, aes(x = x, ymin = lo, ymax = hi), color = high_col, width = 0.15, linewidth = 0.4) +
   geom_point(data = avg_dt, aes(x = x, y = estimate), color = high_col, size = 2.2) +
-  scale_color_manual(values = c(Auditory = "grey25", Visual = "grey55"), name = NULL) +
-  scale_shape_manual(values = c(Auditory = 21, Visual = 24), name = NULL) +
+  scale_color_manual(values = c(Auditory = unname(task_colors["ADT"]), Visual = unname(task_colors["VDT"])), name = NULL) +
+  scale_shape_manual(values = c(Auditory = 16, Visual = 17), name = NULL) +
   scale_x_continuous(breaks = eff_breaks, labels = eff_labels, limits = c(0.6, 5.9)) +
   scale_y_continuous(limits = range(c(obs_dt$lo, obs_dt$hi, 0)) + c(-0.02, 0.02)) +
   labs(title = "Estimated effect (M1)", x = "Offset level (1 = smallest)", y = "High \u2212 low physical effort (probit)") +
