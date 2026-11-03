@@ -526,6 +526,99 @@ p_beh <- ggplot(fig_dt, aes(x = x_lab, y = p_bar, color = effort, group = effort
   theme_ms()
 ggsave(file.path(EXPORT, "fig_p_diff.png"), p_beh, width = 7.2, height = 3.6, dpi = 300)
 
+# --- physical effort effect by offset (phase 7) -----------------------------
+# High minus low physical effort on the probit scale, from M1's fixed effects:
+# d = X_high - X_low, estimate = d beta, SE = sqrt(d V d'). Wald 95% intervals.
+# BEGIN fig_effort_by_offset
+m1_beta <- fixef(fits$M1)
+m1_V <- as.matrix(vcov(fits$M1))
+m1_tt <- delete.response(terms(fits$M1, fixed.only = TRUE))
+eff_pos <- data.table(
+  position = c("catch", "1", "2", "3", "4"),
+  catch = c(1, 0, 0, 0, 0),
+  x_c = c(0, -1.5, -0.5, 0.5, 1.5)
+)
+eff_task <- data.table(task = c("all", "auditory", "visual"), task_c = c(0, -0.5, 0.5))
+eff_row <- function(catch, x_c, task_c, effort_c) {
+  X <- model.matrix(m1_tt, data.frame(catch = catch, x_c = x_c, task_c = task_c, effort_c = effort_c))
+  miss <- setdiff(names(m1_beta), colnames(X))
+  if (length(miss)) stop("design row lacks fixed effects: ", paste(miss, collapse = ", "), call. = FALSE)
+  X[, names(m1_beta), drop = FALSE]
+}
+eff_dt <- rbindlist(lapply(seq_len(nrow(eff_task)), function(i) {
+  rbindlist(lapply(seq_len(nrow(eff_pos)), function(j) {
+    p <- eff_pos[j]
+    d <- eff_row(p$catch, p$x_c, eff_task$task_c[i], 0.5) - eff_row(p$catch, p$x_c, eff_task$task_c[i], -0.5)
+    est <- as.numeric(d %*% m1_beta)
+    se <- sqrt(as.numeric(d %*% m1_V %*% t(d)))
+    data.table(task = eff_task$task[i], position = p$position, catch = p$catch, x_c = p$x_c,
+               estimate = est, se = se, lo = est - 1.959964 * se, hi = est + 1.959964 * se)
+  }))
+}))
+fwrite(eff_dt, file.path(EXPORT, "fig_effort_by_offset.csv"))
+
+all_est <- eff_dt[task == "all"]
+gate <- c(
+  mean_offsets = abs(mean(all_est[position != "catch", estimate]) - m1_beta[["effort_c"]]),
+  catch_diff = abs(all_est[position == "catch", estimate] - m1_beta[["effort_c"]] - m1_beta[["catch:effort_c"]]),
+  offset_steps = max(abs(diff(all_est[position != "catch", estimate]) - m1_beta[["x_c:effort_c"]]))
+)
+if (any(gate > 1e-8)) stop("effort-by-offset gate failed: ", paste(names(gate)[gate > 1e-8], collapse = ", "), call. = FALSE)
+
+eff_x <- c(catch = 1, "1" = 2.5, "2" = 3.5, "3" = 4.5, "4" = 5.5)
+eff_breaks <- unname(eff_x)
+eff_labels <- c("Catch", "1", "2", "3", "4")
+high_col <- effort_colors[["High"]]
+
+pred_dt <- data.table(
+  account = rep(c("Criterion", "Sensitivity", "Capacity"), each = 5),
+  position = rep(names(eff_x), 3),
+  value = c(-0.10, -0.10, -0.10, -0.10, -0.10,
+            0.05, -0.02, -0.06, -0.10, -0.14,
+            0.00, -0.15, -0.10, -0.05, 0.00)
+)
+pred_dt[, account := factor(account, levels = c("Criterion", "Sensitivity", "Capacity"))]
+pred_dt[, x := eff_x[position]]
+p_pred <- ggplot(pred_dt, aes(x = x, y = value)) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.3) +
+  geom_vline(xintercept = 1.75, linewidth = 0.2, color = "grey70") +
+  geom_line(data = pred_dt[position != "catch"], color = high_col, linewidth = 0.6) +
+  geom_point(color = high_col, size = 1.6) +
+  facet_wrap(~ account, ncol = 1) +
+  scale_x_continuous(breaks = eff_breaks, labels = eff_labels, limits = c(0.6, 5.9)) +
+  scale_y_continuous(limits = c(-0.18, 0.08), breaks = NULL) +
+  labs(title = "Predicted patterns", x = "Offset level", y = "Effect (illustration)") +
+  theme_ms() +
+  theme(plot.title = element_text(size = 10), strip.text = element_text(size = 9))
+
+obs_dt <- copy(eff_dt)
+obs_dt[, x := eff_x[position]]
+task_dt <- obs_dt[task != "all"]
+task_dt[, task_label := factor(fifelse(task == "auditory", "Auditory", "Visual"), levels = c("Auditory", "Visual"))]
+task_dt[, x := x + fifelse(task == "auditory", -0.15, 0.15)]
+avg_dt <- obs_dt[task == "all"]
+p_est <- ggplot() +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.3) +
+  geom_vline(xintercept = 1.75, linewidth = 0.2, color = "grey70") +
+  geom_errorbar(data = task_dt, aes(x = x, ymin = lo, ymax = hi, color = task_label), width = 0, linewidth = 0.3) +
+  geom_point(data = task_dt, aes(x = x, y = estimate, color = task_label, shape = task_label), size = 1.6, fill = "white", stroke = 0.6) +
+  geom_line(data = avg_dt[position != "catch"], aes(x = x, y = estimate), color = high_col, linewidth = 0.6) +
+  geom_errorbar(data = avg_dt, aes(x = x, ymin = lo, ymax = hi), color = high_col, width = 0.15, linewidth = 0.4) +
+  geom_point(data = avg_dt, aes(x = x, y = estimate), color = high_col, size = 2.2) +
+  scale_color_manual(values = c(Auditory = "grey25", Visual = "grey55"), name = NULL) +
+  scale_shape_manual(values = c(Auditory = 21, Visual = 24), name = NULL) +
+  scale_x_continuous(breaks = eff_breaks, labels = eff_labels, limits = c(0.6, 5.9)) +
+  scale_y_continuous(limits = range(c(obs_dt$lo, obs_dt$hi, 0)) + c(-0.02, 0.02)) +
+  labs(title = "Estimated effect (M1)", x = "Offset level (1 = smallest)", y = "High \u2212 low physical effort (probit)") +
+  theme_ms() +
+  theme(plot.title = element_text(size = 10))
+
+p_effort <- patchwork::wrap_plots(p_pred, p_est, widths = c(0.4, 0.6)) +
+  patchwork::plot_annotation(tag_levels = "A") &
+  theme(plot.tag = element_text(face = "bold"), plot.tag.position = c(0, 1))
+ggsave(file.path(EXPORT, "fig_effort_by_offset.png"), p_effort, width = 7.2, height = 3.4, dpi = 300)
+# END fig_effort_by_offset
+
 # --- pupil time course ------------------------------------------------------
 # Same display as Chapter 3's waveform (F_figures.R): mean of the
 # within-participant means, Morey SE with effort repeated inside task,
