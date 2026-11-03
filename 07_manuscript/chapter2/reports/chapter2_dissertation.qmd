@@ -71,7 +71,9 @@ needed <- c(
   "values.json", "coefficients.csv", "tbl_key_terms.csv", "tbl_demographics.csv",
   "tbl_reduction.csv", "tbl_pupil_flow.csv", "tbl_axis.csv", "tbl_m5.csv",
   "fig_p_diff.png", "fig_pupil_timecourse.png", "fig_effort_by_offset.png",
-  "fig_effort_by_offset.csv"
+  "fig_effort_by_offset.csv",
+  "fig_pupil_dynamics.png", "fig_pupil_coupling.png", "fig_pupil_diff.csv",
+  "fig_tepr_by_offset.csv", "fig_pupil_coupling.csv"
 )
 stopifnot(all(file.exists(file.path(export_dir, needed))))
 iv <- jsonlite::fromJSON(file.path(export_dir, "values.json"), simplifyVector = FALSE)$iv
@@ -98,7 +100,8 @@ S2_catch <- list(p_fmt = v("s2_catch_effort_c_p"))
 S2_slope <- list(p_fmt = v("s2_x_c_effort_c_p"))
 fig_p_diff <- file.path(export_dir, "fig_p_diff.png")
 fig_effort <- file.path(export_dir, "fig_effort_by_offset.png")
-fig_pupil <- file.path(export_dir, "fig_pupil_timecourse.png")
+fig_pupil <- file.path(export_dir, "fig_pupil_dynamics.png")
+fig_coupling <- file.path(export_dir, "fig_pupil_coupling.png")
 read_export <- function(name) {
   path <- file.path(export_dir, name)
   stopifnot(file.exists(path))
@@ -352,6 +355,10 @@ Models were fit in R [@R] with lme4 `r v("lme4_version")` and lmerTest `r v("lme
 
 Effects are reported with Wald 95% confidence intervals and two-sided *p* values; for the linear models, degrees of freedom are Satterthwaite approximations. No correction was applied across models, because each model tests a different question. No equivalence bound was set, so a nonsignificant effect is reported as its estimate and interval, not as evidence that there was no effect.
 
+```{=latex}
+\FloatBarrier
+```
+
 # Results
 
 ## Physical effort and "different" responses {#sec-behavior}
@@ -360,6 +367,7 @@ Under high physical effort, the mean proportion of "different" responses was low
 
 ```{r}
 #| label: fig-p-diff
+#| fig-pos: "H"
 #| fig-cap: "Proportion of \"different\" responses by offset and physical effort. Points are means of participant proportions, error bars are ±1 within-participant SE, and lines are the behavioral model's fixed-effect predictions. Catch is the zero-offset trial; the four nonzero offsets are 8, 16, 32, and 64 Hz (auditory) and 0.06, 0.12, 0.24, and 0.48 contrast (visual)."
 #| fig-width: 7.2
 #| fig-height: 3.6
@@ -373,6 +381,7 @@ In the behavioral model (M1; `r v_int("m1_nobs")` trials, `r v_int("m1_n_partici
 
 ```{r}
 #| label: fig-effort-by-offset
+#| fig-pos: "H"
 #| fig-cap: "Effect of high physical effort at each offset. (A) Patterns predicted by each account, for illustration only; the vertical axis has no units. Criterion: the same reduction at every offset and on catch trials. Sensitivity: a reduction that grows with the offset, with no fewer \"different\" responses on catch trials. Capacity: a reduction that is largest at the smallest offset and absent on catch trials. (B) Difference between high and low physical effort in the probit of a \"different\" response, estimated from the behavioral model (M1). Filled points average over task, smaller points show each task (auditory, circles; visual, triangles), and error bars are 95% Wald confidence intervals. Offset levels 1–4 are 8, 16, 32, and 64 Hz (auditory) and 0.06, 0.12, 0.24, and 0.48 contrast (visual)."
 #| fig-width: 7.2
 #| fig-height: 3.4
@@ -382,53 +391,54 @@ stopifnot(file.exists(fig_effort))
 knitr::include_graphics(fig_effort)
 ```
 
+```{=latex}
+\FloatBarrier
+```
+
 ## Pupil during the grip and after the probe {#sec-pupil-checks}
 
-In the grip-period model (M2), the grip-period mean did not differ significantly between physical effort levels, *b* = `r v("m2_effort_c_est")`, SE = `r v("m2_effort_c_se")`, *t*(`r v("m2_effort_c_df")`) = `r v("m2_effort_c_stat")`, 95% CI `r v("m2_effort_c_ci")`, *p* `r M2_effort$p_fmt` (`r v_int("m2_nobs")` trials, `r v_int("m2_n_participants")` participants). The by-participant variance of the physical effort effect was `r v("m2_effort_slope_variance")`. @fig-pupil-timecourse shows the time course by task and physical effort.
+In the grip-period model (M2), the grip-period mean did not differ significantly between physical effort levels, *b* = `r v("m2_effort_c_est")`, SE = `r v("m2_effort_c_se")`, *t*(`r v("m2_effort_c_df")`) = `r v("m2_effort_c_stat")`, 95% CI `r v("m2_effort_c_ci")`, *p* `r M2_effort$p_fmt` (`r v_int("m2_nobs")` trials, `r v_int("m2_n_participants")` participants). The by-participant variance of the physical effort effect was `r v("m2_effort_slope_variance")`. @fig-pupil-timecourse shows the time course by task and physical effort (panel A) and the high-minus-low difference at each time point (panel B).
+
+In the task-evoked model (M3), the TEPR was smaller under high physical effort, *b* = `r v("m3_effort_c_est")`, SE = `r v("m3_effort_c_se")`, *t*(`r v("m3_effort_c_df")`) = `r v("m3_effort_c_stat")`, 95% CI `r v("m3_effort_c_ci")`, *p* `r M3_effort$p_fmt`. It was not associated with offset, *b* = `r v("m3_x_c_est")`, SE = `r v("m3_x_c_se")`, *p* `r M3_x$p_fmt`, or with catch trials, *b* = `r v("m3_catch_est")`, SE = `r v("m3_catch_se")`, *p* `r M3_catch$p_fmt`. @fig-pupil-timecourse (panel C) shows the TEPR by offset and physical effort.
 
 ```{r}
 #| label: fig-pupil-timecourse
-#| fig-pos: "tbp"
-#| fig-cap: "Pupil size relative to the pre-squeeze baseline, by task and physical effort, for participants in the task-evoked sample. Lines are participant-equal means after winsorizing participant means at the 1st and 99th percentiles at each time point (capped at ±2 a.u.), and shading is ±1 within-participant SE. Bands mark the grip period (1.0–4.35 s), the pre-probe window (3.85–4.35 s), and the task-evoked window (4.65–7.65 s). Vertical lines mark squeeze onset, the standard, the probe, and the response screen. Units are arbitrary."
-#| fig-width: 8.2
-#| fig-height: 7.5
+#| fig-cap: "Pupil dynamics by task and physical effort, for participants in the task-evoked sample. (A) Pupil size relative to the pre-squeeze baseline. Lines are participant-equal means after winsorizing participant means at the 1st and 99th percentiles at each time point (capped at ±2 a.u.), and shading is ±1 within-participant SE. (B) High-minus-low physical effort difference in the same waveforms. Shading is a pointwise 95% confidence interval across participants, not corrected for multiple comparisons, and is shown for description only. In A and B, bands mark the grip period (1.0–4.35 s), the pre-probe window (3.85–4.35 s), and the task-evoked window (4.65–7.65 s), and vertical lines mark squeeze onset, the standard, the probe, and the response screen. (C) Mean TEPR by offset and physical effort. Points are means of participant means, error bars are ±1 within-participant SE (participants with all cells; auditory, n = 32; visual, n = 40), and lines are the task-evoked model's (M3) fixed-effect predictions. Offset levels 1–4 are 8, 16, 32, and 64 Hz (auditory) and 0.06, 0.12, 0.24, and 0.48 contrast (visual). Units are arbitrary."
+#| fig-width: 7.2
+#| fig-height: 8.4
 #| out-width: "100%"
+#| fig-pos: "H"
 
 stopifnot(file.exists(fig_pupil))
 knitr::include_graphics(fig_pupil)
 ```
 
-In the task-evoked model (M3), the TEPR was smaller under high physical effort, *b* = `r v("m3_effort_c_est")`, SE = `r v("m3_effort_c_se")`, *t*(`r v("m3_effort_c_df")`) = `r v("m3_effort_c_stat")`, 95% CI `r v("m3_effort_c_ci")`, *p* `r M3_effort$p_fmt`. It was not associated with offset, *b* = `r v("m3_x_c_est")`, SE = `r v("m3_x_c_se")`, *p* `r M3_x$p_fmt`, or with catch trials, *b* = `r v("m3_catch_est")`, SE = `r v("m3_catch_se")`, *p* `r M3_catch$p_fmt`.
+```{=latex}
+\FloatBarrier
+```
 
 ## Pupil and sensitivity {#sec-coupling}
 
 In the pre-probe model (M4a; `r v_int("m4a_nobs")` trials), the psychometric function was shallower on trials on which pre-probe pupil was larger than the participant's mean for that task, *b* = `r v("m4a_x_c_b1_state_est")`, SE = `r v("m4a_x_c_b1_state_se")`, *z* = `r v("m4a_x_c_b1_state_stat")`, 95% CI `r v("m4a_x_c_b1_state_ci")`, *p* `r M4a_slope$p_fmt`. Pre-probe pupil was not associated with the rate of "different" responses, *b* = `r v("m4a_b1_state_est")`, SE = `r v("m4a_b1_state_se")`, *p* `r M4a_state$p_fmt`, or with "different" responses on catch trials, *b* = `r v("m4a_catch_b1_state_est")`, SE = `r v("m4a_catch_b1_state_se")`, *p* `r M4a_catch$p_fmt`.
 
-In the task-evoked model (M4b), the TEPR was not associated with the slope, *b* = `r v("m4b_x_c_tepr_state_est")`, SE = `r v("m4b_x_c_tepr_state_se")`, *z* = `r v("m4b_x_c_tepr_state_stat")`, 95% CI `r v("m4b_x_c_tepr_state_ci")`, *p* `r M4b_slope$p_fmt`, with the rate of "different" responses, *b* = `r v("m4b_tepr_state_est")`, SE = `r v("m4b_tepr_state_se")`, *p* `r M4b_state$p_fmt`, or with "different" responses on catch trials, *b* = `r v("m4b_catch_tepr_state_est")`, SE = `r v("m4b_catch_tepr_state_se")`, *p* `r M4b_catch$p_fmt`. @tbl-key-terms lists the key terms of each model in the main text.
+In the task-evoked model (M4b), the TEPR was not associated with the slope, *b* = `r v("m4b_x_c_tepr_state_est")`, SE = `r v("m4b_x_c_tepr_state_se")`, *z* = `r v("m4b_x_c_tepr_state_stat")`, 95% CI `r v("m4b_x_c_tepr_state_ci")`, *p* `r M4b_slope$p_fmt`, with the rate of "different" responses, *b* = `r v("m4b_tepr_state_est")`, SE = `r v("m4b_tepr_state_se")`, *p* `r M4b_state$p_fmt`, or with "different" responses on catch trials, *b* = `r v("m4b_catch_tepr_state_est")`, SE = `r v("m4b_catch_tepr_state_se")`, *p* `r M4b_catch$p_fmt`. @fig-pupil-coupling shows the three pupil terms of each model.
 
 ```{r}
-#| label: tbl-key-terms
-#| tbl-cap: "Key terms from the models in the main text. Estimates are on the probit scale for M1 and M4 and on the measured scale for M2 and M3. Intervals are Wald intervals. The missingness model (M5) is reported in the Supplement."
+#| label: fig-pupil-coupling
+#| fig-cap: "Association between trial-to-trial pupil size and the judgment. Points are fixed-effect estimates from the pre-probe model (M4a) and the task-evoked model (M4b), in probit units per pooled within-participant standard deviation of pupil size (the state component), with 95% Wald confidence intervals. Rate is the state term, the association with the probit of a \"different\" response at the average offset. Slope is the offset × state interaction; a negative value means a shallower psychometric function on trials with a larger pupil. Catch trials is the catch × state interaction, the difference on catch trials from the average offset."
+#| fig-width: 7.2
+#| fig-height: 2.8
+#| out-width: "100%"
+#| fig-pos: "H"
 
-tab <- read_export("tbl_key_terms.csv")
-stopifnot(nrow(tab) > 0L)
-show <- tab[, c("Model", "ID", "Term", "Estimate", "SE", "Statistic", "95% CI", "p_tab")]
-show <- show[show$ID != "M5", , drop = FALSE]
-stopifnot(nrow(show) > 0L)
-show$Model <- term_prose(show$Model)
-show$Model <- ifelse(is.na(model_label(show$ID)), show$Model, model_label(show$ID))
-show$Term <- sentence_case_term(term_prose(show$Term))
-names(show)[names(show) == "p_tab"] <- "p"
-kable_page(show, c(
-  ">{\\raggedright\\arraybackslash}p{1.28in}",
-  ">{\\raggedright\\arraybackslash}p{0.28in}",
-  ">{\\raggedright\\arraybackslash}p{1.62in}",
-  ">{\\raggedright\\arraybackslash}p{0.62in}",
-  ">{\\raggedright\\arraybackslash}p{0.32in}",
-  ">{\\raggedright\\arraybackslash}p{0.95in}",
-  ">{\\raggedright\\arraybackslash}p{0.85in}",
-  ">{\\raggedright\\arraybackslash}p{0.34in}"
-), tabcolsep = "1pt", size = "\\footnotesize")
+stopifnot(file.exists(fig_coupling))
+knitr::include_graphics(fig_coupling)
+```
+
+@tbl-key-terms in the Supplementary Materials lists the key terms of each model.
+
+```{=latex}
+\FloatBarrier
 ```
 
 # Discussion
@@ -447,13 +457,13 @@ Three explanations could account for the criterion shift. The first places it in
 
 ## Physical effort and pupil size {#sec-disc-pupil}
 
-Pupil size during the grip did not differ significantly between physical effort levels. In younger adults, by contrast, high physical effort enlarged the pupil response in every task (Chapter 1), although the measures are not directly comparable: Chapter 1 summarized the pupil from trial onset to the response window, including the response to the probe, and recorded it in a quiet, dimly lit laboratory rather than a scanner. Several features of this sample could weaken the effect. Older adults have smaller pupils and a narrower range of dilation [@winn1994; @piquado2010]. In the time course, the two physical effort levels separated only in the second half of the grip, and the separation persisted into the pre-probe window (@fig-pupil-timecourse), so a window that begins 1 s after squeeze onset also averages over a period in which they did not differ. The effect of physical effort also varied considerably across participants, and only `r v_int("m2_n_participants")` of the `r v_int("m1_n_participants")` participants contributed to that model.
+Pupil size during the grip did not differ significantly between physical effort levels. In younger adults, by contrast, high physical effort enlarged the pupil response in every task (Chapter 1), although the measures are not directly comparable: Chapter 1 summarized the pupil from trial onset to the response window, including the response to the probe, and recorded it in a quiet, dimly lit laboratory rather than a scanner. Several features of this sample could weaken the effect. Older adults have smaller pupils and a narrower range of dilation [@winn1994; @piquado2010]. In the time course, the two physical effort levels separated only in the second half of the grip, and the separation persisted into the pre-probe window (@fig-pupil-timecourse, panel B), so a window that begins 1 s after squeeze onset also averages over a period in which they did not differ. The effect of physical effort also varied considerably across participants, and only `r v_int("m2_n_participants")` of the `r v_int("m1_n_participants")` participants contributed to that model.
 
-The TEPR was smaller under high physical effort, but this difference cannot be attributed to processing of the probe. Grip release, its cue, and the button press fall inside the TEPR window, and releasing a grip held at high physical effort differs from releasing one held at low physical effort. The TEPR is also measured from pre-probe pupil, which the time course shows was larger under high physical effort, and evoked responses tend to be smaller when baseline pupil size is larger [@gilzenrat2010]; in the time course, the two physical effort levels converged after the probe (@fig-pupil-timecourse). The TEPR did not differ with offset or on catch trials, just as task difficulty did not change the whole-trial pupil response in Chapter 1.
+The TEPR was smaller under high physical effort, but this difference cannot be attributed to processing of the probe. Grip release, its cue, and the button press fall inside the TEPR window, and releasing a grip held at high physical effort differs from releasing one held at low physical effort. The TEPR is also measured from pre-probe pupil, which the difference waveform shows was larger under high physical effort (@fig-pupil-timecourse, panel B), and evoked responses tend to be smaller when baseline pupil size is larger [@gilzenrat2010]; in the time course, the two physical effort levels converged after the probe (@fig-pupil-timecourse). The TEPR did not differ with offset or on catch trials (@fig-pupil-timecourse, panel C), just as task difficulty did not change the whole-trial pupil response in Chapter 1.
 
 ## Pre-probe pupil and sensitivity {#sec-disc-preprobe}
 
-On trials on which pupil size before the probe was larger than the participant's mean, the psychometric function was shallower. The evidence is weak: the interval reaches zero, and the pre-probe window contains the early response to the standard. One interpretation comes from adaptive gain theory, which links pupil size to the activity of the locus coeruleus–noradrenergic (LC–NE) system [@astonjones2005; @joshi2016]. In that theory, a larger baseline pupil accompanies a less task-focused state [@gilzenrat2010], and performance is best at intermediate baseline pupil sizes [@murphy2011]. Isometric handgrip engages the noradrenergic system [@mather2020isometric], and the locus coeruleus is among the brain structures most vulnerable to aging [@mather2016], so a route from physical effort to perception through the LC–NE system is plausible in older adults. This study, however, neither manipulated nor measured locus coeruleus activity during the task, and pupil size also covaries with activity outside the locus coeruleus [@joshi2016]. The association is therefore a hypothesis for a study with a pre-stimulus baseline free of other stimuli, not a finding this chapter rests on. The TEPR, summarized as a mean or as an area (@sec-supp-robust), was associated with neither the slope nor the rate of "different" responses.
+On trials on which pupil size before the probe was larger than the participant's mean, the psychometric function was shallower (@fig-pupil-coupling). The evidence is weak: the interval reaches zero, and the pre-probe window contains the early response to the standard. One interpretation comes from adaptive gain theory, which links pupil size to the activity of the locus coeruleus–noradrenergic (LC–NE) system [@astonjones2005; @joshi2016]. In that theory, a larger baseline pupil accompanies a less task-focused state [@gilzenrat2010], and performance is best at intermediate baseline pupil sizes [@murphy2011]. Isometric handgrip engages the noradrenergic system [@mather2020isometric], and the locus coeruleus is among the brain structures most vulnerable to aging [@mather2016], so a route from physical effort to perception through the LC–NE system is plausible in older adults. This study, however, neither manipulated nor measured locus coeruleus activity during the task, and pupil size also covaries with activity outside the locus coeruleus [@joshi2016]. The association is therefore a hypothesis for a study with a pre-stimulus baseline free of other stimuli, not a finding this chapter rests on. The TEPR, summarized as a mean or as an area (@sec-supp-robust), was associated with neither the slope nor the rate of "different" responses.
 
 ## Limitations {#sec-disc-limits}
 
@@ -547,6 +557,31 @@ kable_page(
 ```
 
 ## Model estimation {#sec-supp-models}
+
+```{r}
+#| label: tbl-key-terms
+#| tbl-cap: "Key terms from the models reported in the main text. Estimates are on the probit scale for M1 and M4 and on the measured scale for M2 and M3. Intervals are Wald intervals. The missingness model (M5) is reported in @tbl-missing."
+
+tab <- read_export("tbl_key_terms.csv")
+stopifnot(nrow(tab) > 0L)
+show <- tab[, c("Model", "ID", "Term", "Estimate", "SE", "Statistic", "95% CI", "p_tab")]
+show <- show[show$ID != "M5", , drop = FALSE]
+stopifnot(nrow(show) > 0L)
+show$Model <- term_prose(show$Model)
+show$Model <- ifelse(is.na(model_label(show$ID)), show$Model, model_label(show$ID))
+show$Term <- sentence_case_term(term_prose(show$Term))
+names(show)[names(show) == "p_tab"] <- "p"
+kable_page(show, c(
+  ">{\\raggedright\\arraybackslash}p{1.28in}",
+  ">{\\raggedright\\arraybackslash}p{0.28in}",
+  ">{\\raggedright\\arraybackslash}p{1.62in}",
+  ">{\\raggedright\\arraybackslash}p{0.62in}",
+  ">{\\raggedright\\arraybackslash}p{0.32in}",
+  ">{\\raggedright\\arraybackslash}p{0.95in}",
+  ">{\\raggedright\\arraybackslash}p{0.85in}",
+  ">{\\raggedright\\arraybackslash}p{0.34in}"
+), tabcolsep = "1pt", size = "\\footnotesize")
+```
 
 Each trial was epoched from 3 s before squeeze onset at 250 Hz, so sample $k$ falls at $t_k = -3 + 0.004(k - 1)$ s. A trial was retained when it had 3,425 or 3,426 samples and its median time step was within $10^{-6}$ of 0.004 s. All models used the bobyqa optimizer with a maximum of 200,000 function evaluations. A fit was accepted only when it was not singular and the optimizer returned no convergence message. If the maximal model failed that rule, the random-effects structure was reduced in fixed steps: correlated slopes, then uncorrelated slopes, then removal of the random slope with the smallest variance, then a random intercept only (@tbl-reduction).
 

@@ -742,3 +742,8 @@ write_json(list(run = RUN, iv = iv_store), file.path(EXPORT, "values.json"),
 fwrite(rbindlist(lapply(contract, as.data.table)), file.path(EXPORT, "key_contract.csv"))
 log_line("WROTE ", EXPORT)
 log_line("keys ", length(iv_store))
+
+# --- phase 9 pupil figures --------------------------------------------------
+# Does not refit. Writes only the five new pupil files. Running the export
+# refreshes them from the fits this script has already loaded from disk.
+source(file.path(CH2, "scripts/phase3/03_phase9_figures.R"))
