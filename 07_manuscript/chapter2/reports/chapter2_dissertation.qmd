@@ -634,7 +634,7 @@ R1 replaces the TEPR mean in M4b with the gap-respecting area. M4b's accepted ra
 \Needspace{12\baselineskip}
 ```
 
-## Additional estimation checks (dissertation only)
+## Additional estimation checks
 
 M1, M4a, and M4b were re-estimated with the optimizers that ship with lme4 (`r v("allfit_optimizers")`). No key-term estimate from a converged optimizer differed from the accepted bobyqa estimate by more than 0.01. The largest absolute key-term deviation in that set was `r v("allfit_max_abs_dev")`.
 
@@ -645,7 +645,7 @@ R2 fits M1's formula to the `r v_int("s2_nobs")` trials from the `r v_int("s2_n_
 \Needspace{12\baselineskip}
 ```
 
-## Analysis provenance (dissertation only)
+## Analysis provenance
 
 Recordings are the December 21 processing of the same sessions. The December 25 processing added no participant who was absent from December 21, so it is not in these models.
 
