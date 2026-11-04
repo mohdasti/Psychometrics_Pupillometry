@@ -412,8 +412,6 @@ knitr::include_graphics(fig_effort)
 
 In the grip-period model (M2), the grip-period mean did not differ significantly between physical effort levels, *b* = `r v("m2_effort_c_est")`, SE = `r v("m2_effort_c_se")`, *t*(`r v("m2_effort_c_df")`) = `r v("m2_effort_c_stat")`, 95% CI `r v("m2_effort_c_ci")`, *p* `r M2_effort$p_fmt` (`r v_int("m2_nobs")` trials, `r v_int("m2_n_participants")` participants). The by-participant variance of the physical effort effect was `r v("m2_effort_slope_variance")`. @fig-pupil-timecourse shows the time course by task and physical effort (panel A) and the high-minus-low difference at each time point (panel B).
 
-In the task-evoked model (M3), the TEPR was smaller under high physical effort, *b* = `r v("m3_effort_c_est")`, SE = `r v("m3_effort_c_se")`, *t*(`r v("m3_effort_c_df")`) = `r v("m3_effort_c_stat")`, 95% CI `r v("m3_effort_c_ci")`, *p* `r M3_effort$p_fmt`. It was not associated with offset, *b* = `r v("m3_x_c_est")`, SE = `r v("m3_x_c_se")`, *p* `r M3_x$p_fmt`, or with catch trials, *b* = `r v("m3_catch_est")`, SE = `r v("m3_catch_se")`, *p* `r M3_catch$p_fmt`. @fig-pupil-timecourse (panel C) shows the TEPR by offset and physical effort.
-
 ```{r}
 #| label: fig-pupil-timecourse
 #| fig-cap: "Pupil dynamics by task and physical effort, for participants in the task-evoked sample. (A) Pupil size relative to the pre-squeeze baseline, plotted at 50 Hz. Lines are participant-equal means after winsorizing participant means at the 1st and 99th percentiles at each time point (capped at ±2 a.u.), and shading is ±1 within-participant SE. (B) High-minus-low physical effort difference in the same waveforms. Shading is a pointwise 95% confidence interval across participants, not corrected for multiple comparisons, and is shown for description only. In A and B, bands mark the grip period (1.0–4.35 s), the pre-probe window (3.85–4.35 s), and the task-evoked window (4.65–7.65 s), and vertical lines mark squeeze onset, the standard, the probe, and the response screen. (C) Mean TEPR by offset and physical effort. Points are means of participant means, error bars are ±1 within-participant SE (participants with all cells; auditory, n = 32; visual, n = 40), and lines and short horizontal marks (catch trials) are the task-evoked model's (M3) fixed-effect predictions. Offset levels 1–4 are 8, 16, 32, and 64 Hz (auditory) and 0.06, 0.12, 0.24, and 0.48 contrast (visual). Units are arbitrary."
@@ -425,6 +423,10 @@ In the task-evoked model (M3), the TEPR was smaller under high physical effort, 
 stopifnot(file.exists(fig_pupil))
 knitr::include_graphics(fig_pupil)
 ```
+
+In the task-evoked model (M3), the TEPR was smaller under high physical effort, *b* = `r v("m3_effort_c_est")`, SE = `r v("m3_effort_c_se")`, *t*(`r v("m3_effort_c_df")`) = `r v("m3_effort_c_stat")`, 95% CI `r v("m3_effort_c_ci")`, *p* `r M3_effort$p_fmt`. It was not associated with offset, *b* = `r v("m3_x_c_est")`, SE = `r v("m3_x_c_se")`, *p* `r M3_x$p_fmt`, or with catch trials, *b* = `r v("m3_catch_est")`, SE = `r v("m3_catch_se")`, *p* `r M3_catch$p_fmt`. @fig-pupil-timecourse (panel C) shows the TEPR by offset and physical effort.
+
+
 
 ```{=latex}
 \FloatBarrier
